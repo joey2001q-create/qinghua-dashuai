@@ -436,7 +436,7 @@ export default function RushPage() {
                       </div>
                     </div>
 
-                    {examDate && (
+                    {daysUntilExam && (
                       <div className="text-center p-4 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-lg border border-indigo-500/30">
                         <div className="text-3xl font-bold text-white">{getDaysUntilExam()}</div>
                         <div className="text-sm text-slate-400">天后考试</div>
