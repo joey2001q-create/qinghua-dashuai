@@ -5,14 +5,18 @@ interface CardProps {
   className?: string
   onClick?: () => void
   hover?: boolean
+  onWheel?: () => void
+  onTouchMove?: () => void
 }
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ children, className = '', onClick, hover = true }, ref) => {
+  ({ children, className = '', onClick, hover = true, onWheel, onTouchMove }, ref) => {
     return (
       <div
         ref={ref}
         onClick={onClick}
+        onWheel={onWheel}
+        onTouchMove={onTouchMove}
         className={`
           bg-slate-800 border border-slate-700 rounded-2xl p-6
           ${hover ? 'hover:border-indigo-500/50 hover:-translate-y-1 hover:shadow-xl transition-all duration-300' : ''}
