@@ -40,8 +40,8 @@ export default function ExamPage() {
     {
       icon: '🤖',
       title: '学习搭子',
-      description: 'AI工具箱，智能问答学习助手',
-      external: 'https://chatglm.cn/main/alltoolsdetail?lang=zh',
+      description: 'AI智能学习助手，随时提问即时解答',
+      path: '/exam/buddy',
     },
   ]
 
@@ -65,7 +65,7 @@ export default function ExamPage() {
             {features.map((feature) => (
               <Card 
                 key={feature.title} 
-                onClick={() => feature.external ? window.open(feature.external, '_blank') : router.push(feature.path!)}
+                onClick={() => router.push(feature.path!)}
               >
                 <div className="text-3xl mb-3">{feature.icon}</div>
                 <h3 className="text-lg font-bold text-white mb-1">{feature.title}</h3>
