@@ -79,7 +79,7 @@ export default function RushPage() {
 
   const generatePlan = async () => {
     const finalGrade = customGrade || grade
-    if (!finalGrade || selectedSubjects.length === 0 || !examName || !examDate) {
+    if (!finalGrade || selectedSubjects.length === 0 || !examName || !daysUntilExam) {
       alert('请填写完整信息')
       return
     }
