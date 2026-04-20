@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const API_KEY = process.env.AI_API_KEY || ''
-const API_URL = process.env.AI_API_URL || 'https://api.openai.com/v1/chat/completions'
+const API_KEY = '584b8f96b7040464af809e8574ae5d6a:NDQ2NDc3Zjg0MDM4Nzc3MjJiOTZiNjlh'
+const API_URL = 'https://maas-coding-api.cn-huabei-1.xf-yun.com/v2/chat/completions'
+const MODEL_ID = 'astron-code-latest'
 
 async function callAI(prompt: string): Promise<string> {
   const response = await fetch(API_URL, {
@@ -11,7 +12,7 @@ async function callAI(prompt: string): Promise<string> {
       'Authorization': `Bearer ${API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'gpt-3.5-turbo',
+      model: MODEL_ID,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.8,
       max_tokens: 1500,
@@ -51,7 +52,7 @@ ${knowledge ? `知识点范围：${knowledge}` : ''}
 4. correctIndex是正确答案的索引（0-3）`
 
     const content = await callAI(prompt)
-    
+
     try {
       const quiz = JSON.parse(content)
       return NextResponse.json(quiz)

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const API_KEY = '2e1cead4fb8c5945d133fcfb649b98cb:NmZjNjVmNDNkZWYzMGFjMTBiOGFmZmEw'
-const API_URL = 'https://maas-api.cn-huabei-1.xf-yun.com/v2/chat/completions'
-const MODEL_ID = 'xopdeepseekv32'
+const API_KEY = '584b8f96b7040464af809e8574ae5d6a:NDQ2NDc3Zjg0MDM4Nzc3MjJiOTZiNjlh'
+const API_URL = 'https://maas-coding-api.cn-huabei-1.xf-yun.com/v2/chat/completions'
+const MODEL_ID = 'astron-code-latest'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -63,7 +63,7 @@ async function* callAIStream(prompt: string): AsyncGenerator<string> {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-    const { grade, subjects, examName, examDate, dailyHours } = data
+    const { grade, subjects, examName, daysUntilExam, dailyHours } = data
 
     const subjectsInfo = subjects.map((s: { name: string; currentScore: number; fullScore: number; targetScore: number }) => {
       const gap = s.targetScore - s.currentScore
@@ -77,9 +77,6 @@ export async function POST(request: NextRequest) {
     const totalGap = totalTarget - totalCurrent
     const totalGapPercent = ((totalGap / totalFull) * 100).toFixed(1)
 
-    const exam = new Date(examDate)
-    const today = new Date()
-    const daysUntilExam = Math.ceil((exam.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
     const totalHours = daysUntilExam * dailyHours
 
     const prompt = `你是清华大帅，一位专业的备考规划师。请为以下学生生成考前冲刺计划。
@@ -87,7 +84,7 @@ export async function POST(request: NextRequest) {
 【学生信息】
 - 年级：${grade}
 - 考试名称：${examName}
-- 考试日期：${examDate}（距离考试还有${daysUntilExam}天）
+- 距离考试还有：${daysUntilExam}天
 - 每天学习时间：${dailyHours}小时
 - 总学习时长：约${totalHours}小时
 

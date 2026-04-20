@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header, Card, Button } from '@/components/common'
+import { Header, Card, Button, ExportButton } from '@/components/common'
 import MarkdownRenderer from '@/components/common/MarkdownRenderer'
 import ProgressBar from '@/components/common/ProgressBar'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts'
@@ -299,7 +299,16 @@ export default function SchedulePage() {
 
           {(result || loading) && (
             <Card ref={resultRef}>
-              <h3 className="text-lg font-bold text-indigo-400 mb-4">📋 你的学习计划</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-indigo-400">📋 你的学习计划</h3>
+                {result && (
+                  <ExportButton 
+                    content={`# ${subject}${examType}学习计划\n\n年级：${grade}\n总分：${totalScore}\n目标：${targetScore}\n当前：${currentScore}\n\n${result}`} 
+                    filename={`${subject}${examType}学习计划.md`} 
+                    label="导出" 
+                  />
+                )}
+              </div>
               <div className="prose prose-invert max-w-none">
                 <MarkdownRenderer content={result} />
                 {loading && (

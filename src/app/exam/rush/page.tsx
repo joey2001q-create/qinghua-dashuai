@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header, Card, Button, StepBar, MarkdownRenderer, ProgressBar } from '@/components/common'
+import { Header, Card, Button, StepBar, MarkdownRenderer, ProgressBar, ExportButton } from '@/components/common'
 import { Subject } from '@/types'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts'
 
@@ -41,7 +41,7 @@ export default function RushPage() {
   const [selectedSubjects, setSelectedSubjects] = useState<Subject[]>([])
   const [subjectScores, setSubjectScores] = useState<SubjectScore[]>([])
   const [examName, setExamName] = useState('')
-  const [examDate, setExamDate] = useState('')
+  const [daysUntilExam, setDaysUntilExam] = useState('')
   const [dailyHours, setDailyHours] = useState('2')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState('')
@@ -113,7 +113,7 @@ export default function RushPage() {
             targetScore: Number(s.targetScore)
           })),
           examName,
-          examDate,
+          daysUntilExam: Number(daysUntilExam),
           dailyHours: Number(dailyHours),
         }),
       })
@@ -164,18 +164,14 @@ export default function RushPage() {
       case 1: return grade !== '' || customGrade !== ''
       case 2: return selectedSubjects.length > 0
       case 3: 
-        if (!examName || !examDate) return false
+        if (!examName || !daysUntilExam) return false
         return subjectScores.every(s => s.currentScore && s.targetScore)
       default: return false
     }
   }
 
   const getDaysUntilExam = () => {
-    if (!examDate) return 0
-    const exam = new Date(examDate)
-    const today = new Date()
-    const diff = Math.ceil((exam.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-    return Math.max(0, diff)
+    return Number(daysUntilExam) || 0
   }
 
   const totalCurrent = subjectScores.reduce((sum, s) => sum + (Number(s.currentScore) || 0), 0)
@@ -297,12 +293,14 @@ export default function RushPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm text-slate-400 mb-1">考试日期</label>
+                        <label className="block text-sm text-slate-400 mb-1">距离考试天数</label>
                         <input
-                          type="date"
-                          value={examDate}
-                          onChange={(e) => setExamDate(e.target.value)}
-                          className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white [color-scheme:dark]"
+                          type="number"
+                          value={daysUntilExam}
+                          onChange={(e) => setDaysUntilExam(e.target.value)}
+                          placeholder="如：30"
+                          min="1"
+                          className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
                         />
                       </div>
                     </div>
@@ -404,7 +402,7 @@ export default function RushPage() {
                   <div className="text-sm text-slate-400">
                     <p>年级：{customGrade || grade}</p>
                     <p>科目：{selectedSubjects.join('、')}</p>
-                    <p>考试：{examName}（{examDate}）</p>
+                    <p>考试：{examName}（还有{daysUntilExam}天）</p>
                   </div>
                 </Card>
               )}
@@ -473,7 +471,16 @@ export default function RushPage() {
 
           {(result || loading) && (
             <Card ref={resultRef} className="mt-6">
-              <h3 className="text-lg font-bold text-indigo-400 mb-4">📋 你的冲刺计划</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-indigo-400">📋 你的冲刺计划</h3>
+                {result && (
+                  <ExportButton 
+                    content={`# ${examName}冲刺计划\n\n年级：${customGrade || grade}\n科目：${selectedSubjects.join('、')}\n距离考试：${daysUntilExam}天\n\n${result}`} 
+                    filename={`${examName}冲刺计划.md`} 
+                    label="导出" 
+                  />
+                )}
+              </div>
               <div className="prose prose-invert max-w-none">
                 <MarkdownRenderer content={result} />
                 {loading && (

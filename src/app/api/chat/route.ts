@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const API_KEY = process.env.AI_API_KEY || ''
-const API_URL = process.env.AI_API_URL || 'https://api.openai.com/v1/chat/completions'
+const API_KEY = '584b8f96b7040464af809e8574ae5d6a:NDQ2NDc3Zjg0MDM4Nzc3MjJiOTZiNjlh'
+const API_URL = 'https://maas-coding-api.cn-huabei-1.xf-yun.com/v2/chat/completions'
+const MODEL_ID = 'astron-code-latest'
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
         'Authorization': `Bearer ${API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: MODEL_ID,
         messages: fullMessages,
         temperature: 0.7,
         max_tokens: 2000,

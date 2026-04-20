@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header, Card, Button } from '@/components/common'
+import { Header, Card, Button, ExportButton, MarkdownRenderer } from '@/components/common'
 import { Subject } from '@/types'
 import { subjects } from '@/lib/utils'
 
@@ -22,6 +22,8 @@ export default function ABCPage() {
   const [currentScore, setCurrentScore] = useState(80)
   const [targetScore, setTargetScore] = useState(95)
   const [confidence, setConfidence] = useState(5)
+  const [analysisResult, setAnalysisResult] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const calculatedGoals = useMemo(() => {
     return goals.map(goal => {
@@ -86,6 +88,68 @@ export default function ABCPage() {
     if (c >= 5) return 'bg-amber-500/20'
     return 'bg-red-500/20'
   }
+
+  const generateAnalysis = async () => {
+    if (goals.length === 0) {
+      alert('请先添加科目目标')
+      return
+    }
+    setLoading(true)
+    try {
+      const response = await fetch('/api/abc-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goals: calculatedGoals }),
+      })
+      if (!response.ok) throw new Error('请求失败')
+      const reader = response.body?.getReader()
+      if (!reader) throw new Error('无法读取响应')
+      const decoder = new TextDecoder()
+      let buffer = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed || !trimmed.startsWith('data: ')) continue
+          if (trimmed === 'data: [DONE]') continue
+          const data = trimmed.slice(6)
+          try {
+            const json = JSON.parse(data)
+            if (json.content) {
+              setAnalysisResult((prev) => prev + json.content)
+            }
+          } catch {
+            // skip
+          }
+        }
+      }
+    } catch (error) {
+      console.error(error)
+      alert('生成失败，请重试')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const exportContent = `# ABC目标提分表
+
+## 各科目目标
+
+| 科目 | 满分 | C目标(当前) | B目标(预期) | A目标(理想) | 差距 | 预期提分 | 信心指数 |
+|------|------|-------------|-------------|-------------|------|----------|----------|
+${calculatedGoals.map(g => `| ${g.subject} | ${g.fullScore} | ${g.cTarget} | ${g.bTarget} | ${g.aTarget} | +${g.gap} | +${g.improvement} | ${g.confidence} |`).join('\n')}
+
+## 总结
+- 总提分空间：+${calculatedGoals.reduce((sum, g) => sum + g.gap, 0)}
+- 预期总提分：+${Math.round(totalImprovement * 10) / 10}
+- 平均信心指数：${(goals.reduce((sum, g) => sum + g.confidence, 0) / goals.length).toFixed(1)}
+
+${analysisResult ? `## AI分析\n\n${analysisResult}` : ''}
+`
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -259,7 +323,15 @@ export default function ABCPage() {
               </div>
 
               <Card className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-indigo-500/30">
-                <h3 className="text-lg font-bold text-white mb-3">💡 提分建议</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-bold text-white">💡 提分建议</h3>
+                  <div className="flex gap-2">
+                    <Button onClick={generateAnalysis} variant="primary" size="sm" disabled={loading}>
+                      {loading ? 'AI分析中...' : 'AI分析'}
+                    </Button>
+                    <ExportButton content={exportContent} filename="ABC目标提分表.md" label="导出" />
+                  </div>
+                </div>
                 <ul className="text-slate-300 text-sm space-y-2">
                   <li>• <span className="text-emerald-400 font-medium">A目标</span>：理想情况下的最高目标，需要付出最大努力</li>
                   <li>• <span className="text-amber-400 font-medium">B目标</span>：基于信心指数计算的预期可达目标，是努力的方向</li>
@@ -267,6 +339,18 @@ export default function ABCPage() {
                   <li>• 信心指数越高，预期提分越接近理想目标；建议优先提升信心较低的科目</li>
                 </ul>
               </Card>
+
+              {(analysisResult || loading) && (
+                <Card className="mt-6">
+                  <h3 className="text-lg font-bold text-indigo-400 mb-4">📊 AI分析结果</h3>
+                  <div className="prose prose-invert max-w-none">
+                    <MarkdownRenderer content={analysisResult} />
+                    {loading && (
+                      <span className="inline-block w-2 h-5 bg-indigo-400 animate-pulse ml-1" />
+                    )}
+                  </div>
+                </Card>
+              )}
             </>
           )}
         </div>

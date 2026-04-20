@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const API_KEY = '2e1cead4fb8c5945d133fcfb649b98cb:NmZjNjVmNDNkZWYzMGFjMTBiOGFmZmEw'
-const API_URL = 'https://maas-api.cn-huabei-1.xf-yun.com/v2/chat/completions'
-const MODEL_ID = 'xopdeepseekv32'
+const API_KEY = '584b8f96b7040464af809e8574ae5d6a:NDQ2NDc3Zjg0MDM4Nzc3MjJiOTZiNjlh'
+const API_URL = 'https://maas-coding-api.cn-huabei-1.xf-yun.com/v2/chat/completions'
+const MODEL_ID = 'astron-code-latest'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
