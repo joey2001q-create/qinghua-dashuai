@@ -9,19 +9,29 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Toolti
 const gradeGroups = [
   {
     label: '小学',
-    grades: ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级']
+    grades: ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级'],
+    examTypes: ['期中', '期末', '月考', '小升初']
   },
   {
     label: '初中',
-    grades: ['初一', '初二', '初三']
+    grades: ['初一', '初二', '初三'],
+    examTypes: ['期中', '期末', '月考', '中考一模', '中考二模', '中考']
   },
   {
     label: '高中',
-    grades: ['高一', '高二', '高三']
+    grades: ['高一', '高二', '高三'],
+    examTypes: ['期中', '期末', '月考', '高考一模', '高考二模', '高考']
   }
 ]
 
 const subjects = ['数学', '语文', '英语', '物理', '化学', '历史', '政治', '生物']
+
+interface SubjectScore {
+  subject: Subject
+  currentScore: string
+  fullScore: string
+  targetScore: string
+}
 
 export default function RushPage() {
   const router = useRouter()
@@ -29,16 +39,19 @@ export default function RushPage() {
   const [grade, setGrade] = useState('')
   const [customGrade, setCustomGrade] = useState('')
   const [selectedSubjects, setSelectedSubjects] = useState<Subject[]>([])
+  const [subjectScores, setSubjectScores] = useState<SubjectScore[]>([])
   const [examName, setExamName] = useState('')
   const [examDate, setExamDate] = useState('')
-  const [currentScore, setCurrentScore] = useState('')
-  const [fullScore, setFullScore] = useState('100')
-  const [targetScore, setTargetScore] = useState('')
   const [dailyHours, setDailyHours] = useState('2')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState('')
   const [showAnalysis, setShowAnalysis] = useState(false)
   const resultRef = useRef<HTMLDivElement>(null)
+
+  const currentGradeGroup = gradeGroups.find(g => g.grades.includes(grade))
+  const availableExamTypes = customGrade 
+    ? ['期中', '期末', '月考', '模拟考'] 
+    : (currentGradeGroup?.examTypes || ['期中', '期末', '月考'])
 
   useEffect(() => {
     if (result && resultRef.current) {
@@ -51,19 +64,34 @@ export default function RushPage() {
   const toggleSubject = (subject: Subject) => {
     if (selectedSubjects.includes(subject)) {
       setSelectedSubjects(selectedSubjects.filter(s => s !== subject))
+      setSubjectScores(prev => prev.filter(s => s.subject !== subject))
     } else if (selectedSubjects.length < 3) {
       setSelectedSubjects([...selectedSubjects, subject])
+      setSubjectScores(prev => [...prev, { subject, currentScore: '', fullScore: '100', targetScore: '' }])
     }
+  }
+
+  const updateSubjectScore = (subject: Subject, field: 'currentScore' | 'fullScore' | 'targetScore', value: string) => {
+    setSubjectScores(prev => prev.map(s => 
+      s.subject === subject ? { ...s, [field]: value } : s
+    ))
   }
 
   const generatePlan = async () => {
     const finalGrade = customGrade || grade
-    if (!finalGrade || selectedSubjects.length === 0 || !examName || !examDate || !currentScore || !targetScore) {
+    if (!finalGrade || selectedSubjects.length === 0 || !examName || !examDate) {
       alert('请填写完整信息')
       return
     }
 
-    if (Number(currentScore) >= Number(targetScore)) {
+    const hasInvalidScore = subjectScores.some(s => !s.currentScore || !s.targetScore)
+    if (hasInvalidScore) {
+      alert('请填写所有科目的分数信息')
+      return
+    }
+
+    const hasInvalidTarget = subjectScores.some(s => Number(s.currentScore) >= Number(s.targetScore))
+    if (hasInvalidTarget) {
       alert('目标分数必须大于当前分数')
       return
     }
@@ -78,12 +106,14 @@ export default function RushPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           grade: finalGrade,
-          subjects: selectedSubjects,
+          subjects: subjectScores.map(s => ({
+            name: s.subject,
+            currentScore: Number(s.currentScore),
+            fullScore: Number(s.fullScore),
+            targetScore: Number(s.targetScore)
+          })),
           examName,
           examDate,
-          currentScore: Number(currentScore),
-          fullScore: Number(fullScore),
-          targetScore: Number(targetScore),
           dailyHours: Number(dailyHours),
         }),
       })
@@ -133,7 +163,9 @@ export default function RushPage() {
     switch (step) {
       case 1: return grade !== '' || customGrade !== ''
       case 2: return selectedSubjects.length > 0
-      case 3: return examName && examDate && currentScore && targetScore
+      case 3: 
+        if (!examName || !examDate) return false
+        return subjectScores.every(s => s.currentScore && s.targetScore)
       default: return false
     }
   }
@@ -146,17 +178,17 @@ export default function RushPage() {
     return Math.max(0, diff)
   }
 
-  const current = Number(currentScore) || 0
-  const target = Number(targetScore) || 0
-  const total = Number(fullScore) || 100
-  const gap = target - current
-  const gapPercent = total > 0 ? ((gap / total) * 100).toFixed(1) : 0
+  const totalCurrent = subjectScores.reduce((sum, s) => sum + (Number(s.currentScore) || 0), 0)
+  const totalTarget = subjectScores.reduce((sum, s) => sum + (Number(s.targetScore) || 0), 0)
+  const totalFull = subjectScores.reduce((sum, s) => sum + (Number(s.fullScore) || 0), 0)
+  const totalGap = totalTarget - totalCurrent
+  const gapPercent = totalFull > 0 ? ((totalGap / totalFull) * 100).toFixed(1) : 0
 
-  const barData = [
-    { name: '当前', 分数: current },
-    { name: '目标', 分数: target },
-    { name: '满分', 分数: total },
-  ]
+  const barData = subjectScores.map(s => ({
+    name: s.subject,
+    当前: Number(s.currentScore) || 0,
+    目标: Number(s.targetScore) || 0,
+  }))
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -205,7 +237,7 @@ export default function RushPage() {
                         type="text"
                         value={customGrade}
                         onChange={(e) => { setCustomGrade(e.target.value); setGrade('') }}
-                        placeholder="如：小升初、大学期末、考研"
+                        placeholder="如：大学期末、考研"
                         className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
                       />
                     </div>
@@ -253,13 +285,16 @@ export default function RushPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm text-slate-400 mb-1">考试名称</label>
-                        <input
-                          type="text"
+                        <select
                           value={examName}
                           onChange={(e) => setExamName(e.target.value)}
-                          placeholder="如：中考一模、月考"
-                          className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
-                        />
+                          className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
+                        >
+                          <option value="">请选择</option>
+                          {availableExamTypes.map(t => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <label className="block text-sm text-slate-400 mb-1">考试日期</label>
@@ -267,41 +302,51 @@ export default function RushPage() {
                           type="date"
                           value={examDate}
                           onChange={(e) => setExamDate(e.target.value)}
-                          className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
+                          className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white [color-scheme:dark]"
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm text-slate-400 mb-1">当前得分</label>
-                        <input
-                          type="number"
-                          value={currentScore}
-                          onChange={(e) => setCurrentScore(e.target.value)}
-                          placeholder="80"
-                          className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm text-slate-400 mb-1">满分</label>
-                        <input
-                          type="number"
-                          value={fullScore}
-                          onChange={(e) => setFullScore(e.target.value)}
-                          className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm text-slate-400 mb-1">目标分数</label>
-                        <input
-                          type="number"
-                          value={targetScore}
-                          onChange={(e) => setTargetScore(e.target.value)}
-                          placeholder="95"
-                          className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
-                        />
-                      </div>
+
+                    <div className="space-y-3">
+                      <p className="text-sm text-slate-400">各科目分数</p>
+                      {subjectScores.map((s) => (
+                        <div key={s.subject} className="p-3 bg-slate-700/30 rounded-lg">
+                          <p className="text-sm font-medium text-indigo-400 mb-2">{s.subject}</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <label className="block text-xs text-slate-500 mb-1">当前得分</label>
+                              <input
+                                type="number"
+                                value={s.currentScore}
+                                onChange={(e) => updateSubjectScore(s.subject, 'currentScore', e.target.value)}
+                                placeholder="80"
+                                className="w-full px-3 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder:text-slate-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-slate-500 mb-1">满分</label>
+                              <input
+                                type="number"
+                                value={s.fullScore}
+                                onChange={(e) => updateSubjectScore(s.subject, 'fullScore', e.target.value)}
+                                className="w-full px-3 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder:text-slate-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-slate-500 mb-1">目标分数</label>
+                              <input
+                                type="number"
+                                value={s.targetScore}
+                                onChange={(e) => updateSubjectScore(s.subject, 'targetScore', e.target.value)}
+                                placeholder="95"
+                                className="w-full px-3 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder:text-slate-500"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
+
                     <div>
                       <label className="block text-sm text-slate-400 mb-1">每天可投入时间</label>
                       <select
@@ -347,6 +392,7 @@ export default function RushPage() {
                         setGrade('')
                         setCustomGrade('')
                         setSelectedSubjects([])
+                        setSubjectScores([])
                         setShowAnalysis(false)
                       }}
                       variant="ghost"
@@ -370,20 +416,20 @@ export default function RushPage() {
                   <h3 className="text-lg font-bold text-emerald-400 mb-4">📊 分数分析</h3>
                   <div className="space-y-6">
                     <ProgressBar
-                      current={current}
-                      target={target}
-                      total={total}
-                      label="提分进度"
+                      current={totalCurrent}
+                      target={totalTarget}
+                      total={totalFull}
+                      label="总分提分进度"
                       color="emerald"
                     />
 
                     <div className="grid grid-cols-3 gap-4 pt-4">
                       <div className="text-center p-3 bg-slate-700/30 rounded-lg">
-                        <div className="text-2xl font-bold text-indigo-400">{current}</div>
-                        <div className="text-xs text-slate-400">当前分数</div>
+                        <div className="text-2xl font-bold text-indigo-400">{totalCurrent}</div>
+                        <div className="text-xs text-slate-400">当前总分</div>
                       </div>
                       <div className="text-center p-3 bg-slate-700/30 rounded-lg">
-                        <div className="text-2xl font-bold text-emerald-400">+{gap}</div>
+                        <div className="text-2xl font-bold text-emerald-400">+{totalGap}</div>
                         <div className="text-xs text-slate-400">需提升</div>
                       </div>
                       <div className="text-center p-3 bg-slate-700/30 rounded-lg">
@@ -399,23 +445,26 @@ export default function RushPage() {
                       </div>
                     )}
 
-                    <div className="h-48">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={barData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                          <XAxis dataKey="name" stroke="#9ca3af" />
-                          <YAxis stroke="#9ca3af" />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: '#1e293b',
-                              border: '1px solid #374151',
-                              borderRadius: '8px',
-                            }}
-                          />
-                          <Bar dataKey="分数" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
+                    {barData.length > 0 && (
+                      <div className="h-48">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={barData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                            <XAxis dataKey="name" stroke="#9ca3af" />
+                            <YAxis stroke="#9ca3af" />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: '#1e293b',
+                                border: '1px solid #374151',
+                                borderRadius: '8px',
+                              }}
+                            />
+                            <Bar dataKey="当前" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="目标" fill="#10b981" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
                   </div>
                 </Card>
               </div>

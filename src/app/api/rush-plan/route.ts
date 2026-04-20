@@ -63,10 +63,19 @@ async function* callAIStream(prompt: string): AsyncGenerator<string> {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-    const { grade, subjects, examName, examDate, currentScore, fullScore, targetScore, dailyHours } = data
+    const { grade, subjects, examName, examDate, dailyHours } = data
 
-    const gap = targetScore - currentScore
-    const gapPercent = ((gap / fullScore) * 100).toFixed(1)
+    const subjectsInfo = subjects.map((s: { name: string; currentScore: number; fullScore: number; targetScore: number }) => {
+      const gap = s.targetScore - s.currentScore
+      const gapPercent = ((gap / s.fullScore) * 100).toFixed(1)
+      return `- ${s.name}：当前${s.currentScore}/${s.fullScore}分，目标${s.targetScore}分，需提升${gap}分（${gapPercent}%）`
+    }).join('\n')
+
+    const totalCurrent = subjects.reduce((sum: number, s: { currentScore: number }) => sum + s.currentScore, 0)
+    const totalTarget = subjects.reduce((sum: number, s: { targetScore: number }) => sum + s.targetScore, 0)
+    const totalFull = subjects.reduce((sum: number, s: { fullScore: number }) => sum + s.fullScore, 0)
+    const totalGap = totalTarget - totalCurrent
+    const totalGapPercent = ((totalGap / totalFull) * 100).toFixed(1)
 
     const exam = new Date(examDate)
     const today = new Date()
@@ -77,19 +86,23 @@ export async function POST(request: NextRequest) {
 
 【学生信息】
 - 年级：${grade}
-- 重点科目：${subjects?.join('、')}
 - 考试名称：${examName}
 - 考试日期：${examDate}（距离考试还有${daysUntilExam}天）
-- 当前得分：${currentScore}/${fullScore}
-- 目标分数：${targetScore}
-- 差距：${gap}分（需提升${gapPercent}%）
 - 每天学习时间：${dailyHours}小时
 - 总学习时长：约${totalHours}小时
+
+【各科目情况】
+${subjectsInfo}
+
+【总分情况】
+- 当前总分：${totalCurrent}/${totalFull}分
+- 目标总分：${totalTarget}分
+- 需提升：${totalGap}分（${totalGapPercent}%）
 
 【输出格式要求】
 
 ## 📊 整体分析
-简要分析学生现状和提分策略
+简要分析学生现状和各科目提分策略
 
 ## 📅 每日冲刺计划
 
@@ -114,8 +127,9 @@ export async function POST(request: NextRequest) {
 1. 请确保计划具体、可执行
 2. 每天的内容要明确到知识点和时间分配
 3. 根据${grade}学生的认知水平调整内容难度
-4. 不要使用特殊字符或下划线命名，使用中文标题
-5. 表格必须使用标准markdown格式，列对齐用|分隔`
+4. 合理分配各科目的学习时间
+5. 不要使用特殊字符或下划线命名，使用中文标题
+6. 表格必须使用标准markdown格式，列对齐用|分隔`
 
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
