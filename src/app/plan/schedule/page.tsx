@@ -25,9 +25,10 @@ export default function SchedulePage() {
   const [result, setResult] = useState('')
   const [showChart, setShowChart] = useState(false)
   const resultRef = useRef<HTMLDivElement>(null)
+  const isUserScrolling = useRef(false)
 
   useEffect(() => {
-    if (result && resultRef.current) {
+    if (result && resultRef.current && !isUserScrolling.current) {
       resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }, [result])
@@ -38,8 +39,13 @@ export default function SchedulePage() {
       return
     }
 
-    if (Number(totalScore) < Number(targetScore)) {
-      alert('目标分数不能超过总分')
+    if (Number(totalScore) <= 0 || Number(currentScore) < 0 || Number(targetScore) < 0) {
+      alert('分数不能为负数，满分必须大于0')
+      return
+    }
+
+    if (Number(currentScore) > Number(totalScore) || Number(targetScore) > Number(totalScore)) {
+      alert('当前分数和目标分数不能超过满分')
       return
     }
 
@@ -298,7 +304,7 @@ export default function SchedulePage() {
           </div>
 
           {(result || loading) && (
-            <Card ref={resultRef}>
+            <Card ref={resultRef} onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-indigo-400">📋 你的学习计划</h3>
                 {result && (

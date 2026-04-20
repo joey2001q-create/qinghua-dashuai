@@ -47,6 +47,7 @@ export default function RushPage() {
   const [result, setResult] = useState('')
   const [showAnalysis, setShowAnalysis] = useState(false)
   const resultRef = useRef<HTMLDivElement>(null)
+  const isUserScrolling = useRef(false)
 
   const currentGradeGroup = gradeGroups.find(g => g.grades.includes(grade))
   const availableExamTypes = customGrade 
@@ -54,7 +55,7 @@ export default function RushPage() {
     : (currentGradeGroup?.examTypes || ['期中', '期末', '月考'])
 
   useEffect(() => {
-    if (result && resultRef.current) {
+    if (result && resultRef.current && !isUserScrolling.current) {
       resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }, [result])
@@ -84,9 +85,21 @@ export default function RushPage() {
       return
     }
 
-    const hasInvalidScore = subjectScores.some(s => !s.currentScore || !s.targetScore)
+    const hasInvalidScore = subjectScores.some(s => !s.currentScore || !s.targetScore || !s.fullScore)
     if (hasInvalidScore) {
       alert('请填写所有科目的分数信息')
+      return
+    }
+
+    const hasNegative = subjectScores.some(s => Number(s.currentScore) < 0 || Number(s.targetScore) < 0 || Number(s.fullScore) <= 0)
+    if (hasNegative) {
+      alert('分数不能为负数，满分必须大于0')
+      return
+    }
+
+    const hasExceedFull = subjectScores.some(s => Number(s.currentScore) > Number(s.fullScore) || Number(s.targetScore) > Number(s.fullScore))
+    if (hasExceedFull) {
+      alert('当前分数和目标分数不能超过满分')
       return
     }
 
@@ -470,7 +483,7 @@ export default function RushPage() {
           </div>
 
           {(result || loading) && (
-            <Card ref={resultRef} className="mt-6">
+            <Card ref={resultRef} className="mt-6" onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-indigo-400">📋 你的冲刺计划</h3>
                 {result && (
