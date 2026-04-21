@@ -198,90 +198,87 @@ export default function AnalysisPage() {
           <h1 className="text-2xl font-bold text-white mb-2">📊 失分原因分析器</h1>
           <p className="text-slate-400 mb-6">按题型录入失分，AI诊断薄弱知识点并给出针对性建议</p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2">
               <Card>
                 <h3 className="text-lg font-bold text-indigo-400 mb-4">📝 填写信息</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">年级</label>
-                      <select
-                        value={customGrade || grade}
-                        onChange={(e) => { setCustomGrade(e.target.value); setGrade('') }}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm"
-                      >
-                        <option value="">请选择</option>
-                        {gradeGroups.map(group => (
-                          <optgroup key={group.label} label={group.label}>
-                            {group.grades.map(g => (
-                              <option key={g} value={g}>{g}</option>
-                            ))}
-                          </optgroup>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">学科</label>
-                      <select value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white">
-                        <option value="">请选择</option>
-                        {availableSubjects.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">考试名称</label>
-                      <select value={examName} onChange={(e) => setExamName(e.target.value)} className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white">
-                        <option value="">请选择</option>
-                        <option value="月考">月考</option>
-                        <option value="期中">期中</option>
-                        <option value="期末">期末</option>
-                        <option value="周测">周测</option>
-                        <option value="模拟考">模拟考</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">满分</label>
-                      <input type="number" value={totalScore} onChange={(e) => setTotalScore(e.target.value)} placeholder="100" min="1" className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500" />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">本次得分</label>
-                      <input type="number" value={currentScore} onChange={(e) => setCurrentScore(e.target.value)} placeholder="85" min="0" className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500" />
-                    </div>
-                  </div>
-
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                   <div>
+                    <label className="block text-sm text-slate-400 mb-1">年级</label>
+                    <select
+                      value={customGrade || grade}
+                      onChange={(e) => { setCustomGrade(e.target.value); setGrade('') }}
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm"
+                    >
+                      <option value="">请选择</option>
+                      {gradeGroups.map(group => (
+                        <optgroup key={group.label} label={group.label}>
+                          {group.grades.map(g => (
+                            <option key={g} value={g}>{g}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">学科</label>
+                    <select value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white">
+                      <option value="">请选择</option>
+                      {availableSubjects.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">考试名称</label>
+                    <select value={examName} onChange={(e) => setExamName(e.target.value)} className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white">
+                      <option value="">请选择</option>
+                      <option value="月考">月考</option>
+                      <option value="期中">期中</option>
+                      <option value="期末">期末</option>
+                      <option value="周测">周测</option>
+                      <option value="模拟考">模拟考</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">满分</label>
+                    <input type="number" value={totalScore} onChange={(e) => setTotalScore(e.target.value)} placeholder="100" min="1" className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500" />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">本次得分</label>
+                    <input type="number" value={currentScore} onChange={(e) => setCurrentScore(e.target.value)} placeholder="85" min="0" className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500" />
+                  </div>
+
+                  <div className="col-span-2 md:col-span-3 xl:col-span-4">
                     <p className="text-sm text-slate-400 mb-2">各题型失分情况</p>
-                    <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
                       {questionScores.map((qs, i) => (
-                        <div key={i} className="flex items-center gap-2">
+                        <div key={i} className="flex items-center gap-2 p-2 bg-slate-700/30 rounded-lg">
                           <span className="text-sm text-slate-300 w-16 flex-shrink-0">{qs.type}</span>
-                          <input type="number" value={qs.totalScore} onChange={(e) => updateQuestionScore(i, 'totalScore', e.target.value)} placeholder="总分" min="0" className="w-20 px-2 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm text-center placeholder:text-slate-500" />
-                          <input type="number" value={qs.lostScore} onChange={(e) => updateQuestionScore(i, 'lostScore', e.target.value)} placeholder="失分" min="0" className="w-20 px-2 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm text-center placeholder:text-slate-500" />
+                          <input type="number" value={qs.totalScore} onChange={(e) => updateQuestionScore(i, 'totalScore', e.target.value)} placeholder="总分" min="0" className="w-16 px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-sm text-center placeholder:text-slate-500" />
+                          <input type="number" value={qs.lostScore} onChange={(e) => updateQuestionScore(i, 'lostScore', e.target.value)} placeholder="失分" min="0" className="w-16 px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-sm text-center placeholder:text-slate-500" />
                         </div>
                       ))}
                     </div>
                     <p className="text-xs text-slate-500 mt-1">格式：题型 | 总分 | 失分</p>
                   </div>
 
-                  <div>
+                  <div className="col-span-2 md:col-span-3 xl:col-span-4">
                     <label className="block text-sm text-slate-400 mb-1">补充描述（可选）</label>
-                    <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="如：主要错在函数图像和几何证明，计算失误2题..." className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white min-h-[80px] placeholder:text-slate-500" />
+                    <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="如：主要错在函数图像和几何证明，计算失误2题..." className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white min-h-[60px] placeholder:text-slate-500" />
                   </div>
 
-                  <Button onClick={analyze} variant="primary" className="w-full" disabled={loading}>
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        AI正在分析...
-                      </span>
-                    ) : '🔍 开始分析'}
-                  </Button>
+                  <div className="col-span-2 md:col-span-3 xl:col-span-4">
+                    <Button onClick={analyze} variant="primary" className="w-full" disabled={loading}>
+                      {loading ? (
+                        <span className="flex items-center gap-2">
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          AI正在分析...
+                        </span>
+                      ) : '🔍 开始分析'}
+                    </Button>
+                  </div>
                 </div>
               </Card>
             </div>

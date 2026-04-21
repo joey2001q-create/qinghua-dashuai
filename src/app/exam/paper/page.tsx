@@ -207,21 +207,21 @@ export default function PaperPage() {
           <h1 className="text-2xl font-bold text-white mb-2">📊 卷后提分</h1>
           <p className="text-slate-400 mb-6">上传试卷或描述考试情况，AI分析失分原因并给出针对性提分方案</p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2">
               <Card>
                 <h3 className="text-lg font-bold text-indigo-400 mb-4">📝 填写信息</h3>
-                <div className="space-y-4">
-                  <div className="space-y-4">
-                    {gradeGroups.map((group) => (
-                      <div key={group.label}>
-                        <p className="text-sm text-slate-400 mb-2">{group.label}</p>
-                        <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="col-span-2 md:col-span-3 xl:col-span-4">
+                    <p className="text-sm text-slate-400 mb-2">选择年级</p>
+                    <div className="flex flex-wrap gap-2">
+                      {gradeGroups.map((group) => (
+                        <div key={group.label} className="flex flex-wrap gap-1">
                           {group.grades.map((g) => (
                             <button
                               key={g}
                               onClick={() => { setGrade(g); setCustomGrade('') }}
-                              className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                                 grade === g
                                   ? 'bg-indigo-500 text-white'
                                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
@@ -231,94 +231,88 @@ export default function PaperPage() {
                             </button>
                           ))}
                         </div>
-                      </div>
-                    ))}
-                    <div className="pt-2 border-t border-slate-700">
-                      <label className="block text-sm text-slate-400 mb-1">或自定义年级</label>
-                      <input
-                        type="text"
-                        value={customGrade}
-                        onChange={(e) => { setCustomGrade(e.target.value); setGrade('') }}
-                        placeholder="如：大学期末、考研"
-                        className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
-                      />
+                      ))}
                     </div>
+                    <input
+                      type="text"
+                      value={customGrade}
+                      onChange={(e) => { setCustomGrade(e.target.value); setGrade('') }}
+                      placeholder="或自定义年级"
+                      className="mt-2 w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500 text-sm"
+                    />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">考试类型</label>
-                      <select
-                        value={examType}
-                        onChange={(e) => setExamType(e.target.value)}
-                        className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
-                      >
-                        <option value="">请选择</option>
-                        {availableExamTypes.map(t => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">学科</label>
-                      <select
-                        value={subject}
-                        onChange={(e) => setSubject(e.target.value)}
-                        className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
-                      >
-                        <option value="">请选择</option>
-                        {availableSubjects.map(s => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-                    </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">考试类型</label>
+                    <select
+                      value={examType}
+                      onChange={(e) => setExamType(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
+                    >
+                      <option value="">请选择</option>
+                      {availableExamTypes.map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">学科</label>
+                    <select
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
+                    >
+                      <option value="">请选择</option>
+                      {availableSubjects.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">满分</label>
+                    <input
+                      type="number"
+                      value={fullScore}
+                      onChange={(e) => setFullScore(e.target.value)}
+                      placeholder="100"
+                      min="1"
+                      className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">本次得分</label>
+                    <input
+                      type="number"
+                      value={currentScore}
+                      onChange={(e) => setCurrentScore(e.target.value)}
+                      placeholder="85"
+                      min="0"
+                      className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">下次目标</label>
+                    <input
+                      type="number"
+                      value={targetScore}
+                      onChange={(e) => setTargetScore(e.target.value)}
+                      placeholder="95"
+                      min="0"
+                      className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
+                    />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">满分</label>
-                      <input
-                        type="number"
-                        value={fullScore}
-                        onChange={(e) => setFullScore(e.target.value)}
-                        placeholder="100"
-                        min="1"
-                        className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">本次得分</label>
-                      <input
-                        type="number"
-                        value={currentScore}
-                        onChange={(e) => setCurrentScore(e.target.value)}
-                        placeholder="85"
-                        min="0"
-                        className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">下次目标</label>
-                      <input
-                        type="number"
-                        value={targetScore}
-                        onChange={(e) => setTargetScore(e.target.value)}
-                        placeholder="95"
-                        min="0"
-                        className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
-                      />
-                    </div>
+                  <div className="col-span-2 md:col-span-3 xl:col-span-4">
+                    <UploadZone
+                      onUpload={handleUpload}
+                      multiple
+                      text="上传卷面图片（支持多选）"
+                      subtext="JPG / PNG，最多10张"
+                    />
                   </div>
-
-                  <UploadZone
-                    onUpload={handleUpload}
-                    multiple
-                    text="上传卷面图片（支持多选）"
-                    subtext="JPG / PNG，最多10张"
-                  />
 
                   {images.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="col-span-2 md:col-span-3 xl:col-span-4 flex flex-wrap gap-2">
                       {images.map((img, i) => (
                         <div key={i} className="relative group">
                           <img src={img} alt={`试卷${i + 1}`} className="w-20 h-20 object-cover rounded-lg" />
@@ -333,7 +327,7 @@ export default function PaperPage() {
                     </div>
                   )}
 
-                  <div>
+                  <div className="col-span-2 md:col-span-3 xl:col-span-4">
                     <label className="block text-sm text-slate-400 mb-1">或描述考试情况</label>
                     <textarea
                       value={text}
@@ -343,19 +337,21 @@ export default function PaperPage() {
                     />
                   </div>
 
-                  <Button onClick={analyze} variant="orange" className="w-full" disabled={loading}>
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        AI正在分析...
-                      </span>
-                    ) : (
-                      '🔍 开始分析'
-                    )}
-                  </Button>
+                  <div className="col-span-2 md:col-span-3 xl:col-span-4">
+                    <Button onClick={analyze} variant="orange" className="w-full" disabled={loading}>
+                      {loading ? (
+                        <span className="flex items-center gap-2">
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          AI正在分析...
+                        </span>
+                      ) : (
+                        '🔍 开始分析'
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </Card>
             </div>

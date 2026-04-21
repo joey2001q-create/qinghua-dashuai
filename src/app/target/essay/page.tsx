@@ -145,44 +145,40 @@ export default function EssayPage() {
           <h1 className="text-2xl font-bold text-white mb-2">✍️ 作文提升</h1>
           <p className="text-slate-400 mb-6">AI批改作文，多维度评分，提升写作能力</p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2">
               <Card>
                 <h3 className="text-lg font-bold text-indigo-400 mb-4">📝 填写作文信息</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">年级</label>
-                      <select
-                        value={customGrade || grade}
-                        onChange={(e) => { setCustomGrade(e.target.value); setGrade('') }}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm"
-                      >
-                        <option value="">请选择</option>
-                        {gradeGroups.map(group => (
-                          <optgroup key={group.label} label={group.label}>
-                            {group.grades.map(g => (
-                              <option key={g} value={g}>{g}</option>
-                            ))}
-                          </optgroup>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">作文类型</label>
-                      <select value={essayType} onChange={(e) => setEssayType(e.target.value)} className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white">
-                        <option value="">请选择</option>
-                        {availableEssayTypes.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                    </div>
-                  </div>
-
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                   <div>
+                    <label className="block text-sm text-slate-400 mb-1">年级</label>
+                    <select
+                      value={customGrade || grade}
+                      onChange={(e) => { setCustomGrade(e.target.value); setGrade('') }}
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm"
+                    >
+                      <option value="">请选择</option>
+                      {gradeGroups.map(group => (
+                        <optgroup key={group.label} label={group.label}>
+                          {group.grades.map(g => (
+                            <option key={g} value={g}>{g}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">作文类型</label>
+                    <select value={essayType} onChange={(e) => setEssayType(e.target.value)} className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white">
+                      <option value="">请选择</option>
+                      {availableEssayTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-span-2 md:col-span-1 xl:col-span-2">
                     <label className="block text-sm text-slate-400 mb-1">作文题目（可选）</label>
                     <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="如：难忘的一件事" className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500" />
                   </div>
-
-                  <div>
+                  <div className="col-span-2 md:col-span-3 xl:col-span-4">
                     <div className="flex justify-between items-center mb-1">
                       <label className="block text-sm text-slate-400">作文内容</label>
                       <div className="flex gap-3 text-xs text-slate-500">
@@ -194,21 +190,22 @@ export default function EssayPage() {
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
                       placeholder="粘贴或输入你的作文..."
-                      className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white min-h-[200px] placeholder:text-slate-500"
+                      className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white min-h-[150px] placeholder:text-slate-500"
                     />
                   </div>
-
-                  <Button onClick={analyze} variant="primary" className="w-full" disabled={loading}>
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        AI正在批改...
-                      </span>
-                    ) : '🔍 开始批改'}
-                  </Button>
+                  <div className="col-span-2 md:col-span-3 xl:col-span-4">
+                    <Button onClick={analyze} variant="primary" className="w-full" disabled={loading}>
+                      {loading ? (
+                        <span className="flex items-center gap-2">
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          AI正在批改...
+                        </span>
+                      ) : '🔍 开始批改'}
+                    </Button>
+                  </div>
                 </div>
               </Card>
             </div>

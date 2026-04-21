@@ -170,73 +170,75 @@ export default function PointsPage() {
           <h1 className="text-2xl font-bold text-white mb-2">🎯 考点覆盖检测</h1>
           <p className="text-slate-400 mb-6">上传考试大纲或教材目录，AI智能提取考点并评估掌握程度</p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2">
               <Card>
                 <h3 className="text-lg font-bold text-indigo-400 mb-4">📝 填写信息</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">年级</label>
-                      <select
-                        value={customGrade || grade}
-                        onChange={(e) => { setCustomGrade(e.target.value); setGrade('') }}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm"
-                      >
-                        <option value="">请选择</option>
-                        {gradeGroups.map(group => (
-                          <optgroup key={group.label} label={group.label}>
-                            {group.grades.map(g => (
-                              <option key={g} value={g}>{g}</option>
-                            ))}
-                          </optgroup>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">学科</label>
-                      <select
-                        value={subject}
-                        onChange={(e) => setSubject(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm"
-                      >
-                        <option value="">请选择</option>
-                        {availableSubjects.map(s => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-                    </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">年级</label>
+                    <select
+                      value={customGrade || grade}
+                      onChange={(e) => { setCustomGrade(e.target.value); setGrade('') }}
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm"
+                    >
+                      <option value="">请选择</option>
+                      {gradeGroups.map(group => (
+                        <optgroup key={group.label} label={group.label}>
+                          {group.grades.map(g => (
+                            <option key={g} value={g}>{g}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">学科</label>
+                    <select
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm"
+                    >
+                      <option value="">请选择</option>
+                      {availableSubjects.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
                   </div>
 
-                  <UploadZone
-                    onUpload={handleUpload}
-                    text="上传考试大纲或教材目录"
-                    subtext="支持图片 / PDF / Word 格式"
-                    loading={loading}
-                  />
+                  <div className="col-span-2 md:col-span-4 xl:col-span-3">
+                    <UploadZone
+                      onUpload={handleUpload}
+                      text="上传考试大纲或教材目录"
+                      subtext="支持图片 / PDF / Word 格式"
+                      loading={loading}
+                    />
+                  </div>
 
-                  <div className="text-center text-slate-500 text-sm">或 直接粘贴文字</div>
+                  <div className="col-span-2 md:col-span-4 xl:col-span-5">
+                    <textarea
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      placeholder="粘贴考试大纲、教材目录或知识点清单..."
+                      className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white min-h-[80px] placeholder:text-slate-500 text-sm"
+                    />
+                  </div>
 
-                  <textarea
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder="粘贴考试大纲、教材目录或知识点清单..."
-                    className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white min-h-[120px] placeholder:text-slate-500"
-                  />
-
-                  <Button onClick={checkPoints} variant="primary" className="w-full" disabled={loading}>
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        AI正在分析考点...
-                      </span>
-                    ) : (
-                      '🚀 开始分析考点'
-                    )}
-                  </Button>
+                  <div className="col-span-2 md:col-span-4 xl:col-span-5">
+                    <Button onClick={checkPoints} variant="primary" className="w-full" disabled={loading}>
+                      {loading ? (
+                        <span className="flex items-center gap-2">
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          AI正在分析考点...
+                        </span>
+                      ) : (
+                        '🚀 开始分析考点'
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </Card>
             </div>
