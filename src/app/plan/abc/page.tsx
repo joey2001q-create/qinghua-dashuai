@@ -74,6 +74,8 @@ export default function ABCPage() {
   const [confidence, setConfidence] = useState(5)
   const [analysisResult, setAnalysisResult] = useState('')
   const [loading, setLoading] = useState(false)
+  const [planWeeks, setPlanWeeks] = useState(4)
+  const [dailyHours, setDailyHours] = useState(2)
 
   const availableSubjects = gradeSubjects[gradeGroup] || subjects
 
@@ -178,7 +180,14 @@ export default function ABCPage() {
       const response = await fetch('/api/abc-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ goals: calculatedGoals, grade: currentGrade, gradeGroup }),
+        body: JSON.stringify({ 
+          goals: calculatedGoals, 
+          grade: currentGrade, 
+          gradeGroup,
+          planWeeks,
+          dailyHours,
+          totalWeeklyHours: planWeeks * dailyHours * 7
+        }),
       })
       if (!response.ok) throw new Error('请求失败')
       const reader = response.body?.getReader()
@@ -218,6 +227,9 @@ export default function ABCPage() {
 
 ## 基本信息
 - 年级：${currentGrade}（${gradeGroup}）
+- 计划周期：${planWeeks}周
+- 每日学习时长：${dailyHours}小时
+- 每周学习时间：${dailyHours * 7}小时
 
 ## 各科目目标
 
@@ -230,7 +242,7 @@ ${calculatedGoals.map(g => `| ${g.subject} | ${g.fullScore} | ${g.lastScore} | $
 - 预期总提分：+${Math.round(totalImprovement * 10) / 10}
 - 平均信心指数：${goals.length > 0 ? (goals.reduce((sum, g) => sum + g.confidence, 0) / goals.length).toFixed(1) : 0}
 
-${analysisResult ? `## AI分析\n\n${analysisResult}` : ''}
+${analysisResult ? `## AI分析与学习计划\n\n${analysisResult}` : ''}
 `
 
   return (
@@ -345,6 +357,32 @@ ${analysisResult ? `## AI分析\n\n${analysisResult}` : ''}
                       {confidence}
                     </span>
                   </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">计划周数</label>
+                  <select
+                    value={planWeeks}
+                    onChange={(e) => setPlanWeeks(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 8, 10, 12].map(w => (
+                      <option key={w} value={w}>{w} 周</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">每日学习时长</label>
+                  <select
+                    value={dailyHours}
+                    onChange={(e) => setDailyHours(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
+                  >
+                    {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6].map(h => (
+                      <option key={h} value={h}>{h} 小时</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <Button onClick={addGoal} variant="primary">+ 添加科目</Button>

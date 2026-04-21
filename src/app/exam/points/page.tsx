@@ -61,10 +61,17 @@ export default function PointsPage() {
         const response = await fetch('/api/ocr', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64 }),
+          body: JSON.stringify({ 
+            image: base64, 
+            fileType: file.type || file.name 
+          }),
         })
         const data = await response.json()
-        setText(data.text)
+        if (data.error && !data.text) {
+          alert(data.error)
+        } else {
+          setText(data.text)
+        }
       } catch (error) {
         console.error(error)
         alert('OCR识别失败')
@@ -217,8 +224,8 @@ export default function PointsPage() {
 
                   <UploadZone
                     onUpload={handleUpload}
-                    text="上传考试大纲或教材目录截图"
-                    subtext="JPG / PNG 格式"
+                    text="上传考试大纲或教材目录"
+                    subtext="支持图片 / PDF / Word 格式"
                     loading={loading}
                   />
 

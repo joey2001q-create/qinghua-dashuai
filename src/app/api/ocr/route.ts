@@ -1,58 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { recognizeFile, recognizeImage, recognizeTable } from '@/lib/baidu-ocr'
 
-const PADDLE_OCR_URL = process.env.PADDLE_OCR_URL || 'http://localhost:8868/predict'
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const { image } = await request.json()
-    
+    const body = await request.json()
+    const { image, fileType, detectTable } = body
+
     if (!image) {
-      return NextResponse.json({ text: '' }, { status: 400 })
+      return NextResponse.json({ text: '', error: 'No image provided' }, { status: 400 })
     }
 
-    const base64Data = image.includes(',') ? image.split(',')[1] : image
+    let result
 
-    const response = await fetch(PADDLE_OCR_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        images: [base64Data],
-      }),
+    if (fileType) {
+      result = await recognizeFile(image, fileType)
+    } else if (detectTable) {
+      result = await recognizeTable(image)
+    } else {
+      result = await recognizeImage(image)
+    }
+
+    return NextResponse.json({
+      text: result.text,
+      tables: result.tables,
+      hasTable: result.hasTable,
     })
-
-    if (!response.ok) {
-      throw new Error('PaddleOCR request failed')
-    }
-
-    const result = await response.json()
-    
-    let text = ''
-    if (result.results && Array.isArray(result.results)) {
-      text = result.results
-        .map((item: { text?: string; words?: string }) => item.text || item.words || '')
-        .filter(Boolean)
-        .join('\n')
-    } else if (result.data && Array.isArray(result.data)) {
-      text = result.data
-        .map((item: { text?: string; words?: string }) => item.text || item.words || '')
-        .filter(Boolean)
-        .join('\n')
-    } else if (Array.isArray(result)) {
-      text = result
-        .map((item: { text?: string; words?: string }[]) => 
-          item.map((i) => i.text || i.words || '').join('')
-        )
-        .filter(Boolean)
-        .join('\n')
-    }
-
-    return NextResponse.json({ text })
   } catch (error) {
     console.error('OCR API error:', error)
     return NextResponse.json(
-      { text: '', error: 'OCR识别失败' },
+      { text: '', error: 'OCR识别失败，请稍后重试' },
       { status: 500 }
     )
   }

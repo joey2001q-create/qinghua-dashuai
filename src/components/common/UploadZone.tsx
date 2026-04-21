@@ -10,19 +10,22 @@ interface UploadZoneProps {
   progress?: number
   text?: string
   subtext?: string
+  showFileInfo?: boolean
 }
 
 export default function UploadZone({ 
   onUpload, 
-  accept = 'image/*', 
+  accept = 'image/*,.pdf,.doc,.docx', 
   multiple = false,
   loading = false,
   progress = 0,
   text = '点击或拖拽上传',
-  subtext = '支持 JPG / PNG 格式'
+  subtext = '支持图片 / PDF / Word 格式',
+  showFileInfo = true
 }: UploadZoneProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [drag, setDrag] = useState(false)
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
 
   const handleClick = () => {
     inputRef.current?.click()
@@ -31,6 +34,7 @@ export default function UploadZone({
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length > 0) {
+      setUploadedFile(files[0])
       onUpload(files)
     }
   }
@@ -40,8 +44,22 @@ export default function UploadZone({
     setDrag(false)
     const files = Array.from(e.dataTransfer.files)
     if (files.length > 0) {
+      setUploadedFile(files[0])
       onUpload(files)
     }
+  }
+
+  const getFileIcon = (file: File) => {
+    if (file.type.startsWith('image/')) return '🖼️'
+    if (file.type === 'application/pdf') return '📕'
+    if (file.name.endsWith('.doc') || file.name.endsWith('.docx')) return '📄'
+    return '📎'
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B'
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -77,6 +95,14 @@ export default function UploadZone({
       <div className="text-4xl mb-3">📤</div>
       <div className="text-slate-300 text-sm">{text}</div>
       <div className="text-slate-500 text-xs mt-1">{subtext}</div>
+      
+      {showFileInfo && uploadedFile && !loading && (
+        <div className="mt-4 px-4 py-2 bg-slate-700/50 rounded-lg inline-flex items-center gap-2">
+          <span>{getFileIcon(uploadedFile)}</span>
+          <span className="text-slate-300 text-sm truncate max-w-[200px]">{uploadedFile.name}</span>
+          <span className="text-slate-500 text-xs">({formatFileSize(uploadedFile.size)})</span>
+        </div>
+      )}
       
       {loading && progress > 0 && (
         <div className="mt-4">
