@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { AI_CONFIG, callAIStream } from '@/lib/ai-config'
+import { callAIStream } from '@/lib/ai-config'
+import { buildPrompt } from '@/lib/prompt-builder'
+import { globalMetricsCollector, evaluateOutputQuality } from '@/lib/quality-metrics'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -8,58 +10,33 @@ export async function POST(request: NextRequest) {
   try {
     const { grade, subject, topic, goal } = await request.json()
 
-    const prompt = `你是清华大帅，一位经验丰富的${grade}${subject}老师。学生要预习"${topic}"这个知识点。
+    const prompt = buildPrompt('preview', {
+      grade,
+      subject,
+      topic,
+      goal: goal || ''
+    })
 
-【学生信息】
-- 年级：${grade}
-- 学科：${subject}
-- 预习内容：${topic}
-${goal ? `- 预习目标：${goal}` : ''}
-
-【输出格式要求 - 预习导学案】
-
-## 🎯 学习目标
-明确本次预习需要掌握的核心目标
-
-## 📖 知识点讲解
-用简洁易懂的方式讲解这个知识点，适合${grade}学生的认知水平
-
-## 📝 核心概念
-列出核心概念、公式或定义，用表格或列表清晰展示
-
-## 💡 典型例题
-给出2-3道典型例题，附详细解题步骤
-
-| 题目 | 解题思路 | 答案 |
-|------|----------|------|
-| ... | ... | ... |
-
-## ⚠️ 易错提醒
-列出学生容易犯的错误和注意事项
-
-## 🧠 预习自测
-给出2-3道简单自测题，检验预习效果
-
-## 📚 拓展延伸
-推荐相关的拓展内容或下节课预习方向
-
-【注意事项】
-1. 用学生容易理解的语言
-2. 适合${grade}学生的认知水平
-3. 不要使用特殊字符或下划线命名，使用中文标题
-4. 表格必须使用标准markdown格式，列对齐用|分隔`
+    if (!prompt) {
+      return NextResponse.json({ error: 'Prompt build failed' }, { status: 500 })
+    }
 
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
         try {
+          let fullContent = ''
           for await (const chunk of callAIStream(prompt)) {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`))
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`));
+            fullContent += chunk;
           }
-          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+
+          const qualityMetrics = evaluateOutputQuality('preview', fullContent);
+          globalMetricsCollector.addMetric(qualityMetrics);
         } catch (error) {
           console.error('Stream error:', error)
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: '生成失败' })}\n\n`))
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: '生成失败' })}\n\n`));
         } finally {
           controller.close()
         }

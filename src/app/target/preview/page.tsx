@@ -313,7 +313,7 @@ export default function PreviewPage() {
 
                   <div className="space-y-3 mb-4 max-h-[400px] overflow-y-auto">
                     {chatMessages.length === 0 && (
-      <div className="text-center py-6 text-slate-500 text-sm">
+                      <div className="text-center py-6 text-slate-500 text-sm">
                         输入你的问题，AI老师会为你解答
                       </div>
                     )}

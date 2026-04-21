@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header, Card, Button, MarkdownRenderer } from '@/components/common'
+import { ROLES } from '@/lib/prompts'
 
 const gradeGroups = [
   {
@@ -17,15 +18,6 @@ const gradeGroups = [
     label: '高中',
     grades: ['高一', '高二', '高三']
   }
-]
-
-const roles = [
-  { id: 'math', icon: '📐', name: '数学老师', prompt: '你是一位经验丰富的数学老师，擅长用通俗易懂的方式讲解数学概念和解题方法。' },
-  { id: 'chinese', icon: '📝', name: '语文老师', prompt: '你是一位资深语文老师，擅长阅读理解、作文指导和文言文讲解。' },
-  { id: 'english', icon: '🔤', name: '英语老师', prompt: '你是一位专业英语老师，擅长语法讲解、阅读技巧和写作指导。' },
-  { id: 'science', icon: '🔬', name: '理科老师', prompt: '你是一位理科名师，擅长物理、化学、生物的概念讲解和实验分析。' },
-  { id: 'method', icon: '🧠', name: '学习方法教练', prompt: '你是一位学习方法专家，擅长制定学习计划、时间管理、记忆技巧和考试策略。' },
-  { id: 'psych', icon: '💚', name: '心理辅导师', prompt: '你是一位学生心理辅导师，擅长缓解考试焦虑、提升学习动力和调节学习状态。' },
 ]
 
 const quickQuestions = [
@@ -46,7 +38,7 @@ export default function BuddyPage() {
   const router = useRouter()
   const [grade, setGrade] = useState('')
   const [customGrade, setCustomGrade] = useState('')
-  const [selectedRole, setSelectedRole] = useState(roles[0])
+  const [selectedRole, setSelectedRole] = useState(ROLES[0])
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
@@ -55,6 +47,11 @@ export default function BuddyPage() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  const getSystemPrompt = () => {
+    const finalGrade = customGrade || grade
+    return `${selectedRole.prompt}\n\n学生年级：${finalGrade || '未指定'}\n\n请用简洁清晰的方式回答，适合${finalGrade || '中学'}学生的认知水平。如果涉及解题，请给出详细的解题步骤。`
+  }
 
   const sendMessage = async (text?: string) => {
     const content = text || input.trim()
@@ -67,15 +64,12 @@ export default function BuddyPage() {
     setLoading(true)
 
     try {
-      const finalGrade = customGrade || grade
-      const systemPrompt = `${selectedRole.prompt}\n\n学生年级：${finalGrade || '未指定'}\n\n请用简洁清晰的方式回答，适合${finalGrade || '中学'}学生的认知水平。如果涉及解题，请给出详细的解题步骤。`
-
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-          systemPrompt,
+          systemPrompt: getSystemPrompt(),
         }),
       })
 
@@ -167,7 +161,7 @@ export default function BuddyPage() {
               <Card hover={false}>
                 <h4 className="text-sm font-bold text-slate-300 mb-3">选择角色</h4>
                 <div className="space-y-1">
-                  {roles.map((role) => (
+                  {ROLES.map((role) => (
                     <button key={role.id} onClick={() => { setSelectedRole(role); clearChat() }} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition ${selectedRole.id === role.id ? 'bg-indigo-500/20 text-indigo-300' : 'text-slate-400 hover:bg-slate-700'}`}>
                       <span>{role.icon}</span>
                       <span>{role.name}</span>

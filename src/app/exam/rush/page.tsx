@@ -51,11 +51,12 @@ export default function RushPage() {
   const isUserScrolling = useRef(false)
 
   const currentGradeGroup = gradeGroups.find(g => g.grades.includes(grade))
+  const currentCustomGradeGroup = customGrade ? gradeGroups.find(g => g.grades.includes(customGrade)) : null
   const availableExamTypes = customGrade
-    ? ['期中', '期末', '月考', '模拟考']
+    ? (currentCustomGradeGroup?.examTypes || ['期中', '期末', '月考', '模拟考'])
     : (currentGradeGroup?.examTypes || ['期中', '期末', '月考'])
   const availableSubjects = customGrade
-    ? ['数学', '语文', '英语', '物理', '化学', '历史', '政治', '生物']
+    ? (currentCustomGradeGroup?.subjects || ['数学', '语文', '英语'])
     : (currentGradeGroup?.subjects || ['数学', '语文', '英语'])
 
   useEffect(() => {

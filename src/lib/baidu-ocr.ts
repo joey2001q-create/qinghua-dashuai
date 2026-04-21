@@ -1,9 +1,21 @@
-const BAIDU_API_KEY = 'xgfJNPBXIoVpwhtO3we2r7kP'
-const BAIDU_SECRET_KEY = 'KBxf5h6bszkBSbkJyUgVbwAFbKcuPF3c'
+const BAIDU_API_KEY = process.env.BAIDU_API_KEY || ''
+const BAIDU_SECRET_KEY = process.env.BAIDU_SECRET_KEY || ''
+
+function validateBaiduConfig(): void {
+  if (!BAIDU_API_KEY || !BAIDU_SECRET_KEY) {
+    console.warn('BAIDU_API_KEY or BAIDU_SECRET_KEY is not set. OCR functionality may not work.')
+  }
+}
+
+validateBaiduConfig()
 
 let cachedToken: { token: string; expiresAt: number } | null = null
 
 async function getAccessToken(): Promise<string> {
+  if (!BAIDU_API_KEY || !BAIDU_SECRET_KEY) {
+    throw new Error('Baidu OCR credentials not configured')
+  }
+
   if (cachedToken && cachedToken.expiresAt > Date.now()) {
     return cachedToken.token
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { AI_CONFIG, callAI } from '@/lib/ai-config'
+import { callAI } from '@/lib/ai-config'
+import { buildPrompt } from '@/lib/prompt-builder'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,30 +14,16 @@ export async function POST(request: NextRequest) {
 
     const difficultyDesc = difficultyMap[difficulty] || difficultyMap[1]
 
-    const prompt = `你是一位${grade}${subject}出题专家。请出一道选择题：
+    const prompt = buildPrompt('quiz', {
+      grade,
+      subject,
+      difficultyDesc,
+      knowledge: knowledge || ''
+    })
 
-年级：${grade}
-学科：${subject}
-难度：${difficultyDesc}
-${knowledge ? `知识点范围：${knowledge}` : ''}
-
-请严格按照以下JSON格式输出（不要有其他内容）：
-{
-  "question": "题目内容",
-  "options": ["选项A", "选项B", "选项C", "选项D"],
-  "correctIndex": 0,
-  "explanation": "答案解析",
-  "knowledgePoint": "本题考查的知识点名称",
-  "difficulty": ${difficulty || 1}
-}
-
-要求：
-1. 题目难度符合${difficultyDesc}的要求
-2. 题目符合${grade}学生的认知水平
-3. 选项要有迷惑性，干扰项要合理
-4. 解析要详细说明解题思路和方法
-5. correctIndex是正确答案的索引（0-3）
-6. knowledgePoint是简洁的知识点名称（2-6个字）`
+    if (!prompt) {
+      return NextResponse.json({ error: 'Prompt build failed' }, { status: 500 })
+    }
 
     const content = await callAI(prompt)
 

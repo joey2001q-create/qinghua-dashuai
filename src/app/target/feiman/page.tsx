@@ -243,7 +243,8 @@ export default function FeimanPage() {
 ${introContent}
 
 ## 讲解过程
-${messages.map((m, i) => `${m.role === 'user' ? '**我的讲解**' : '**AI反馈**'}：\n${m.content}`).join('\n\n')}
+${messages.map((m, i) => `${m.role === 'user' ? '**我的讲解**' : '**AI反馈**'}：
+${m.content}`).join('\n\n')}
 
 ## 理解度变化
 ${understandingHistory.map((s, i) => `第${i + 1}轮：${'⭐'.repeat(s)}${'☆'.repeat(5 - s)}（${s}/5）`).join('\n')}
@@ -343,7 +344,7 @@ ${understandingHistory.map((s, i) => `第${i + 1}轮：${'⭐'.repeat(s)}${'☆'
                     {phase === 1 && !loading && (
                       <div className="mt-4 p-4 bg-amber-500/10 rounded-xl border border-amber-500/30">
                         <p className="text-amber-400 font-medium mb-1">🎯 现在轮到你了！</p>
-                        <p className="text-sm text-slate-300">请用自己的话讲解&ldquo;{topic}&rdquo;这个知识点，就像在教一个完全不懂的同学一样。</p>
+                        <p className="text-sm text-slate-300">请用自己的话讲解&quot;{topic}&quot;这个知识点，就像在教一个完全不懂的同学一样。</p>
                         <Button onClick={() => setPhase(2)} variant="primary" className="mt-3">开始讲解 →</Button>
                       </div>
                     )}

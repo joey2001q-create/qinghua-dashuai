@@ -6,7 +6,7 @@ describe('UploadZone', () => {
   it('should render default text', () => {
     render(<UploadZone onUpload={() => {}} />)
     expect(screen.getByText('点击或拖拽上传')).toBeInTheDocument()
-    expect(screen.getByText('支持 JPG / PNG 格式')).toBeInTheDocument()
+    expect(screen.getByText('支持图片 / PDF / Word 格式')).toBeInTheDocument()
   })
 
   it('should render custom text', () => {
