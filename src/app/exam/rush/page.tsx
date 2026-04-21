@@ -10,21 +10,22 @@ const gradeGroups = [
   {
     label: '小学',
     grades: ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级'],
-    examTypes: ['期中', '期末', '月考', '小升初']
+    examTypes: ['期中', '期末', '月考', '小升初'],
+    subjects: ['数学', '语文', '英语']
   },
   {
     label: '初中',
     grades: ['初一', '初二', '初三'],
-    examTypes: ['期中', '期末', '月考', '中考一模', '中考二模', '中考']
+    examTypes: ['期中', '期末', '月考', '中考一模', '中考二模', '中考'],
+    subjects: ['数学', '语文', '英语', '物理', '化学', '历史', '政治', '生物']
   },
   {
     label: '高中',
     grades: ['高一', '高二', '高三'],
-    examTypes: ['期中', '期末', '月考', '高考一模', '高考二模', '高考']
+    examTypes: ['期中', '期末', '月考', '高考一模', '高考二模', '高考'],
+    subjects: ['数学', '语文', '英语', '物理', '化学', '历史', '政治', '生物']
   }
 ]
-
-const subjects = ['数学', '语文', '英语', '物理', '化学', '历史', '政治', '生物']
 
 interface SubjectScore {
   subject: Subject
@@ -50,9 +51,12 @@ export default function RushPage() {
   const isUserScrolling = useRef(false)
 
   const currentGradeGroup = gradeGroups.find(g => g.grades.includes(grade))
-  const availableExamTypes = customGrade 
-    ? ['期中', '期末', '月考', '模拟考'] 
+  const availableExamTypes = customGrade
+    ? ['期中', '期末', '月考', '模拟考']
     : (currentGradeGroup?.examTypes || ['期中', '期末', '月考'])
+  const availableSubjects = customGrade
+    ? ['数学', '语文', '英语', '物理', '化学', '历史', '政治', '生物']
+    : (currentGradeGroup?.subjects || ['数学', '语文', '英语'])
 
   useEffect(() => {
     if (result && resultRef.current && !isUserScrolling.current) {
@@ -250,7 +254,7 @@ export default function RushPage() {
                 <Card>
                   <h3 className="text-lg font-bold text-indigo-400 mb-4">📐 选择科目（1-3科）</h3>
                   <div className="grid grid-cols-4 gap-2 mb-4">
-                    {subjects.map((s) => (
+                    {availableSubjects.map((s) => (
                       <button
                         key={s}
                         onClick={() => toggleSubject(s)}
