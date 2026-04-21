@@ -31,7 +31,7 @@ export default function TargetPage() {
     <div className="min-h-screen bg-slate-900">
       <Header />
       
-      <main className="pt-20 pb-8 px-4">
+      <main className="pt-20 pb-24 px-4">
         <div className="max-w-4xl mx-auto">
           <button 
             onClick={() => router.push('/')}

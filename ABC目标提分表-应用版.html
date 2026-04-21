@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABC目标提分表</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+</style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const calcATargets = (subs, target) => {
+  const cur = subs.reduce((a,b) => a + b.currentScore, 0);
+  const gap = target - cur;
+  if (gap <= 0) return subs.map(s => ({...s, aTarget: s.currentScore}));
+  const w = subs.map(s => ({...s, room: s.fullMark - s.currentScore, weight: (s.fullMark - s.currentScore) * s.interest}));
+  let alloc = new Array(subs.length).fill(0);
+  let rem = gap;
+  while (rem > 0) {
+    const tw = w.reduce((a,w,i) => a + (w.room > alloc[i] ? w.weight : 0), 0);
+    if (tw === 0) break;
+    for (let i = 0; i < w.length; i++) {
+      if (w[i].room > alloc[i]) {
+        const add = Math.min(w[i].room - alloc[i], rem * w[i].weight / tw);
+        alloc[i] += add; rem -= add;
+      }
+    }
+    if (rem < 0.1) break;
+  }
+  let intA = alloc.map(Math.floor);
+  let rems = alloc.map((v,i) => ({i, rem: v - intA[i], room: w[i].room - intA[i]}));
+  let un = Math.round(gap - intA.reduce((a,b) => a+b, 0));
+  rems.sort((a,b) => b.rem - a.rem);
+  for (let n = 0; n < un; n++) {
+    for (let j = 0; j < rems.length; j++) {
+      if (rems[j].room > 0) { intA[rems[j].i]++; rems[j].room--; break; }
+    }
+  }
+  return subs.map((s,i) => ({...s, aTarget: s.currentScore + intA[i]}));
+};
+
+const calcB = (subs) => subs.map(s => {
+  const gap = s.aTarget - s.currentScore;
+  const inc = parseFloat((gap * s.confidence / 10).toFixed(1));
+  return {...s, acGap: gap, scoreIncrease: inc, bTarget: parseFloat((s.currentScore + inc).toFixed(1))};
+});
+
+const Icon = ({ d }) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>;
+
+const Bubble = ({ role, text }) => (
+  <div className={`flex ${role==='user'?'justify-end':'justify-start'}`}>
+    <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm ${role==='user'?'bg-blue-500 text-white':'bg-white border text-gray-800'} shadow-sm`} style={{whiteSpace:'pre-wrap'}}>{text}</div>
+  </div>
+);
+
+const StepBar = ({ step }) => {
+  const labels = ['学科','C目标','兴趣','A总分','A分配','信心','B目标','结果'];
+  return (
+    <div className="flex gap-1 p-2 bg-white border-b overflow-x-auto">
+      {labels.map((l,i) => (
+        <div key={i} className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap ${step===i+1?'bg-blue-600 text-white':step>i+1?'bg-green-100 text-green-700':'bg-gray-100 text-gray-400'}`}>
+          <span className="mr-1">{i+1}</span>{l}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const Step1 = ({ setSubs, setStep, addMsg }) => {
+  const [inps, setInps] = useState([{n:'',f:150}]);
+  const add = () => setInps([...inps,{n:'',f:100}]);
+  const chg = (i,f,v) => { const ni=[...inps]; ni[i][f]=v; setInps(ni); };
+  const rm = (i) => setInps(inps.filter((_,j)=>j!==i));
+  const submit = () => {
+    const valid = inps.filter(x=>x.n.trim()&&x.f>0);
+    if (!valid.length) return alert('至少填一个科目');
+    const ns = valid.map(x=>({name:x.n.trim(),fullMark:Number(x.f),currentScore:0,interest:5,aTarget:0,acGap:0,confidence:5,scoreIncrease:0,bTarget:0}));
+    setSubs(ns);
+    addMsg('user','科目：'+ns.map(s=>s.name+'('+s.fullMark+'分)').join('、'));
+    setStep(2);
+    addMsg('ai','好，第2步：请填各科当前分数（C目标）。');
+  };
+  return (
+    <div className="bg-white p-4 rounded-xl border max-w-lg mx-auto shadow-sm">
+      <h3 className="font-semibold mb-4">第1步：填学科与满分</h3>
+      {inps.map((v,i)=>(
+        <div key={i} className="flex gap-2 mb-2">
+          <input className="flex-1 border rounded p-2" placeholder="科目名" value={v.n} onChange={e=>chg(i,'n',e.target.value)}/>
+          <input type="number" className="w-20 border rounded p-2 text-center" value={v.f} onChange={e=>chg(i,'f',e.target.value)}/>
+          <span className="self-center text-gray-400">分</span>
+          {inps.length>1&&<button onClick={()=>rm(i)} className="text-red-500">✕</button>}
+        </div>
+      ))}
+      <div className="flex gap-2 mt-3">
+        <button onClick={add} className="flex-1 bg-blue-50 text-blue-600 py-2 rounded">+ 学科</button>
+        <button onClick={submit} className="flex-1 bg-blue-600 text-white py-2 rounded">提交</button>
+      </div>
+    </div>
+  );
+};
+
+const Step2 = ({ subs, setSubs, setStep, setSubIdx, addMsg }) => {
+  const [sc, setSc] = useState(subs.map(()=>''));
+  const submit = () => {
+    if (sc.some(s=>s==='')) return alert('填完所有分数');
+    const updated = subs.map((s,i)=>({...s,currentScore:Number(sc[i])}));
+    setSubs(updated);
+    const tot = updated.reduce((a,b)=>a+b.currentScore,0);
+    addMsg('user','当前：'+updated.map(s=>s.name+':'+s.currentScore+'分').join('、')+'，合计'+tot+'分');
+    setStep(3); setSubIdx(0);
+    addMsg('ai','收到，总分'+tot+'。第3步：评各科兴趣度(1-10)，'+updated[0].name+'几分？');
+  };
+  return (
+    <div className="bg-white p-4 rounded-xl border max-w-lg mx-auto shadow-sm">
+      <h3 className="font-semibold mb-4">第2步：填当前分数(C目标)</h3>
+      {subs.map((s,i)=>(
+        <div key={i} className="flex justify-between bg-gray-50 p-2 rounded mb-2">
+          <span>{s.name} <span className="text-gray-400 text-sm">满分{s.fullMark}</span></span>
+          <div className="flex gap-1">
+            <input type="number" className="w-20 border rounded p-1 text-center" value={sc[i]} onChange={e=>{const ns=[...sc];ns[i]=e.target.value;setSc(ns);}}/>
+            <span className="self-center text-gray-400">分</span>
+          </div>
+        </div>
+      ))}
+      <button onClick={submit} className="w-full mt-2 bg-blue-600 text-white py-2 rounded">提交</button>
+    </div>
+  );
+};
+
+const Slider = ({ type, subs, subIdx, setSubs, setSubIdx, setStep, addMsg }) => {
+  const [val, setVal] = useState(5);
+  const cur = subs[subIdx];
+  const label = type==='interest'?'兴趣度':'信心指数';
+  const submit = () => {
+    const updated = [...subs];
+    if (type==='interest') updated[subIdx].interest=val;
+    else updated[subIdx].confidence=val;
+    setSubs(updated);
+    addMsg('user',cur.name+'的'+label+'：'+val+'分');
+    if (subIdx < subs.length-1) {
+      setSubIdx(subIdx+1);
+      if (type==='interest') addMsg('ai',subs[subIdx+1].name+'的兴趣度？');
+      else addMsg('ai',subs[subIdx+1].name+'信心？差距'+subs[subIdx+1].aTarget+'分');
+    } else {
+      setSubIdx(0);
+      if (type==='interest') { setStep(4); addMsg('ai','兴趣完成。第4步：A目标总分多少？'); }
+      else { const fin=calcB(updated); setSubs(fin); setStep(8); addMsg('ai','完成！B目标已算好，查看结果表。'); }
+    }
+    setVal(5);
+  };
+  return (
+    <div className="bg-white p-5 rounded-xl border max-w-md mx-auto shadow-sm text-center">
+      <h3 className="font-semibold mb-1">【{cur.name}】</h3>
+      <p className="text-gray-500 mb-4">{label}</p>
+      <span className="text-5xl font-bold text-blue-600">{val}<span className="text-xl text-gray-400">/10</span></span>
+      <input type="range" min="1" max="10" value={val} onChange={e=>setVal(Number(e.target.value))} className="w-full my-4 accent-blue-600"/>
+      <div className="flex justify-between text-xs text-gray-400 mb-2"><span>1低</span><span>5中</span><span>10高</span></div>
+      {type==='confidence'&&<div className="text-orange-500 text-sm mb-2">差距：+{cur.aTarget-cur.currentScore}分</div>}
+      <button onClick={submit} className="w-full bg-blue-600 text-white py-2 rounded">确认</button>
+    </div>
+  );
+};
+
+const Step4 = ({ subs, setSubs, setStep, addMsg }) => {
+  const [tgt, setTgt] = useState('');
+  const cur = subs.reduce((a,b)=>a+b.currentScore,0);
+  const submit = () => {
+    const n = Number(tgt);
+    if (!tgt||isNaN(n)) return alert('输有效总分');
+    if (n<=cur) return alert('目标要大于当前'+cur);
+    const ns = calcATargets(subs, n);
+    setSubs(ns);
+    addMsg('user','A目标：'+n+'分');
+    setStep(5);
+    addMsg('ai','好！A目标已分配，查看第5步。');
+  };
+  return (
+    <div className="bg-white p-4 rounded-xl border max-w-lg mx-auto shadow-sm">
+      <h3 className="font-semibold mb-4">第4步：设A目标总分</h3>
+      <div className="text-center py-3 bg-blue-50 rounded mb-4">
+        当前：<span className="font-bold text-xl text-blue-600">{cur}</span> 分
+      </div>
+      <div className="flex gap-2 mb-4">
+        <span className="self-center">A目标：</span>
+        <input type="number" className="flex-1 border rounded p-2 text-center font-bold" value={tgt} onChange={e=>setTgt(e.target.value)}/>
+        <span className="self-center">分</span>
+      </div>
+      <button onClick={submit} className="w-full bg-blue-600 text-white py-2 rounded">确认</button>
+    </div>
+  );
+};
+
+const Step5 = ({ subs, setSubIdx, setStep, addMsg }) => {
+  const next = () => { setSubIdx(0); setStep(6); addMsg('ai','第6步：评各科信心指数(1-10)，'+subs[0].name+'几分？'); };
+  return (
+    <div className="bg-white p-4 rounded-xl border max-w-lg mx-auto shadow-sm">
+      <h3 className="font-semibold mb-4 text-green-700">第5步：A目标分配结果</h3>
+      {subs.map((s,i)=>(
+        <div key={i} className="flex justify-between bg-gray-50 p-2 rounded mb-2">
+          <span>{s.name}</span>
+          <span><span className="line-through text-gray-400 mr-2">{s.currentScore}</span>→<span className="font-bold text-green-600 bg-green-50 px-2 rounded">{s.aTarget}</span><span className="text-xs text-gray-400 ml-1">+{s.aTarget-s.currentScore}</span></span>
+        </div>
+      ))}
+      <div className="flex justify-between bg-green-50 p-2 rounded font-bold mt-2">
+        <span>合计</span>
+        <span><span className="text-gray-400">{subs.reduce((a,b)=>a+b.currentScore,0)}</span>→<span className="text-green-600">{subs.reduce((a,b)=>a+b.aTarget,0)}</span></span>
+      </div>
+      <button onClick={next} className="w-full mt-4 bg-green-600 text-white py-2 rounded">确认，进入第6步 →</button>
+    </div>
+  );
+};
+
+const Table = ({ subs }) => (
+  <div className="max-w-4xl mx-auto">
+    <div className="bg-white rounded-xl border-2 border-green-300 shadow-lg overflow-hidden">
+      <div className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-4 text-center">
+        <h2 className="text-xl font-bold">ABC目标提分表</h2>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead><tr className="bg-gray-50">
+            <th className="p-2 text-left">科目</th>
+            <th className="p-2 text-center">C目标<br/><span className="text-xs text-gray-400">(当前)</span></th>
+            <th className="p-2 text-center">A目标</th>
+            <th className="p-2 text-center">AC差距</th>
+            <th className="p-2 text-center">信心</th>
+            <th className="p-2 text-center">B目标<br/><span className="text-xs text-gray-400">(可行)</span></th>
+            <th className="p-2 text-center">本次提分</th>
+          </tr></thead>
+          <tbody>
+            {subs.map((s,i)=>(
+              <tr key={i} className="border-b">
+                <td className="p-2 font-medium">{s.name}</td>
+                <td className="p-2 text-center text-gray-500">{s.currentScore}</td>
+                <td className="p-2 text-center text-blue-600 font-bold">{s.aTarget}<span className="text-xs text-gray-400">/{s.fullMark}</span></td>
+                <td className="p-2 text-center text-purple-600 font-bold">+{s.acGap}</td>
+                <td className="p-2 text-center"><span className="bg-orange-100 text-orange-600 px-2 rounded-full text-xs">{s.confidence}/10</span></td>
+                <td className="p-2 text-center text-green-600 font-bold text-base">{s.bTarget}</td>
+                <td className="p-2 text-center"><span className="bg-teal-100 text-teal-700 px-2 py-0.5 rounded font-bold">+{s.scoreIncrease}</span></td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot><tr className="bg-gray-50 font-bold">
+            <td className="p-2">合计</td>
+            <td className="p-2 text-center">{subs.reduce((a,b)=>a+b.currentScore,0)}</td>
+            <td className="p-2 text-center text-blue-600">{subs.reduce((a,b)=>a+b.aTarget,0)}</td>
+            <td className="p-2 text-center text-purple-600">+{subs.reduce((a,b)=>a+b.acGap,0)}</td>
+            <td className="p-2 text-center">—</td>
+            <td className="p-2 text-center text-green-600">{subs.reduce((a,b)=>a+b.bTarget,0)}</td>
+            <td className="p-2 text-center text-teal-600">+{subs.reduce((a,b)=>a+b.scoreIncrease,0)}</td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>
+    <div className="bg-blue-50 border rounded-xl p-4 mt-4">
+      <h4 className="font-bold mb-2">💡 解读</h4>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div><b>C目标</b>=当前水平(起点)</div>
+        <div><b>A目标</b>=最终目标</div>
+        <div><b>AC差距</b>=需提升总分</div>
+        <div><b>B目标</b>=下一阶段目标</div>
+      </div>
+      <p className="mt-2 text-center text-green-700 font-semibold">建议：先达B目标，再冲A目标！</p>
+    </div>
+  </div>
+);
+
+const App = () => {
+  const [step, setStep] = useState(1);
+  const [subs, setSubs] = useState([]);
+  const [subIdx, setSubIdx] = useState(0);
+  const [msgs, setMsgs] = useState([{role:'ai',text:'👋 欢迎！\n\n步骤：①填学科②C目标③兴趣度④A总分⑤查看A分配⑥信心⑦得B目标⑧结果表\n\n开始第1步！'}]);
+  const endRef = useRef(null);
+  useEffect(() => endRef.current?.scrollIntoView(), [msgs]);
+  const addMsg = (role, text) => setMsgs(m=>[...m,{role,text}]);
+  const reset = () => { setStep(1); setSubs([]); setSubIdx(0); setMsgs([{role:'ai',text:'已重置！重新开始。'}]); };
+  
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 flex justify-between items-center">
+        <h1 className="text-xl font-bold">🎯 ABC目标提分表</h1>
+        <button onClick={reset} className="bg-white/20 px-3 py-1 rounded text-sm">重置</button>
+      </div>
+      <StepBar step={step}/>
+      <div className="p-4 space-y-4">
+        {msgs.map((m,i)=><Bubble key={i} role={m.role} text={m.text}/>)}
+        <div ref={endRef}/>
+        {step===1&&<Step1 setSubs={setSubs} setStep={setStep} addMsg={addMsg}/>}
+        {step===2&&<Step2 subs={subs} setSubs={setSubs} setStep={setStep} setSubIdx={setSubIdx} addMsg={addMsg}/>}
+        {step===3&&<Slider type="interest" subs={subs} subIdx={subIdx} setSubs={setSubs} setSubIdx={setSubIdx} setStep={setStep} addMsg={addMsg}/>}
+        {step===4&&<Step4 subs={subs} setSubs={setSubs} setStep={setStep} addMsg={addMsg}/>}
+        {step===5&&<Step5 subs={subs} setSubIdx={setSubIdx} setStep={setStep} addMsg={addMsg}/>}
+        {step===6&&<Slider type="confidence" subs={subs} subIdx={subIdx} setSubs={setSubs} setSubIdx={setSubIdx} setStep={setStep} addMsg={addMsg}/>}
+        {step===8&&<Table subs={subs}/>}
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

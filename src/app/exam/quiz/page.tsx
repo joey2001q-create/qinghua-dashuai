@@ -203,7 +203,7 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
     <div className="min-h-screen bg-slate-900">
       <Header />
 
-      <main className="pt-20 pb-8 px-4">
+      <main className="pt-20 pb-24 px-4">
         <div className="max-w-5xl mx-auto">
           <Button variant="outline" size="sm" onClick={() => router.push('/exam')} className="mb-4">
             ← 返回考试冲刺

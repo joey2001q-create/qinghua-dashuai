@@ -254,7 +254,7 @@ ${understandingHistory.map((s, i) => `第${i + 1}轮：${'⭐'.repeat(s)}${'☆'
     <div className="min-h-screen bg-slate-900">
       <Header />
 
-      <main className="pt-20 pb-8 px-4">
+      <main className="pt-20 pb-24 px-4">
         <div className="max-w-5xl mx-auto">
           <Button variant="outline" size="sm" onClick={() => router.push('/target')} className="mb-4">
             ← 返回靶向提分

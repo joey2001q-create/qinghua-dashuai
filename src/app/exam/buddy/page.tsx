@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header, Card, Button, MarkdownRenderer } from '@/components/common'
-import { ROLES } from '@/lib/prompts'
+import { ROLE_PROMPTS } from '@/lib/prompts'
 
 const gradeGroups = [
   {
@@ -38,15 +38,28 @@ export default function BuddyPage() {
   const router = useRouter()
   const [grade, setGrade] = useState('')
   const [customGrade, setCustomGrade] = useState('')
-  const [selectedRole, setSelectedRole] = useState(ROLES[0])
+  const [selectedRole, setSelectedRole] = useState(ROLE_PROMPTS[0])
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const isUserScrolling = useRef(false)
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (!isUserScrolling.current && chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [messages])
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.stopPropagation()
+    isUserScrolling.current = true
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.stopPropagation()
+    isUserScrolling.current = true
+  }
 
   const getSystemPrompt = () => {
     const finalGrade = customGrade || grade
@@ -130,7 +143,7 @@ export default function BuddyPage() {
     <div className="min-h-screen bg-slate-900">
       <Header />
 
-      <main className="pt-20 pb-8 px-4">
+      <main className="pt-20 pb-24 px-4">
         <div className="max-w-5xl mx-auto">
           <Button variant="outline" size="sm" onClick={() => router.push('/exam')} className="mb-4">
             ← 返回考试冲刺
@@ -161,7 +174,7 @@ export default function BuddyPage() {
               <Card hover={false}>
                 <h4 className="text-sm font-bold text-slate-300 mb-3">选择角色</h4>
                 <div className="space-y-1">
-                  {ROLES.map((role) => (
+                  {ROLE_PROMPTS.map((role) => (
                     <button key={role.id} onClick={() => { setSelectedRole(role); clearChat() }} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition ${selectedRole.id === role.id ? 'bg-indigo-500/20 text-indigo-300' : 'text-slate-400 hover:bg-slate-700'}`}>
                       <span>{role.icon}</span>
                       <span>{role.name}</span>
@@ -197,7 +210,7 @@ export default function BuddyPage() {
                   )}
                 </div>
 
-                <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2" style={{ maxHeight: 'calc(100vh - 340px)' }}>
+                <div id="chat-container" className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2" style={{ maxHeight: 'calc(100vh - 340px)' }} onWheel={handleWheel} onTouchMove={handleTouchMove}>
                   {messages.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-full text-center">
                       <div className="text-5xl mb-4">{selectedRole.icon}</div>
