@@ -234,3 +234,46 @@ rm -rf node_modules .next
 npm install
 npm run build
 ```
+
+### Node.js 版本不兼容
+错误信息：`For Next.js, Node.js version ">=20.9.0" is required`
+
+解决方案：
+```bash
+# 方法一：使用 n 模块升级
+npm install -g n
+n 20
+hash -r
+node -v
+
+# 方法二：宝塔面板升级
+软件商店 → 搜索 Node.js → 卸载旧版本 → 安装 Node.js 20.x
+
+# 升级后需要删除并重建 PM2 进程
+pm2 delete qinghua-dashuai
+pm2 start npm --name "qinghua-dashuai" -- start
+pm2 save
+```
+
+### Windows 上传后构建失败（原生依赖缺失）
+错误信息：`Cannot find module '@tailwindcss/oxide-linux-x64-gnu'`
+
+原因：Windows 上安装的 node_modules 缺少 Linux 原生依赖
+
+解决方案：
+```bash
+cd /www/wwwroot/qinghua-dashuai
+rm -rf node_modules package-lock.json
+npm install
+npm run build
+pm2 restart qinghua-dashuai
+```
+
+### npm install 速度慢
+```bash
+# 配置国内镜像
+npm config set registry https://registry.npmmirror.com
+
+# 安装完成后可恢复
+npm config set registry https://registry.npmjs.org
+```

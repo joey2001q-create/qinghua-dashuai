@@ -216,48 +216,37 @@ export default function RushPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
-              {step === 1 && (
-                <Card>
-                  <h3 className="text-lg font-bold text-indigo-400 mb-4">📚 选择年级</h3>
-                  <div className="space-y-4">
-                    {gradeGroups.map((group) => (
-                      <div key={group.label}>
-                        <p className="text-sm text-slate-400 mb-2">{group.label}</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {group.grades.map((g) => (
-                            <button
-                              key={g}
-                              onClick={() => { setGrade(g); setCustomGrade('') }}
-                              className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                                grade === g
-                                  ? 'bg-indigo-500 text-white'
-                                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                              }`}
-                            >
-                              {g}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+          {step === 1 && (
+            <Card>
+              <h3 className="text-lg font-bold text-indigo-400 mb-4">📚 选择年级</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">年级</label>
+                  <select
+                    value={customGrade || grade}
+                    onChange={(e) => { setCustomGrade(e.target.value); setGrade('') }}
+                    className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm"
+                  >
+                    <option value="">请选择</option>
+                    {gradeGroups.map(group => (
+                      <optgroup key={group.label} label={group.label}>
+                        {group.grades.map(g => (
+                          <option key={g} value={g}>{g}</option>
+                        ))}
+                      </optgroup>
                     ))}
-                    <div className="pt-2 border-t border-slate-700">
-                      <label className="block text-sm text-slate-400 mb-1">或自定义年级</label>
-                      <input
-                        type="text"
-                        value={customGrade}
-                        onChange={(e) => { setCustomGrade(e.target.value); setGrade('') }}
-                        placeholder="如：大学期末、考研"
-                        className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
-                      />
-                    </div>
-                  </div>
-                  <Button onClick={() => setStep(2)} variant="primary" className="mt-4 w-full" disabled={!canProceed()}>
+                  </select>
+                </div>
+                <div className="flex items-end">
+                  <Button onClick={() => setStep(2)} variant="primary" className="w-full" disabled={!grade && !customGrade}>
                     下一步 →
                   </Button>
-                </Card>
-              )}
+                </div>
+              </div>
+            </Card>
+          )}
 
-              {step === 2 && (
+          {step === 2 && (
                 <Card>
                   <h3 className="text-lg font-bold text-indigo-400 mb-4">📐 选择科目（1-3科）</h3>
                   <div className="grid grid-cols-4 gap-2 mb-4">
