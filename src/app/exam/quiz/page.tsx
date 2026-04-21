@@ -435,7 +435,7 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
                 </div>
               </Card>
             </div>
-          ) : !quiz && !showWrongBook ? (
+          ) : batchQuestions.length === 0 && !showReport ? (
             <>
               <StepBar steps={steps} currentStep={step} />
 
