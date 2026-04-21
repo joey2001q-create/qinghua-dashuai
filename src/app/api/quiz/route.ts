@@ -1,31 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-const API_KEY = '584b8f96b7040464af809e8574ae5d6a:NDQ2NDc3Zjg0MDM4Nzc3MjJiOTZiNjlh'
-const API_URL = 'https://maas-coding-api.cn-huabei-1.xf-yun.com/v2/chat/completions'
-const MODEL_ID = 'astron-code-latest'
-
-async function callAI(prompt: string): Promise<string> {
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: MODEL_ID,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.8,
-      max_tokens: 1500,
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error('AI API request failed')
-  }
-
-  const data = await response.json()
-  return data.choices[0]?.message?.content || ''
-}
+import { AI_CONFIG, callAI } from '@/lib/ai-config'
 
 export async function POST(request: NextRequest) {
   try {

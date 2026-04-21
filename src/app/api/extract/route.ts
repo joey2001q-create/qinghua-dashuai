@@ -1,62 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-const API_KEY = '584b8f96b7040464af809e8574ae5d6a:NDQ2NDc3Zjg0MDM4Nzc3MjJiOTZiNjlh'
-const API_URL = 'https://maas-coding-api.cn-huabei-1.xf-yun.com/v2/chat/completions'
-const MODEL_ID = 'astron-code-latest'
+import { AI_CONFIG, callAIStream } from '@/lib/ai-config'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-async function* callAIStream(prompt: string): AsyncGenerator<string> {
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: MODEL_ID,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-      max_tokens: 4096,
-      stream: true,
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error('AI API request failed')
-  }
-
-  const reader = response.body?.getReader()
-  if (!reader) throw new Error('No response body')
-
-  const decoder = new TextDecoder()
-  let buffer = ''
-
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-
-    buffer += decoder.decode(value, { stream: true })
-    const lines = buffer.split('\n')
-    buffer = lines.pop() || ''
-
-    for (const line of lines) {
-      const trimmed = line.trim()
-      if (!trimmed || !trimmed.startsWith('data: ')) continue
-      if (trimmed === 'data: [DONE]') continue
-
-      const data = trimmed.slice(6)
-      try {
-        const json = JSON.parse(data)
-        const content = json.choices?.[0]?.delta?.content
-        if (content) yield content
-      } catch {
-        // skip
-      }
-    }
-  }
-}
 
 export async function POST(request: NextRequest) {
   try {
