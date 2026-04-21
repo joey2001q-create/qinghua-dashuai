@@ -178,8 +178,17 @@ export default function PointsPage() {
                   <div>
                     <label className="block text-sm text-slate-400 mb-1">年级</label>
                     <select
-                      value={customGrade || grade}
-                      onChange={(e) => { setCustomGrade(e.target.value); setGrade('') }}
+                      value={grade || customGrade}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (gradeGroups.some(g => g.grades.includes(val))) {
+                          setGrade(val)
+                          setCustomGrade('')
+                        } else {
+                          setGrade('')
+                          setCustomGrade(val)
+                        }
+                      }}
                       className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm"
                     >
                       <option value="">请选择</option>
