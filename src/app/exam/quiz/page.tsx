@@ -55,14 +55,15 @@ export default function QuizPage() {
   const [loading, setLoading] = useState(false)
   const [batchCount, setBatchCount] = useState(5)
   const [batchQuestions, setBatchQuestions] = useState<Quiz[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [batchAnswers, setBatchAnswers] = useState<Record<number, number>>({})
+  const [showExplanation, setShowExplanation] = useState(false)
   const [showBatchResults, setShowBatchResults] = useState(false)
   const [correct, setCorrect] = useState(0)
   const [total, setTotal] = useState(0)
   const [difficulty, setDifficulty] = useState(1)
   const [wrongQuestions, setWrongQuestions] = useState<WrongQuestion[]>([])
   const [knowledgeStats, setKnowledgeStats] = useState<Record<string, { correct: number; total: number }>>({})
-  const [showWrongBook, setShowWrongBook] = useState(false)
   const [showReport, setShowReport] = useState(false)
 
   const currentGradeGroup = gradeGroups.find(g => g.grades.includes(grade))
@@ -70,7 +71,7 @@ export default function QuizPage() {
     ? ['数学', '语文', '英语', '物理', '化学', '历史', '政治', '生物']
     : (currentGradeGroup?.subjects || ['数学', '语文', '英语'])
 
-  const steps = ['1️⃣ 年级', '2️⃣ 学科', '3️⃣ 知识模块', '4️⃣ 批量训练']
+  const steps = ['1️⃣ 年级', '2️⃣ 学科', '3️⃣ 知识模块', '4️⃣ 开始训练']
 
   const generateBatchQuizzes = async () => {
     const finalGrade = customGrade || grade
@@ -78,11 +79,13 @@ export default function QuizPage() {
     setBatchQuestions([])
     setBatchAnswers({})
     setShowBatchResults(false)
+    setShowExplanation(false)
     setCorrect(0)
     setTotal(0)
     setWrongQuestions([])
     setKnowledgeStats({})
     setDifficulty(1)
+    setCurrentIndex(0)
 
     try {
       const quizzes: Quiz[] = []
@@ -111,42 +114,46 @@ export default function QuizPage() {
     }
   }
 
-  const handleBatchAnswer = (index: number, answerIndex: number) => {
-    if (showBatchResults) return
-    setBatchAnswers(prev => ({ ...prev, [index]: answerIndex }))
-  }
+  const handleAnswer = (answerIndex: number) => {
+    if (showExplanation) return
+    setBatchAnswers(prev => ({ ...prev, [currentIndex]: answerIndex }))
+    setShowExplanation(true)
 
-  const submitBatchAnswers = () => {
-    if (batchQuestions.length === 0) return
+    const currentQuiz = batchQuestions[currentIndex]
+    const isCorrect = answerIndex === currentQuiz.correctIndex
 
-    let correctCount = 0
-    const newWrongQuestions: WrongQuestion[] = []
-    const newKnowledgeStats: Record<string, { correct: number; total: number }> = {}
-
-    batchQuestions.forEach((quiz, index) => {
-      const userAnswer = batchAnswers[index]
-      if (userAnswer === undefined) return
-
-      const isCorrect = userAnswer === quiz.correctIndex
-      if (isCorrect) {
-        correctCount++
-      } else {
-        newWrongQuestions.push({ ...quiz, selectedIndex: userAnswer })
-      }
-
-      const kp = quiz.knowledgePoint
-      const existing = newKnowledgeStats[kp] || { correct: 0, total: 0 }
-      newKnowledgeStats[kp] = {
-        correct: existing.correct + (isCorrect ? 1 : 0),
-        total: existing.total + 1,
+    const kp = currentQuiz.knowledgePoint
+    setKnowledgeStats(prev => {
+      const existing = prev[kp] || { correct: 0, total: 0 }
+      return {
+        ...prev,
+        [kp]: {
+          correct: existing.correct + (isCorrect ? 1 : 0),
+          total: existing.total + 1,
+        }
       }
     })
+  }
 
-    setCorrect(correctCount)
-    setTotal(batchQuestions.length)
-    setWrongQuestions(newWrongQuestions)
-    setKnowledgeStats(newKnowledgeStats)
-    setShowBatchResults(true)
+  const nextQuestion = () => {
+    const currentQuiz = batchQuestions[currentIndex]
+    const userAnswer = batchAnswers[currentIndex]
+    const isCorrect = userAnswer === currentQuiz.correctIndex
+
+    if (isCorrect) {
+      setCorrect(prev => prev + 1)
+    } else {
+      setWrongQuestions(prev => [...prev, { ...currentQuiz, selectedIndex: userAnswer }])
+    }
+
+    setTotal(prev => prev + 1)
+
+    if (currentIndex < batchQuestions.length - 1) {
+      setCurrentIndex(prev => prev + 1)
+      setShowExplanation(false)
+    } else {
+      setShowBatchResults(true)
+    }
   }
 
   const startChallenge = () => {
@@ -164,17 +171,21 @@ export default function QuizPage() {
     setBatchQuestions([])
     setBatchAnswers({})
     setShowBatchResults(false)
+    setShowExplanation(false)
     setCorrect(0)
     setTotal(0)
     setDifficulty(1)
     setWrongQuestions([])
     setKnowledgeStats({})
-    setShowWrongBook(false)
     setShowReport(false)
+    setCurrentIndex(0)
   }
 
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0
   const finalGrade = customGrade || grade
+  const currentQuiz = batchQuestions[currentIndex]
+  const currentAnswer = batchAnswers[currentIndex]
+  const hasAnswered = currentAnswer !== undefined
 
   const reportContent = `# ${subject}题感训练报告
 
@@ -197,20 +208,18 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
     { name: '答错', value: total - correct },
   ].filter(d => d.value > 0)
 
-  const allAnswered = batchQuestions.length > 0 && batchQuestions.every((_, i) => batchAnswers[i] !== undefined)
-
   return (
     <div className="min-h-screen bg-slate-900">
       <Header />
 
       <main className="pt-20 pb-24 px-4">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <Button variant="outline" size="sm" onClick={() => router.push('/exam')} className="mb-4">
             ← 返回考试冲刺
           </Button>
 
           <h1 className="text-2xl font-bold text-white mb-2">🧠 题感训练</h1>
-          <p className="text-slate-400 mb-6">AI自适应训练，智能调整难度，识别薄弱环节</p>
+          <p className="text-slate-400 mb-6">一题一答，稳扎稳打</p>
 
           {showReport ? (
             <div className="space-y-6">
@@ -302,75 +311,96 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
               <Card>
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-sm text-slate-400">批量训练</span>
-                    <span className={`text-sm font-bold ${difficultyLabels[difficulty].color}`}>
-                      {difficultyLabels[difficulty].emoji} {difficultyLabels[difficulty].label}
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-indigo-500 text-white`}>
+                      {currentIndex + 1}
                     </span>
+                    <span className="text-sm text-slate-400">/ {batchQuestions.length}题</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm text-indigo-400 font-bold">共{batchQuestions.length}题</span>
-                    <span className="text-sm text-emerald-400">{Object.keys(batchAnswers).length}已答</span>
+                    <span className={`text-sm font-bold ${difficultyLabels[currentQuiz?.difficulty || 1].color}`}>
+                      {difficultyLabels[currentQuiz?.difficulty || 1].emoji} {difficultyLabels[currentQuiz?.difficulty || 1].label}
+                    </span>
+                    <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-xs rounded">{currentQuiz?.knowledgePoint}</span>
                   </div>
                 </div>
-                <p className="text-slate-400 text-sm mb-4">请一次性作答所有题目，然后点击"提交答案"查看结果</p>
+
+                <div className="w-full bg-slate-700 rounded-full h-2 mb-4">
+                  <div className="bg-indigo-500 h-2 rounded-full transition-all" style={{ width: `${((currentIndex) / batchQuestions.length) * 100}%` }} />
+                </div>
               </Card>
 
-              {batchQuestions.map((quiz, qIndex) => (
-                <Card key={qIndex} className="mb-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                        batchAnswers[qIndex] !== undefined
-                          ? quiz.correctIndex === batchAnswers[qIndex]
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-red-500 text-white'
-                          : 'bg-slate-600 text-white'
-                      }`}>
-                        {qIndex + 1}
-                      </span>
-                      <span className={`text-xs font-bold ${difficultyLabels[quiz.difficulty].color}`}>
-                        {difficultyLabels[quiz.difficulty].emoji}
-                      </span>
-                    </div>
-                    <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-xs rounded">{quiz.knowledgePoint}</span>
+              <Card>
+                <div className="bg-slate-700/50 rounded-xl p-4 mb-4">
+                  <p className="text-white leading-relaxed text-lg">{currentQuiz?.question}</p>
+                </div>
+
+                <div className="space-y-3">
+                  {currentQuiz?.options.map((opt, oi) => {
+                    const isSelected = currentAnswer === oi
+                    const isCorrect = oi === currentQuiz.correctIndex
+                    const showResult = showExplanation
+
+                    let btnClass = 'bg-slate-700/50 hover:bg-slate-600 text-slate-300'
+                    if (showResult) {
+                      if (isCorrect) {
+                        btnClass = 'bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400'
+                      } else if (isSelected) {
+                        btnClass = 'bg-red-500/20 border-2 border-red-500 text-red-400'
+                      } else {
+                        btnClass = 'bg-slate-700/30 text-slate-500'
+                      }
+                    } else if (isSelected) {
+                      btnClass = 'bg-indigo-500/20 border-2 border-indigo-500 text-indigo-300'
+                    }
+
+                    return (
+                      <button
+                        key={oi}
+                        onClick={() => handleAnswer(oi)}
+                        disabled={showExplanation}
+                        className={`w-full p-4 rounded-lg text-left transition ${btnClass}`}
+                      >
+                        <span className="font-bold mr-2">{String.fromCharCode(65 + oi)}.</span>
+                        {opt}
+                        {showResult && isCorrect && <span className="ml-2">✓</span>}
+                        {showResult && isSelected && !isCorrect && <span className="ml-2">✗</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+              </Card>
+
+              {showExplanation && (
+                <Card className={`border-l-4 ${currentAnswer === currentQuiz.correctIndex ? 'border-l-emerald-500' : 'border-l-red-500'}`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    {currentAnswer === currentQuiz.correctIndex ? (
+                      <span className="text-emerald-400 font-bold text-lg">✓ 回答正确！</span>
+                    ) : (
+                      <span className="text-red-400 font-bold text-lg">✗ 回答错误</span>
+                    )}
                   </div>
-                  <div className="bg-slate-700/50 rounded-xl p-4 mb-3">
-                    <p className="text-white leading-relaxed">{quiz.question}</p>
-                  </div>
-                  <div className="space-y-2">
-                    {quiz.options.map((opt, oi) => {
-                      const isSelected = batchAnswers[qIndex] === oi
-                      return (
-                        <button
-                          key={oi}
-                          onClick={() => handleBatchAnswer(qIndex, oi)}
-                          className={`w-full p-3 rounded-lg text-left transition ${
-                            isSelected
-                              ? 'bg-indigo-500/20 border-2 border-indigo-500 text-indigo-300'
-                              : 'bg-slate-700/50 hover:bg-slate-600 text-slate-300'
-                          }`}
-                        >
-                          {String.fromCharCode(65 + oi)}. {opt}
-                        </button>
-                      )
-                    })}
-                  </div>
+                  {!currentAnswer === currentQuiz.correctIndex && (
+                    <p className="text-slate-300 mb-3">正确答案：{String.fromCharCode(65 + currentQuiz.correctIndex)}. {currentQuiz.options[currentQuiz.correctIndex]}</p>
+                  )}
+                  <p className="text-slate-400 text-sm border-t border-slate-700 pt-3">💡 {currentQuiz.explanation}</p>
                 </Card>
-              ))}
+              )}
 
               <Card>
-                <div className="flex gap-3">
-                  <Button onClick={reset} variant="outline">← 重新选择</Button>
-                  <Button onClick={submitBatchAnswers} variant="primary" className="flex-1" disabled={!allAnswered}>
-                    {allAnswered ? '📊 提交答案' : `请答完所有题目 (${Object.keys(batchAnswers).length}/${batchQuestions.length})`}
-                  </Button>
-                </div>
+                <Button
+                  onClick={nextQuestion}
+                  variant={showExplanation ? "primary" : "outline"}
+                  className="w-full"
+                  disabled={!hasAnswered}
+                >
+                  {!showExplanation ? '请先选择答案' : currentIndex < batchQuestions.length - 1 ? '下一题 →' : '查看结果'}
+                </Button>
               </Card>
             </div>
           ) : showBatchResults && batchQuestions.length > 0 ? (
             <div className="space-y-4">
               <Card>
-                <h3 className="text-lg font-bold text-emerald-400 mb-4">📊 答题结果</h3>
+                <h3 className="text-lg font-bold text-emerald-400 mb-4">📊 本轮答题完成</h3>
                 <div className="grid grid-cols-4 gap-4 mb-6">
                   <div className="text-center p-3 bg-slate-700/30 rounded-lg">
                     <div className="text-2xl font-bold text-indigo-400">{total}</div>
@@ -395,36 +425,26 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
                 </div>
               </Card>
 
-              {batchQuestions.map((quiz, qIndex) => {
-                const userAnswer = batchAnswers[qIndex]
-                const isCorrect = userAnswer === quiz.correctIndex
-                return (
-                  <Card key={qIndex} className={`border-l-4 ${isCorrect ? 'border-l-emerald-500' : 'border-l-red-500'}`}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                        isCorrect ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
-                      }`}>
-                        {qIndex + 1}
-                      </span>
-                      <span className={`text-sm font-bold ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {isCorrect ? '✓ 正确' : '✗ 错误'}
-                      </span>
-                      <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-xs rounded">{quiz.knowledgePoint}</span>
-                    </div>
-                    <div className="bg-slate-700/50 rounded-xl p-4 mb-3">
-                      <p className="text-white leading-relaxed">{quiz.question}</p>
-                    </div>
-                    <div className="space-y-1 mb-2">
-                      {quiz.options.map((opt, oi) => (
-                        <p key={oi} className={`text-sm ${oi === quiz.correctIndex ? 'text-emerald-400' : oi === userAnswer ? 'text-red-400 line-through' : 'text-slate-500'}`}>
-                          {String.fromCharCode(65 + oi)}. {opt} {oi === quiz.correctIndex ? '✓' : oi === userAnswer ? '✗' : ''}
-                        </p>
-                      ))}
-                    </div>
-                    <p className="text-slate-400 text-sm border-t border-slate-700 pt-2">💡 {quiz.explanation}</p>
-                  </Card>
-                )
-              })}
+              {wrongQuestions.length > 0 && (
+                <Card>
+                  <h3 className="text-lg font-bold text-red-400 mb-4">❌ 错题回顾</h3>
+                  <div className="space-y-4">
+                    {wrongQuestions.map((q, i) => (
+                      <div key={i} className="p-4 bg-red-500/5 border border-red-500/20 rounded-lg">
+                        <p className="text-white mb-2">{i + 1}. {q.question}</p>
+                        <div className="space-y-1 mb-2">
+                          {q.options.map((opt, oi) => (
+                            <p key={oi} className={`text-sm ${oi === q.correctIndex ? 'text-emerald-400' : oi === q.selectedIndex ? 'text-red-400 line-through' : 'text-slate-500'}`}>
+                              {String.fromCharCode(65 + oi)}. {opt} {oi === q.correctIndex ? '✓' : oi === q.selectedIndex ? '✗' : ''}
+                            </p>
+                          ))}
+                        </div>
+                        <p className="text-slate-400 text-sm border-t border-slate-700 pt-2">💡 {q.explanation}</p>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
 
               <Card>
                 <div className="flex gap-3">
@@ -435,7 +455,7 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
                 </div>
               </Card>
             </div>
-          ) : batchQuestions.length === 0 && !showReport ? (
+          ) : (
             <>
               <StepBar steps={steps} currentStep={step} />
 
@@ -490,17 +510,17 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
 
               {step === 4 && (
                 <Card>
-                  <h3 className="text-lg font-bold text-indigo-400 mb-4">⚡ 批量训练设置</h3>
+                  <h3 className="text-lg font-bold text-indigo-400 mb-4">⚡ 训练设置</h3>
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <button onClick={() => setMode('quick')} className={`p-6 rounded-xl border-2 transition ${mode === 'quick' ? 'border-indigo-500 bg-indigo-500/10' : 'border-slate-600 hover:border-slate-500'}`}>
                       <div className="text-3xl mb-2">⚡</div>
                       <div className="font-bold text-white">快速模式</div>
-                      <div className="text-sm text-slate-400 mt-1">批量训练，即时反馈</div>
+                      <div className="text-sm text-slate-400 mt-1">一题一答</div>
                     </button>
                     <button onClick={() => setMode('challenge')} className={`p-6 rounded-xl border-2 transition ${mode === 'challenge' ? 'border-indigo-500 bg-indigo-500/10' : 'border-slate-600 hover:border-slate-500'}`}>
                       <div className="text-3xl mb-2">🏆</div>
                       <div className="font-bold text-white">挑战模式</div>
-                      <div className="text-sm text-slate-400 mt-1">连续5题，统一评分</div>
+                      <div className="text-sm text-slate-400 mt-1">连续5题</div>
                     </button>
                   </div>
                   <div className="mb-6">
@@ -528,9 +548,60 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
                 </Card>
               )}
             </>
-          ) : null}
+          )}
         </div>
       </main>
     </div>
   )
 }
+
+/*
+
+// ============ 以下为旧版代码，已注释保留 ============
+
+// 旧版批量显示所有题目
+/*
+const [batchQuestions, setBatchQuestions] = useState<Quiz[]>([])
+const [batchAnswers, setBatchAnswers] = useState<Record<number, number>>({})
+const [showBatchResults, setShowBatchResults] = useState(false)
+
+const handleBatchAnswer = (index: number, answerIndex: number) => {
+  if (showBatchResults) return
+  setBatchAnswers(prev => ({ ...prev, [index]: answerIndex }))
+}
+
+const submitBatchAnswers = () => {
+  if (batchQuestions.length === 0) return
+
+  let correctCount = 0
+  const newWrongQuestions: WrongQuestion[] = []
+  const newKnowledgeStats: Record<string, { correct: number; total: number }> = {}
+
+  batchQuestions.forEach((quiz, index) => {
+    const userAnswer = batchAnswers[index]
+    if (userAnswer === undefined) return
+
+    const isCorrect = userAnswer === quiz.correctIndex
+    if (isCorrect) {
+      correctCount++
+    } else {
+      newWrongQuestions.push({ ...quiz, selectedIndex: userAnswer })
+    }
+
+    const kp = quiz.knowledgePoint
+    const existing = newKnowledgeStats[kp] || { correct: 0, total: 0 }
+    newKnowledgeStats[kp] = {
+      correct: existing.correct + (isCorrect ? 1 : 0),
+      total: existing.total + 1,
+    }
+  })
+
+  setCorrect(correctCount)
+  setTotal(batchQuestions.length)
+  setWrongQuestions(newWrongQuestions)
+  setKnowledgeStats(newKnowledgeStats)
+  setShowBatchResults(true)
+}
+
+const allAnswered = batchQuestions.length > 0 && batchQuestions.every((_, i) => batchAnswers[i] !== undefined)
+//*/

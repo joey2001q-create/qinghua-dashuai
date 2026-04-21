@@ -1,5 +1,177 @@
 'use client'
 
+import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { Header, Card, Button, MarkdownRenderer, LoadingIndicator } from '@/components/common'
+
+export default function AnalysisPage() {
+  const router = useRouter()
+  const [text, setText] = useState('')
+  const [image, setImage] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      if (ev.target?.result) {
+        setImage(ev.target.result as string)
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const analyze = async () => {
+    if (!text.trim() && !image) {
+      alert('请输入题目或上传图片')
+      return
+    }
+
+    setLoading(true)
+    setResult('')
+
+    try {
+      const response = await fetch('/api/weak-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, image }),
+      })
+
+      if (!response.ok) throw new Error('请求失败')
+
+      const reader = response.body?.getReader()
+      if (!reader) throw new Error('无法读取响应')
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed || !trimmed.startsWith('data: ')) continue
+          if (trimmed === 'data: [DONE]') continue
+
+          const data = trimmed.slice(6)
+          try {
+            const json = JSON.parse(data)
+            if (json.content) {
+              setResult((prev) => prev + json.content)
+            }
+          } catch {
+            // skip invalid JSON
+          }
+        }
+      }
+    } catch (error) {
+      console.error(error)
+      alert('分析失败，请重试')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-900">
+      <Header />
+
+      <main className="pt-20 pb-24 px-4">
+        <div className="max-w-3xl mx-auto">
+          <Button variant="outline" size="sm" onClick={() => router.push('/exam')} className="mb-4">
+            ← 返回考试冲刺
+          </Button>
+
+          <h1 className="text-2xl font-bold text-white mb-2">📊 失分原因分析器</h1>
+          <p className="text-slate-400 mb-6">输入题目或拍照上传，AI智能诊断失分原因</p>
+
+          <Card>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">拍照上传</label>
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-slate-600 rounded-xl p-6 text-center cursor-pointer hover:border-indigo-500 transition-colors"
+                >
+                  {image ? (
+                    <img src={image} alt="上传图片" className="max-h-48 mx-auto rounded-lg" />
+                  ) : (
+                    <div className="text-slate-400">
+                      <div className="text-4xl mb-2">📷</div>
+                      <p className="text-sm">点击上传图片</p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                {image && (
+                  <button onClick={() => setImage(null)} className="mt-2 text-sm text-red-400 hover:text-red-300">
+                    删除图片
+                  </button>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">或输入题目</label>
+                <textarea
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="输入你的错题题目..."
+                  className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white min-h-[120px] placeholder:text-slate-500"
+                />
+              </div>
+
+              <Button onClick={analyze} variant="primary" className="w-full" disabled={loading}>
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    AI正在诊断...
+                  </span>
+                ) : '🔍 智能诊断失分原因'}
+              </Button>
+            </div>
+          </Card>
+
+          {(result || loading) && (
+            <Card className="mt-6">
+              <h3 className="text-lg font-bold text-indigo-400 mb-4">📊 诊断结果</h3>
+              <div className="prose prose-invert max-w-none">
+                {loading && !result && <LoadingIndicator text="AI正在分析失分原因..." />}
+                <MarkdownRenderer content={result} />
+                {loading && result && (
+                  <span className="inline-block w-2 h-5 bg-indigo-400 animate-pulse ml-1" />
+                )}
+              </div>
+            </Card>
+          )}
+        </div>
+      </main>
+    </div>
+  )
+}
+
+/*
+
+// ============ 以下为旧版代码，已注释保留 ============
+
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header, Card, Button, MarkdownRenderer, ExportButton, LoadingIndicator } from '@/components/common'
@@ -33,6 +205,8 @@ interface QuestionTypeScore {
 
 const PIE_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
 
+// 旧版 AnalysisPage 组件 - 已注释保留
+/*
 export default function AnalysisPage() {
   const router = useRouter()
   const [grade, setGrade] = useState('')
@@ -372,3 +546,5 @@ export default function AnalysisPage() {
     </div>
   )
 }
+*/
+
