@@ -4,12 +4,12 @@
       "name": "qinghua-dashuai",
       "script": "node_modules/next/dist/bin/next",
       "args": "start",
-      "cwd": "/var/www/qinghua-dashuai",
-      "instances": 2,
-      "exec_mode": "cluster",
+      "cwd": "/www/wwwroot/qinghua-dashuai",
+      "instances": 1,
+      "exec_mode": "fork",
       "autorestart": true,
       "watch": false,
-      "max_memory_restart": "500M",
+      "max_memory_restart": "300M",
       "env": {
         "NODE_ENV": "production",
         "PORT": 3000
