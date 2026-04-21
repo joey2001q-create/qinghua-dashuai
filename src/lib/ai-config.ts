@@ -1,8 +1,7 @@
 export const AI_CONFIG = {
-  API_KEY: '2e1cead4fb8c5945d133fcfb649b98cb:NmZjNjVmNDNkZWYzMGFjMTBiOGFmZmEw',
-  API_URL: 'https://maas-api.cn-huabei-1.xf-yun.com/v2/chat/completions',
-  MODEL_ID: 'xop.deepseekv32',
-  APP_ID: '359f72e6',
+  API_KEY: '7823359434488ac3bb15a321400f225f:NjkwNjVkOGM3MDk5NTc3YTg4ZTUyNmI5',
+  API_URL: 'https://maas-coding-api.cn-huabei-1.xf-yun.com/v2/chat/completions',
+  MODEL_ID: 'astron-code-latest',
 }
 
 export async function* callAIStream(prompt: string): AsyncGenerator<string> {
