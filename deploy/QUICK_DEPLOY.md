@@ -35,7 +35,7 @@ sudo mkdir -p /www/wwwroot/qinghua-dashuai
 cd /www/wwwroot/qinghua-dashuai
 
 # 克隆代码
-git clone https://github.com/joey2001q-create/qinghua-dashuai.git .
+git clone https://gitee.com/Y1zsda23/dev_dashuai.git .
 
 # 安装依赖
 npm install
@@ -103,7 +103,7 @@ sudo mkdir -p /var/log/pm2
 # 下载代码
 sudo mkdir -p /www/wwwroot/qinghua-dashuai
 cd /www/wwwroot/qinghua-dashuai
-git clone https://github.com/joey2001q-create/qinghua-dashuai.git .
+git clone https://gitee.com/Y1zsda23/dev_dashuai.git .
 npm install
 npm run build
 
