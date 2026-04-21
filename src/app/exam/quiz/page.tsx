@@ -53,9 +53,10 @@ export default function QuizPage() {
   const [knowledge, setKnowledge] = useState('')
   const [mode, setMode] = useState<'quick' | 'challenge'>('quick')
   const [loading, setLoading] = useState(false)
-  const [quiz, setQuiz] = useState<Quiz | null>(null)
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
-  const [showResult, setShowResult] = useState(false)
+  const [batchCount, setBatchCount] = useState(5)
+  const [batchQuestions, setBatchQuestions] = useState<Quiz[]>([])
+  const [batchAnswers, setBatchAnswers] = useState<Record<number, number>>({})
+  const [showBatchResults, setShowBatchResults] = useState(false)
   const [correct, setCorrect] = useState(0)
   const [total, setTotal] = useState(0)
   const [difficulty, setDifficulty] = useState(1)
@@ -63,38 +64,45 @@ export default function QuizPage() {
   const [knowledgeStats, setKnowledgeStats] = useState<Record<string, { correct: number; total: number }>>({})
   const [showWrongBook, setShowWrongBook] = useState(false)
   const [showReport, setShowReport] = useState(false)
-  const [challengeQuestions, setChallengeQuestions] = useState(0)
-  const [challengeIndex, setChallengeIndex] = useState(0)
-  const [challengeCorrect, setChallengeCorrect] = useState(0)
 
   const currentGradeGroup = gradeGroups.find(g => g.grades.includes(grade))
   const availableSubjects = customGrade
     ? ['数学', '语文', '英语', '物理', '化学', '历史', '政治', '生物']
     : (currentGradeGroup?.subjects || ['数学', '语文', '英语'])
 
-  const steps = ['1️⃣ 年级', '2️⃣ 学科', '3️⃣ 知识模块', '4️⃣ 模式']
+  const steps = ['1️⃣ 年级', '2️⃣ 学科', '3️⃣ 知识模块', '4️⃣ 批量训练']
 
-  const generateQuiz = async () => {
+  const generateBatchQuizzes = async () => {
     const finalGrade = customGrade || grade
     setLoading(true)
+    setBatchQuestions([])
+    setBatchAnswers({})
+    setShowBatchResults(false)
+    setCorrect(0)
+    setTotal(0)
+    setWrongQuestions([])
+    setKnowledgeStats({})
+    setDifficulty(1)
+
     try {
-      const response = await fetch('/api/quiz', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ grade: finalGrade, subject, knowledge, difficulty }),
-      })
-      const data = await response.json()
-      const quizData: Quiz = {
-        question: data.question,
-        options: data.options,
-        correctIndex: data.correctIndex,
-        explanation: data.explanation,
-        knowledgePoint: data.knowledgePoint || '综合',
-        difficulty: data.difficulty || difficulty,
+      const quizzes: Quiz[] = []
+      for (let i = 0; i < batchCount; i++) {
+        const response = await fetch('/api/quiz', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grade: finalGrade, subject, knowledge, difficulty }),
+        })
+        const data = await response.json()
+        quizzes.push({
+          question: data.question,
+          options: data.options,
+          correctIndex: data.correctIndex,
+          explanation: data.explanation,
+          knowledgePoint: data.knowledgePoint || '综合',
+          difficulty: data.difficulty || difficulty,
+        })
       }
-      setQuiz(quizData)
-      setSelectedIndex(null)
-      setShowResult(false)
+      setBatchQuestions(quizzes)
     } catch (error) {
       console.error(error)
       alert('生成题目失败')
@@ -103,53 +111,47 @@ export default function QuizPage() {
     }
   }
 
-  const handleAnswer = (index: number) => {
-    if (showResult || !quiz) return
-    setSelectedIndex(index)
-    setShowResult(true)
-    const isCorrect = index === quiz.correctIndex
+  const handleBatchAnswer = (index: number, answerIndex: number) => {
+    if (showBatchResults) return
+    setBatchAnswers(prev => ({ ...prev, [index]: answerIndex }))
+  }
 
-    if (isCorrect) {
-      setCorrect(c => c + 1)
-      if (difficulty < 3) setDifficulty(d => d + 1)
-    } else {
-      if (difficulty > 1) setDifficulty(d => d - 1)
-      setWrongQuestions(prev => [...prev, { ...quiz, selectedIndex: index }])
-    }
+  const submitBatchAnswers = () => {
+    if (batchQuestions.length === 0) return
 
-    setKnowledgeStats(prev => {
+    let correctCount = 0
+    const newWrongQuestions: WrongQuestion[] = []
+    const newKnowledgeStats: Record<string, { correct: number; total: number }> = {}
+
+    batchQuestions.forEach((quiz, index) => {
+      const userAnswer = batchAnswers[index]
+      if (userAnswer === undefined) return
+
+      const isCorrect = userAnswer === quiz.correctIndex
+      if (isCorrect) {
+        correctCount++
+      } else {
+        newWrongQuestions.push({ ...quiz, selectedIndex: userAnswer })
+      }
+
       const kp = quiz.knowledgePoint
-      const existing = prev[kp] || { correct: 0, total: 0 }
-      return {
-        ...prev,
-        [kp]: {
-          correct: existing.correct + (isCorrect ? 1 : 0),
-          total: existing.total + 1,
-        }
+      const existing = newKnowledgeStats[kp] || { correct: 0, total: 0 }
+      newKnowledgeStats[kp] = {
+        correct: existing.correct + (isCorrect ? 1 : 0),
+        total: existing.total + 1,
       }
     })
 
-    if (mode === 'challenge') {
-      if (isCorrect) setChallengeCorrect(c => c + 1)
-      setChallengeIndex(i => i + 1)
-    }
-
-    setTotal(t => t + 1)
-  }
-
-  const nextQuestion = () => {
-    if (mode === 'challenge' && challengeIndex >= 5) {
-      setShowReport(true)
-      return
-    }
-    generateQuiz()
+    setCorrect(correctCount)
+    setTotal(batchQuestions.length)
+    setWrongQuestions(newWrongQuestions)
+    setKnowledgeStats(newKnowledgeStats)
+    setShowBatchResults(true)
   }
 
   const startChallenge = () => {
-    setChallengeQuestions(5)
-    setChallengeIndex(0)
-    setChallengeCorrect(0)
-    generateQuiz()
+    setBatchCount(5)
+    generateBatchQuizzes()
   }
 
   const reset = () => {
@@ -159,7 +161,9 @@ export default function QuizPage() {
     setSubject('')
     setKnowledge('')
     setMode('quick')
-    setQuiz(null)
+    setBatchQuestions([])
+    setBatchAnswers({})
+    setShowBatchResults(false)
     setCorrect(0)
     setTotal(0)
     setDifficulty(1)
@@ -167,13 +171,6 @@ export default function QuizPage() {
     setKnowledgeStats({})
     setShowWrongBook(false)
     setShowReport(false)
-    setChallengeIndex(0)
-    setChallengeCorrect(0)
-  }
-
-  const endTraining = () => {
-    setShowReport(true)
-    setQuiz(null)
   }
 
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0
@@ -199,6 +196,8 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
     { name: '答对', value: correct },
     { name: '答错', value: total - correct },
   ].filter(d => d.value > 0)
+
+  const allAnswered = batchQuestions.length > 0 && batchQuestions.every((_, i) => batchAnswers[i] !== undefined)
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -298,6 +297,144 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
                 </Card>
               )}
             </div>
+          ) : batchQuestions.length > 0 && !showBatchResults ? (
+            <div className="space-y-4">
+              <Card>
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-slate-400">批量训练</span>
+                    <span className={`text-sm font-bold ${difficultyLabels[difficulty].color}`}>
+                      {difficultyLabels[difficulty].emoji} {difficultyLabels[difficulty].label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-indigo-400 font-bold">共{batchQuestions.length}题</span>
+                    <span className="text-sm text-emerald-400">{Object.keys(batchAnswers).length}已答</span>
+                  </div>
+                </div>
+                <p className="text-slate-400 text-sm mb-4">请一次性作答所有题目，然后点击"提交答案"查看结果</p>
+              </Card>
+
+              {batchQuestions.map((quiz, qIndex) => (
+                <Card key={qIndex} className="mb-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        batchAnswers[qIndex] !== undefined
+                          ? quiz.correctIndex === batchAnswers[qIndex]
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-red-500 text-white'
+                          : 'bg-slate-600 text-white'
+                      }`}>
+                        {qIndex + 1}
+                      </span>
+                      <span className={`text-xs font-bold ${difficultyLabels[quiz.difficulty].color}`}>
+                        {difficultyLabels[quiz.difficulty].emoji}
+                      </span>
+                    </div>
+                    <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-xs rounded">{quiz.knowledgePoint}</span>
+                  </div>
+                  <div className="bg-slate-700/50 rounded-xl p-4 mb-3">
+                    <p className="text-white leading-relaxed">{quiz.question}</p>
+                  </div>
+                  <div className="space-y-2">
+                    {quiz.options.map((opt, oi) => {
+                      const isSelected = batchAnswers[qIndex] === oi
+                      return (
+                        <button
+                          key={oi}
+                          onClick={() => handleBatchAnswer(qIndex, oi)}
+                          className={`w-full p-3 rounded-lg text-left transition ${
+                            isSelected
+                              ? 'bg-indigo-500/20 border-2 border-indigo-500 text-indigo-300'
+                              : 'bg-slate-700/50 hover:bg-slate-600 text-slate-300'
+                          }`}
+                        >
+                          {String.fromCharCode(65 + oi)}. {opt}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </Card>
+              ))}
+
+              <Card>
+                <div className="flex gap-3">
+                  <Button onClick={reset} variant="outline">← 重新选择</Button>
+                  <Button onClick={submitBatchAnswers} variant="primary" className="flex-1" disabled={!allAnswered}>
+                    {allAnswered ? '📊 提交答案' : `请答完所有题目 (${Object.keys(batchAnswers).length}/${batchQuestions.length})`}
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          ) : showBatchResults && batchQuestions.length > 0 ? (
+            <div className="space-y-4">
+              <Card>
+                <h3 className="text-lg font-bold text-emerald-400 mb-4">📊 答题结果</h3>
+                <div className="grid grid-cols-4 gap-4 mb-6">
+                  <div className="text-center p-3 bg-slate-700/30 rounded-lg">
+                    <div className="text-2xl font-bold text-indigo-400">{total}</div>
+                    <div className="text-xs text-slate-400">总题数</div>
+                  </div>
+                  <div className="text-center p-3 bg-slate-700/30 rounded-lg">
+                    <div className="text-2xl font-bold text-emerald-400">{correct}</div>
+                    <div className="text-xs text-slate-400">答对</div>
+                  </div>
+                  <div className="text-center p-3 bg-slate-700/30 rounded-lg">
+                    <div className="text-2xl font-bold text-red-400">{total - correct}</div>
+                    <div className="text-xs text-slate-400">答错</div>
+                  </div>
+                  <div className="text-center p-3 bg-slate-700/30 rounded-lg">
+                    <div className="text-2xl font-bold text-amber-400">{accuracy}%</div>
+                    <div className="text-xs text-slate-400">正确率</div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button onClick={() => { setShowBatchResults(false); setBatchQuestions([]) }} variant="outline">← 再练一组</Button>
+                  <Button onClick={() => setShowReport(true)} variant="primary" className="flex-1">📊 查看完整报告</Button>
+                </div>
+              </Card>
+
+              {batchQuestions.map((quiz, qIndex) => {
+                const userAnswer = batchAnswers[qIndex]
+                const isCorrect = userAnswer === quiz.correctIndex
+                return (
+                  <Card key={qIndex} className={`border-l-4 ${isCorrect ? 'border-l-emerald-500' : 'border-l-red-500'}`}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        isCorrect ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
+                      }`}>
+                        {qIndex + 1}
+                      </span>
+                      <span className={`text-sm font-bold ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {isCorrect ? '✓ 正确' : '✗ 错误'}
+                      </span>
+                      <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-xs rounded">{quiz.knowledgePoint}</span>
+                    </div>
+                    <div className="bg-slate-700/50 rounded-xl p-4 mb-3">
+                      <p className="text-white leading-relaxed">{quiz.question}</p>
+                    </div>
+                    <div className="space-y-1 mb-2">
+                      {quiz.options.map((opt, oi) => (
+                        <p key={oi} className={`text-sm ${oi === quiz.correctIndex ? 'text-emerald-400' : oi === userAnswer ? 'text-red-400 line-through' : 'text-slate-500'}`}>
+                          {String.fromCharCode(65 + oi)}. {opt} {oi === quiz.correctIndex ? '✓' : oi === userAnswer ? '✗' : ''}
+                        </p>
+                      ))}
+                    </div>
+                    <p className="text-slate-400 text-sm border-t border-slate-700 pt-2">💡 {quiz.explanation}</p>
+                  </Card>
+                )
+              })}
+
+              <Card>
+                <div className="flex gap-3">
+                  <Button onClick={() => generateBatchQuizzes()} variant="orange" className="flex-1" disabled={loading}>
+                    {loading ? '生成中...' : '🔄 再练一组'}
+                  </Button>
+                  <Button onClick={reset} variant="outline">← 重新选择</Button>
+                </div>
+              </Card>
+            </div>
           ) : !quiz && !showWrongBook ? (
             <>
               <StepBar steps={steps} currentStep={step} />
@@ -353,95 +490,43 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
 
               {step === 4 && (
                 <Card>
-                  <h3 className="text-lg font-bold text-indigo-400 mb-4">⚡ 选择训练模式</h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <h3 className="text-lg font-bold text-indigo-400 mb-4">⚡ 批量训练设置</h3>
+                  <div className="grid grid-cols-2 gap-4 mb-6">
                     <button onClick={() => setMode('quick')} className={`p-6 rounded-xl border-2 transition ${mode === 'quick' ? 'border-indigo-500 bg-indigo-500/10' : 'border-slate-600 hover:border-slate-500'}`}>
                       <div className="text-3xl mb-2">⚡</div>
                       <div className="font-bold text-white">快速模式</div>
-                      <div className="text-sm text-slate-400 mt-1">逐题训练，即时反馈</div>
-                      <div className="text-xs text-slate-500 mt-2">难度自适应调整</div>
+                      <div className="text-sm text-slate-400 mt-1">批量训练，即时反馈</div>
                     </button>
                     <button onClick={() => setMode('challenge')} className={`p-6 rounded-xl border-2 transition ${mode === 'challenge' ? 'border-indigo-500 bg-indigo-500/10' : 'border-slate-600 hover:border-slate-500'}`}>
                       <div className="text-3xl mb-2">🏆</div>
                       <div className="font-bold text-white">挑战模式</div>
                       <div className="text-sm text-slate-400 mt-1">连续5题，统一评分</div>
-                      <div className="text-xs text-slate-500 mt-2">测试综合能力</div>
                     </button>
                   </div>
-                  <div className="flex gap-3 mt-4">
+                  <div className="mb-6">
+                    <label className="block text-sm text-slate-400 mb-2">每组题目数量</label>
+                    <div className="flex gap-2">
+                      {[5, 10, 15, 20].map(n => (
+                        <button
+                          key={n}
+                          onClick={() => setBatchCount(n)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                            batchCount === n ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                          }`}
+                        >
+                          {n}题
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
                     <Button onClick={() => setStep(3)} variant="outline">← 上一步</Button>
-                    <Button onClick={mode === 'challenge' ? startChallenge : generateQuiz} variant="orange" className="flex-1" disabled={loading}>
+                    <Button onClick={mode === 'challenge' ? startChallenge : generateBatchQuizzes} variant="orange" className="flex-1" disabled={loading}>
                       {loading ? '生成中...' : '🚀 开始训练'}
                     </Button>
                   </div>
                 </Card>
               )}
-            </>
-          ) : quiz ? (
-            <>
-              <Card className="mb-4">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-slate-400">题感训练</span>
-                    <span className={`text-sm font-bold ${difficultyLabels[difficulty].color}`}>
-                      {difficultyLabels[difficulty].emoji} {difficultyLabels[difficulty].label}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {mode === 'challenge' && (
-                      <span className="text-sm text-slate-400">{challengeIndex}/5</span>
-                    )}
-                    <span className="text-sm text-indigo-400 font-bold">第{total + 1}题</span>
-                  </div>
-                </div>
-                <div className="bg-slate-700/50 rounded-xl p-4 mb-4">
-                  <p className="text-white leading-relaxed">{quiz.question}</p>
-                  <span className="inline-block mt-2 px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-xs rounded">{quiz.knowledgePoint}</span>
-                </div>
-                <div className="space-y-2">
-                  {quiz.options.map((opt, i) => (
-                    <button key={i} onClick={() => handleAnswer(i)} disabled={showResult} className={`w-full p-4 rounded-xl text-left transition ${showResult ? i === quiz.correctIndex ? 'bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400' : i === selectedIndex ? 'bg-red-500/20 border-2 border-red-500 text-red-400' : 'bg-slate-700/50 text-slate-300' : 'bg-slate-700/50 hover:bg-slate-600 text-slate-300'}`}>
-                      {String.fromCharCode(65 + i)}. {opt}
-                    </button>
-                  ))}
-                </div>
-                {showResult && (
-                  <div className={`mt-4 p-4 rounded-xl ${selectedIndex === quiz.correctIndex ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
-                    <div className={`font-bold mb-2 ${selectedIndex === quiz.correctIndex ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {selectedIndex === quiz.correctIndex ? '✓ 回答正确！' : '✗ 回答错误'}
-                      {selectedIndex === quiz.correctIndex && difficulty < 3 && <span className="text-sm ml-2 text-slate-400">→ 难度提升</span>}
-                      {selectedIndex !== quiz.correctIndex && difficulty > 1 && <span className="text-sm ml-2 text-slate-400">→ 难度降低</span>}
-                    </div>
-                    <p className="text-slate-300 text-sm">{quiz.explanation}</p>
-                  </div>
-                )}
-                <div className="flex gap-3 mt-4">
-                  <Button onClick={endTraining} variant="outline">📊 结束训练</Button>
-                  <Button onClick={reset} variant="ghost">← 重新选择</Button>
-                  <Button onClick={nextQuestion} variant="primary" className="flex-1" disabled={loading}>
-                    {loading ? '生成中...' : mode === 'challenge' && challengeIndex >= 5 ? '查看报告 →' : '下一题 →'}
-                  </Button>
-                </div>
-              </Card>
-
-              <div className="grid grid-cols-4 gap-3">
-                <Card className="text-center py-3">
-                  <div className="text-2xl font-bold text-emerald-400">{correct}</div>
-                  <div className="text-xs text-slate-400">答对</div>
-                </Card>
-                <Card className="text-center py-3">
-                  <div className="text-2xl font-bold text-red-400">{total - correct}</div>
-                  <div className="text-xs text-slate-400">答错</div>
-                </Card>
-                <Card className="text-center py-3">
-                  <div className="text-2xl font-bold text-amber-400">{accuracy}%</div>
-                  <div className="text-xs text-slate-400">正确率</div>
-                </Card>
-                <Card className="text-center py-3">
-                  <div className={`text-2xl font-bold ${difficultyLabels[difficulty].color}`}>{difficultyLabels[difficulty].emoji}</div>
-                  <div className="text-xs text-slate-400">{difficultyLabels[difficulty].label}</div>
-                </Card>
-              </div>
             </>
           ) : null}
         </div>
