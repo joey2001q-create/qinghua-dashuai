@@ -11,13 +11,11 @@ interface ExportButtonProps {
   disabled?: boolean
 }
 
-const defaultFormats: ExportFormat[] = ['md', 'docx', 'pdf', 'xlsx']
+const defaultFormats: ExportFormat[] = ['md', 'docx']
 
 const formatIcons: Record<ExportFormat, string> = {
   md: '📝',
   docx: '📄',
-  pdf: '📕',
-  xlsx: '📊',
 }
 
 export default function ExportButton({
