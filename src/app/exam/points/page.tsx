@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header, Card, Button, UploadZone, MarkdownRenderer, ExportButton } from '@/components/common'
+import { Header, Card, Button, UploadZone, MarkdownRenderer, ExportButton, LoadingIndicator } from '@/components/common'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 
 const gradeGroups = [
@@ -355,17 +355,17 @@ export default function PointsPage() {
             <Card ref={resultRef} className="mt-6" onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-indigo-400">📊 考点分析结果</h3>
-                {result && (
-                  <ExportButton
-                    content={`# ${subject}考点覆盖检测\n\n年级：${customGrade || grade}\n考点总数：${totalPoints}\n已掌握：${mastered}\n半掌握：${halfMastered}\n未掌握：${notMastered}\n覆盖率：${coveragePercent}%\n\n${result}`}
-                    filename={`${subject}考点覆盖检测.md`}
-                    label="导出"
-                  />
-                )}
+                <ExportButton
+                  content={`# ${subject}考点覆盖检测\n\n年级：${customGrade || grade}\n考点总数：${totalPoints}\n已掌握：${mastered}\n半掌握：${halfMastered}\n未掌握：${notMastered}\n覆盖率：${coveragePercent}%\n\n${result}`}
+                  filename={`${subject}考点覆盖检测`}
+                  label="导出"
+                  disabled={loading || !result}
+                />
               </div>
               <div className="prose prose-invert max-w-none">
+                {loading && !result && <LoadingIndicator text="AI正在分析考点覆盖..." />}
                 <MarkdownRenderer content={result} />
-                {loading && (
+                {loading && result && (
                   <span className="inline-block w-2 h-5 bg-indigo-400 animate-pulse ml-1" />
                 )}
               </div>

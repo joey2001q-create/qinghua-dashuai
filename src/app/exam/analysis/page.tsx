@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header, Card, Button, MarkdownRenderer, ExportButton } from '@/components/common'
+import { Header, Card, Button, MarkdownRenderer, ExportButton, LoadingIndicator } from '@/components/common'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
 const gradeGroups = [
@@ -230,7 +230,14 @@ export default function AnalysisPage() {
                     </div>
                     <div>
                       <label className="block text-sm text-slate-400 mb-1">考试名称</label>
-                      <input type="text" value={examName} onChange={(e) => setExamName(e.target.value)} placeholder="如：期中考试" className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500" />
+                      <select value={examName} onChange={(e) => setExamName(e.target.value)} className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white">
+                        <option value="">请选择</option>
+                        <option value="月考">月考</option>
+                        <option value="期中">期中</option>
+                        <option value="期末">期末</option>
+                        <option value="周测">周测</option>
+                        <option value="模拟考">模拟考</option>
+                      </select>
                     </div>
                   </div>
 
@@ -338,17 +345,17 @@ export default function AnalysisPage() {
             <Card ref={resultRef} className="mt-6" onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-indigo-400">📊 分析结果</h3>
-                {result && (
-                  <ExportButton
-                    content={`# ${subject}失分原因分析\n\n年级：${finalGrade}\n考试：${examName}\n满分：${totalScore}\n本次得分：${currentScore}\n总失分：${totalLost}\n\n${result}`}
-                    filename={`${subject}失分原因分析.md`}
-                    label="导出"
-                  />
-                )}
+                <ExportButton
+                  content={`# ${subject}失分原因分析\n\n年级：${finalGrade}\n考试：${examName}\n满分：${totalScore}\n本次得分：${currentScore}\n总失分：${totalLost}\n\n${result}`}
+                  filename={`${subject}失分原因分析`}
+                  label="导出"
+                  disabled={loading || !result}
+                />
               </div>
               <div className="prose prose-invert max-w-none">
+                {loading && !result && <LoadingIndicator text="AI正在分析失分原因..." />}
                 <MarkdownRenderer content={result} />
-                {loading && (
+                {loading && result && (
                   <span className="inline-block w-2 h-5 bg-indigo-400 animate-pulse ml-1" />
                 )}
               </div>

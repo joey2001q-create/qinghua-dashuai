@@ -2,6 +2,8 @@
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
 
 interface MarkdownRendererProps {
   content: string
@@ -22,6 +24,49 @@ function preprocessContent(content: string): string {
   processed = processed.replace(/^[•·]\s*/gm, '- ')
   
   return processed
+}
+
+function renderLatex(text: string): string {
+  let result = text
+  
+  result = result.replace(/\$\$([\s\S]*?)\$\$/g, (_, latex) => {
+    try {
+      return katex.renderToString(latex.trim(), { displayMode: true, throwOnError: false })
+    } catch {
+      return `$$${latex}$$`
+    }
+  })
+  
+  result = result.replace(/\$([^$\n]+?)\$/g, (_, latex) => {
+    try {
+      return katex.renderToString(latex.trim(), { displayMode: false, throwOnError: false })
+    } catch {
+      return `$${latex}$`
+    }
+  })
+  
+  result = result.replace(/\\\[([\s\S]*?)\\\]/g, (_, latex) => {
+    try {
+      return katex.renderToString(latex.trim(), { displayMode: true, throwOnError: false })
+    } catch {
+      return `\\[${latex}\\]`
+    }
+  })
+  
+  result = result.replace(/\\\(([^)]+?)\\\)/g, (_, latex) => {
+    try {
+      return katex.renderToString(latex.trim(), { displayMode: false, throwOnError: false })
+    } catch {
+      return `\\(${latex}\\)`
+    }
+  })
+  
+  return result
+}
+
+function LatexText({ text }: { text: string }) {
+  const rendered = renderLatex(text)
+  return <span dangerouslySetInnerHTML={{ __html: rendered }} />
 }
 
 export default function MarkdownRenderer({ content, className = '' }: MarkdownRendererProps) {
@@ -52,9 +97,12 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
               {children}
             </h4>
           ),
-          p: ({ children }) => (
-            <p className="text-slate-300 leading-relaxed mb-3">{children}</p>
-          ),
+          p: ({ children }) => {
+            if (typeof children === 'string') {
+              return <p className="text-slate-300 leading-relaxed mb-3"><LatexText text={children} /></p>
+            }
+            return <p className="text-slate-300 leading-relaxed mb-3">{children}</p>
+          },
           ul: ({ children }) => (
             <ul className="list-none space-y-2 mb-4 ml-2">{children}</ul>
           ),
@@ -76,6 +124,10 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
           code: ({ className: codeClassName, children, ...props }) => {
             const isInline = !codeClassName
             if (isInline) {
+              const codeStr = String(children)
+              if (codeStr.includes('\\frac') || codeStr.includes('\\sqrt') || codeStr.includes('\\sum') || codeStr.includes('\\int')) {
+                return <LatexText text={codeStr} />
+              }
               return (
                 <code className="px-2 py-0.5 bg-slate-700 text-pink-400 rounded text-sm font-mono" {...props}>
                   {children}

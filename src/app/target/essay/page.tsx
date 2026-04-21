@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header, Card, Button, MarkdownRenderer, ExportButton } from '@/components/common'
+import { Header, Card, Button, MarkdownRenderer, ExportButton, LoadingIndicator } from '@/components/common'
 
 const gradeGroups = [
   {
@@ -250,17 +250,17 @@ export default function EssayPage() {
             <Card ref={resultRef} className="mt-6" onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-indigo-400">📊 批改结果</h3>
-                {result && (
-                  <ExportButton
-                    content={`# 作文批改报告\n\n年级：${finalGrade}\n类型：${essayType}${title ? `\n题目：${title}` : ''}\n字数：${charCount}字\n${totalScore > 0 ? `总分：${totalScore}/100` : ''}\n\n${result}`}
-                    filename={`作文批改-${essayType}.md`}
-                    label="导出"
-                  />
-                )}
+                <ExportButton
+                  content={`# 作文批改报告\n\n年级：${finalGrade}\n类型：${essayType}${title ? `\n题目：${title}` : ''}\n字数：${charCount}字\n${totalScore > 0 ? `总分：${totalScore}/100` : ''}\n\n${result}`}
+                  filename={`作文批改-${essayType}`}
+                  label="导出"
+                  disabled={loading || !result}
+                />
               </div>
               <div className="prose prose-invert max-w-none">
+                {loading && !result && <LoadingIndicator text="AI正在批改作文..." />}
                 <MarkdownRenderer content={result} />
-                {loading && (
+                {loading && result && (
                   <span className="inline-block w-2 h-5 bg-indigo-400 animate-pulse ml-1" />
                 )}
               </div>

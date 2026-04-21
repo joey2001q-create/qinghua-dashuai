@@ -272,7 +272,7 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
                 )}
 
                 <div className="flex gap-3">
-                  <ExportButton content={reportContent} filename={`${subject}题感训练报告.md`} label="导出报告" />
+                  <ExportButton content={reportContent} filename={`${subject}题感训练报告`} label="导出报告" disabled={!showReport} />
                   <Button onClick={reset} variant="primary" className="flex-1">🔄 重新训练</Button>
                 </div>
               </Card>

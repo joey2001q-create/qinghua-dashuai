@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header, Card, Button, MarkdownRenderer, ExportButton } from '@/components/common'
+import { Header, Card, Button, MarkdownRenderer, ExportButton, LoadingIndicator } from '@/components/common'
 
 const gradeGroups = [
   {
@@ -72,13 +72,17 @@ export default function FeimanPage() {
         body: JSON.stringify({ grade: finalGrade, subject, topic }),
       })
 
-      if (!response.ok) throw new Error('请求失败')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.content || `请求失败 (${response.status})`)
+      }
 
       const reader = response.body?.getReader()
       if (!reader) throw new Error('无法读取响应')
 
       const decoder = new TextDecoder()
       let buffer = ''
+      let hasContent = false
 
       while (true) {
         const { done, value } = await reader.read()
@@ -96,15 +100,28 @@ export default function FeimanPage() {
           const data = trimmed.slice(6)
           try {
             const json = JSON.parse(data)
+            if (json.error) {
+              throw new Error(json.error)
+            }
             if (json.content) {
+              hasContent = true
               setIntroContent((prev) => prev + json.content)
             }
-          } catch { /* skip */ }
+          } catch (parseErr) {
+            if (parseErr instanceof Error && parseErr.message !== 'skip') {
+              throw parseErr
+            }
+          }
         }
+      }
+
+      if (!hasContent) {
+        throw new Error('AI 未返回内容，请重试')
       }
     } catch (error) {
       console.error(error)
-      alert('生成失败，请重试')
+      setPhase(0)
+      alert(error instanceof Error ? error.message : '生成失败，请重试')
     } finally {
       setLoading(false)
     }
@@ -312,13 +329,14 @@ ${understandingHistory.map((s, i) => `第${i + 1}轮：${'⭐'.repeat(s)}${'☆'
                         <p className="text-sm text-slate-500">{finalGrade} · {subject} · {topic}</p>
                       </div>
                       <div className="flex gap-2">
-                        <ExportButton content={exportContent} filename={`费曼学习-${topic}.md`} label="导出" />
+                        <ExportButton content={exportContent} filename={`费曼学习-${topic}`} label="导出" disabled={loading || !introContent} />
                         <Button onClick={reset} variant="ghost" size="sm">重新选择</Button>
                       </div>
                     </div>
                     <div className="prose prose-invert max-w-none">
+                      {loading && !introContent && <LoadingIndicator text="AI正在准备知识点介绍..." />}
                       <MarkdownRenderer content={introContent} />
-                      {loading && phase === 1 && (
+                      {loading && introContent && (
                         <span className="inline-block w-2 h-5 bg-indigo-400 animate-pulse ml-1" />
                       )}
                     </div>

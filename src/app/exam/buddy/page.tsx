@@ -189,7 +189,7 @@ export default function BuddyPage() {
             </div>
 
             <div className="lg:col-span-3">
-              <Card hover={false} className="flex flex-col h-[calc(100vh-180px)] min-h-[500px]">
+              <Card hover={false} className="flex flex-col" style={{ height: 'calc(100vh - 180px)', minHeight: '500px' }}>
                 <div className="flex items-center justify-between mb-4 border-b border-slate-700 pb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{selectedRole.icon}</span>
@@ -203,7 +203,7 @@ export default function BuddyPage() {
                   )}
                 </div>
 
-                <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
+                <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2" style={{ maxHeight: 'calc(100vh - 340px)' }}>
                   {messages.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-full text-center">
                       <div className="text-5xl mb-4">{selectedRole.icon}</div>

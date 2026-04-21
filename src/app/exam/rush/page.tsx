@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header, Card, Button, StepBar, MarkdownRenderer, ProgressBar, ExportButton } from '@/components/common'
+import { Header, Card, Button, StepBar, MarkdownRenderer, ProgressBar, ExportButton, LoadingIndicator } from '@/components/common'
 import { Subject } from '@/types'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts'
 
@@ -486,17 +486,17 @@ export default function RushPage() {
             <Card ref={resultRef} className="mt-6" onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-indigo-400">📋 你的冲刺计划</h3>
-                {result && (
-                  <ExportButton 
-                    content={`# ${examName}冲刺计划\n\n年级：${customGrade || grade}\n科目：${selectedSubjects.join('、')}\n距离考试：${daysUntilExam}天\n\n${result}`} 
-                    filename={`${examName}冲刺计划.md`} 
-                    label="导出" 
-                  />
-                )}
+                <ExportButton 
+                  content={`# ${examName}冲刺计划\n\n年级：${customGrade || grade}\n科目：${selectedSubjects.join('、')}\n距离考试：${daysUntilExam}天\n\n${result}`} 
+                  filename={`${examName}冲刺计划`} 
+                  label="导出"
+                  disabled={loading || !result}
+                />
               </div>
               <div className="prose prose-invert max-w-none">
+                {loading && !result && <LoadingIndicator text="AI正在生成冲刺计划..." />}
                 <MarkdownRenderer content={result} />
-                {loading && (
+                {loading && result && (
                   <span className="inline-block w-2 h-5 bg-indigo-400 animate-pulse ml-1" />
                 )}
               </div>

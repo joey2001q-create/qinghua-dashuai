@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header, Card, Button, MarkdownRenderer, ExportButton } from '@/components/common'
+import { Header, Card, Button, MarkdownRenderer, ExportButton, LoadingIndicator } from '@/components/common'
 
 const gradeGroups = [
   {
@@ -269,15 +269,14 @@ export default function PreviewPage() {
                     <p className="text-sm text-slate-500">{finalGrade} · {subject} · {topic}</p>
                   </div>
                   <div className="flex gap-2">
-                    {previewContent && (
-                      <ExportButton content={`# ${subject}预习导学案\n\n年级：${finalGrade}\n知识点：${topic}${goal ? `\n目标：${goal}` : ''}\n\n${previewContent}`} filename={`${subject}预习-${topic}.md`} label="导出" />
-                    )}
+                    <ExportButton content={`# ${subject}预习导学案\n\n年级：${finalGrade}\n知识点：${topic}${goal ? `\n目标：${goal}` : ''}\n\n${previewContent}`} filename={`${subject}预习-${topic}`} label="导出" disabled={loading || !previewContent} />
                     <Button onClick={() => { setShowPreview(false); setPreviewContent('') }} variant="ghost" size="sm">重新选择</Button>
                   </div>
                 </div>
                 <div className="prose prose-invert max-w-none">
+                  {loading && !previewContent && <LoadingIndicator text="AI正在生成预习内容..." />}
                   <MarkdownRenderer content={previewContent} />
-                  {loading && (
+                  {loading && previewContent && (
                     <span className="inline-block w-2 h-5 bg-indigo-400 animate-pulse ml-1" />
                   )}
                 </div>

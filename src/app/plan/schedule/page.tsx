@@ -2,25 +2,44 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header, Card, Button, ExportButton } from '@/components/common'
+import { Header, Card, Button, ExportButton, LoadingIndicator } from '@/components/common'
 import MarkdownRenderer from '@/components/common/MarkdownRenderer'
 import ProgressBar from '@/components/common/ProgressBar'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts'
 
-const subjects = ['数学', '语文', '英语', '物理', '化学', '生物', '历史', '地理', '政治']
+const gradeGroups = [
+  { label: '小学', grades: ['小一', '小二', '小三', '小四', '小五', '小六'] },
+  { label: '初中', grades: ['初一', '初二', '初三'] },
+  { label: '高中', grades: ['高一', '高二', '高三'] },
+]
+
+const gradeSubjects: Record<string, string[]> = {
+  '小学': ['语文', '数学', '英语'],
+  '初中': ['语文', '数学', '英语', '物理', '化学', '历史', '政治'],
+  '高中': ['语文', '数学', '英语', '物理', '化学', '生物', '历史', '地理', '政治'],
+}
+
 const examTypes = ['月考', '期中', '期末', '周测', '模拟考']
-const grades = ['初一', '初二', '初三']
+
+const weakTypes = [
+  { key: 'knowledge', label: '知识漏洞', desc: '基础概念不清晰、知识点遗漏' },
+  { key: 'technique', label: '解题技巧', desc: '会做但做不对、方法不熟练' },
+  { key: 'careless', label: '粗心失误', desc: '审题不清、计算错误、看错题' },
+  { key: 'application', label: '综合应用', desc: '单一知识点会，综合题不会' },
+]
 
 export default function SchedulePage() {
   const router = useRouter()
+  const [gradeGroup, setGradeGroup] = useState('初中')
+  const [grade, setGrade] = useState('初二')
   const [subject, setSubject] = useState('数学')
   const [examType, setExamType] = useState('期末')
-  const [grade, setGrade] = useState('初二')
   const [totalScore, setTotalScore] = useState('')
   const [targetScore, setTargetScore] = useState('')
   const [currentScore, setCurrentScore] = useState('')
   const [days, setDays] = useState('')
   const [dailyHours, setDailyHours] = useState('2')
+  const [weaknesses, setWeaknesses] = useState<string[]>(['knowledge'])
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState('')
   const [showChart, setShowChart] = useState(false)
@@ -32,6 +51,22 @@ export default function SchedulePage() {
       resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }, [result])
+
+  const availableSubjects = gradeSubjects[gradeGroup] || ['语文', '数学', '英语']
+
+  const handleGradeGroupChange = (group: string) => {
+    setGradeGroup(group)
+    const gList = gradeGroups.find(g => g.label === group)?.grades || []
+    if (gList.length > 0) setGrade(gList[0])
+    const sList = gradeSubjects[group] || ['语文', '数学', '英语']
+    setSubject(sList[0])
+  }
+
+  const toggleWeakness = (key: string) => {
+    setWeaknesses(prev =>
+      prev.includes(key) ? prev.filter(w => w !== key) : [...prev, key]
+    )
+  }
 
   const generatePlan = async () => {
     if (!totalScore || !targetScore || !currentScore || !days) {
@@ -54,6 +89,11 @@ export default function SchedulePage() {
       return
     }
 
+    if (weaknesses.length === 0) {
+      alert('请至少选择一个薄弱环节类型')
+      return
+    }
+
     setLoading(true)
     setResult('')
     setShowChart(true)
@@ -66,11 +106,13 @@ export default function SchedulePage() {
           subject,
           examType,
           grade,
+          gradeGroup,
           totalScore: Number(totalScore),
           targetScore: Number(targetScore),
           currentScore: Number(currentScore),
           days: Number(days),
           dailyHours: Number(dailyHours),
+          weaknesses,
         }),
       })
 
@@ -118,7 +160,7 @@ export default function SchedulePage() {
   const target = Number(targetScore) || 0
   const total = Number(totalScore) || 100
   const gap = target - current
-  const gapPercent = total > 0 ? ((gap / total) * 100).toFixed(1) : 0
+  const gapPercent = total > 0 ? ((gap / total) * 100).toFixed(1) : '0'
 
   const barData = [
     { name: '当前', 分数: current },
@@ -137,12 +179,30 @@ export default function SchedulePage() {
           </Button>
 
           <h1 className="text-2xl font-bold text-white mb-2">📅 学习计划</h1>
-          <p className="text-slate-400 mb-6">AI生成个性化冲刺方案</p>
+          <p className="text-slate-400 mb-6">AI生成个性化三阶段冲刺方案（含艾宾浩斯复习节点）</p>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <Card className="mb-6 lg:mb-0">
               <h3 className="text-lg font-bold text-indigo-400 mb-4">📝 填写信息</h3>
               <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">学段</label>
+                  <div className="flex gap-2">
+                    {gradeGroups.map(g => (
+                      <button
+                        key={g.label}
+                        onClick={() => handleGradeGroupChange(g.label)}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                          gradeGroup === g.label
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                        }`}
+                      >
+                        {g.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm text-slate-400 mb-1">年级</label>
@@ -151,7 +211,7 @@ export default function SchedulePage() {
                       onChange={(e) => setGrade(e.target.value)}
                       className="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white"
                     >
-                      {grades.map((g) => (
+                      {gradeGroups.find(g => g.label === gradeGroup)?.grades.map(g => (
                         <option key={g} value={g}>{g}</option>
                       ))}
                     </select>
@@ -163,7 +223,7 @@ export default function SchedulePage() {
                       onChange={(e) => setSubject(e.target.value)}
                       className="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white"
                     >
-                      {subjects.map((s) => (
+                      {availableSubjects.map((s) => (
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
@@ -234,8 +294,31 @@ export default function SchedulePage() {
                       <option value="1">1小时</option>
                       <option value="2">2小时</option>
                       <option value="3">3小时</option>
-                      <option value="4">4小时以上</option>
+                      <option value="4">4小时</option>
+                      <option value="5">5小时</option>
+                      <option value="6">6小时</option>
+                      <option value="7">7小时</option>
+                      <option value="8">8小时以上</option>
                     </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-2">薄弱环节类型（可多选）</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {weakTypes.map(w => (
+                      <button
+                        key={w.key}
+                        onClick={() => toggleWeakness(w.key)}
+                        className={`px-3 py-2 rounded-lg text-left text-sm transition ${
+                          weaknesses.includes(w.key)
+                            ? 'bg-indigo-500/20 border border-indigo-500/50 text-indigo-300'
+                            : 'bg-slate-700/30 border border-slate-700 text-slate-400 hover:border-slate-600'
+                        }`}
+                      >
+                        <div className="font-medium">{w.label}</div>
+                        <div className="text-xs opacity-70 mt-0.5">{w.desc}</div>
+                      </button>
+                    ))}
                   </div>
                 </div>
                 <Button onClick={generatePlan} variant="primary" className="w-full" disabled={loading}>
@@ -307,17 +390,17 @@ export default function SchedulePage() {
             <Card ref={resultRef} onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-indigo-400">📋 你的学习计划</h3>
-                {result && (
-                  <ExportButton 
-                    content={`# ${subject}${examType}学习计划\n\n年级：${grade}\n总分：${totalScore}\n目标：${targetScore}\n当前：${currentScore}\n\n${result}`} 
-                    filename={`${subject}${examType}学习计划.md`} 
-                    label="导出" 
-                  />
-                )}
+                <ExportButton
+                  content={`# ${subject}${examType}学习计划\n\n年级：${grade}\n总分：${totalScore}\n目标：${targetScore}\n当前：${currentScore}\n薄弱环节：${weaknesses.map(w => weakTypes.find(t => t.key === w)?.label).join('、')}\n\n${result}`}
+                  filename={`${subject}${examType}学习计划`}
+                  label="导出"
+                  disabled={loading || !result}
+                />
               </div>
               <div className="prose prose-invert max-w-none">
+                {loading && !result && <LoadingIndicator text="AI正在生成学习计划..." />}
                 <MarkdownRenderer content={result} />
-                {loading && (
+                {loading && result && (
                   <span className="inline-block w-2 h-5 bg-indigo-400 animate-pulse ml-1" />
                 )}
               </div>

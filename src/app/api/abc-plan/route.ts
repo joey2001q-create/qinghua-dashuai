@@ -62,36 +62,51 @@ async function* callAIStream(prompt: string): AsyncGenerator<string> {
 
 export async function POST(request: NextRequest) {
   try {
-    const { goals } = await request.json()
+    const { goals, grade, gradeGroup } = await request.json()
 
-    const prompt = `你是清华大帅，一位资深教育规划师。学生设定了以下ABC目标提分表：
+    const prompt = `你是清华大帅，一位资深教育规划师，擅长目标管理和学习策略制定。学生（${grade}，${gradeGroup}）设定了以下ABC目标提分表：
 
-${goals.map((g: { subject: string; fullScore: number; currentScore: number; targetScore: number; confidence: number }) => 
-  `- ${g.subject}：当前${g.currentScore}/${g.fullScore}分 → 目标${g.targetScore}/${g.fullScore}分，信心等级${g.confidence}/10`
+${goals.map((g: { subject: string; fullScore: number; currentScore: number; lastScore: number; targetScore: number; confidence: number; gap: number; improvement: number; bTarget: number; trend: string }) =>
+  `- ${g.subject}：上次${g.lastScore}/${g.fullScore}分 → 当前${g.currentScore}/${g.fullScore}分 → 目标${g.targetScore}/${g.fullScore}分，信心等级${g.confidence}/10，预期B目标${g.bTarget}分，趋势${g.trend === 'up' ? '上升' : g.trend === 'down' ? '下降' : '平稳'}，差距+${g.gap}分，预期提分+${g.improvement}分`
 ).join('\n')}
 
-【输出格式要求】
+【输出格式要求 - 必须严格遵循】
 
 ## 📊 整体分析
-简要分析各科目提分难度和可行性
+1. 各科目提分难度评估（结合当前分数占比和边际递减效应）
+2. 总体目标可行性判断（预期总提分是否合理）
+3. 趋势分析（哪些科目在进步，哪些在退步，需要警惕）
 
-## 📈 提分策略
+## 📈 各科提分策略
 
-### 各科分析
-| 科目 | 提分难度 | 时间分配建议 | 具体策略 |
-|------|----------|--------------|----------|
-| 数学 | 中等 | 30% | ... |
+| 科目 | 提分难度 | 时间分配比例 | 核心突破点 | 具体策略 |
+|------|----------|-------------|-----------|----------|
+| 数学 | 较高 | 30% | 函数综合 | 每天专项训练1道压轴题 |
 
 ## 🎯 优先级排序
-按信心等级和提分空间排序
+按"提分性价比"排序（提分空间×信心指数/所需时间），说明为什么这样排
 
-## 💡 重点提醒
-- 关键建议
+## 📅 学习路径规划
+- 第一阶段（前1/3时间）：基础巩固，重点攻克哪些科目
+- 第二阶段（中间1/3时间）：专项突破，重点攻克哪些科目
+- 第三阶段（最后1/3时间）：冲刺提分，重点攻克哪些科目
+
+## 💪 心理建设
+- 针对信心指数较低的科目，给出具体的信心提升建议
+- 如何应对考试焦虑和目标压力
+- 每日激励建议
+
+## ⚠️ 风险提示
+- 最可能达不到目标的科目及原因
+- 需要额外关注的薄弱环节
+- 时间分配冲突的解决方案
 
 【注意事项】
-1. 用简洁清晰的格式输出，适合学生阅读
+1. 用简洁清晰的格式输出，适合${gradeGroup}学生阅读
 2. 不要使用特殊字符或下划线命名，使用中文标题
-3. 表格必须使用标准markdown格式`
+3. 表格必须使用标准markdown格式
+4. 策略要具体到可执行的行动，不要空泛建议
+5. 考虑${gradeGroup}学生的认知水平和学习特点`
 
     const encoder = new TextEncoder()
     const stream = new ReadableStream({

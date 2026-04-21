@@ -64,12 +64,20 @@ export async function POST(request: NextRequest) {
   try {
     const { grade, subject, topic } = await request.json()
 
-    const prompt = `你是清华大帅，一位经验丰富的${grade}${subject}老师。学生要学习"${topic}"这个知识点，请用费曼学习法引导学生。
+    if (!grade || !subject || !topic) {
+      return NextResponse.json(
+        { content: '请提供完整的年级、学科和知识点信息。' },
+        { status: 400 }
+      )
+    }
 
-【学生信息】
-- 年级：${grade}
-- 学科：${subject}
-- 知识点：${topic}
+    const prompt = `你是清华大帅，一位经验丰富的${grade}${subject}老师。学生要学习"${topic}"这个知识点。
+
+【重要校验】
+首先判断"${topic}"是否属于${subject}学科的知识点：
+- 如果明显不属于（如：选择数学但问古诗词、选择语文但问勾股定理），请在开头明确指出："⚠️ 提示：您输入的知识点【${topic}】似乎不属于${subject}学科，建议选择正确的学科后重新学习。"
+- 如果勉强相关或不确定，可以继续但提醒学生注意
+- 如果确实属于，则正常教学
 
 【输出格式要求】
 

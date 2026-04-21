@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header, Card, Button, UploadZone, MarkdownRenderer, ProgressBar, ExportButton } from '@/components/common'
+import { Header, Card, Button, UploadZone, MarkdownRenderer, ProgressBar, ExportButton, LoadingIndicator } from '@/components/common'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts'
 
 const gradeGroups = [
@@ -423,17 +423,17 @@ export default function PaperPage() {
             <Card ref={resultRef} className="mt-6" onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-indigo-400">📊 分析结果</h3>
-                {result && (
-                  <ExportButton
-                    content={`# ${subject}卷后提分分析\n\n年级：${customGrade || grade}\n考试：${examType}\n满分：${fullScore}\n本次得分：${currentScore}${targetScore ? `\n目标：${targetScore}` : ''}\n\n${result}`}
-                    filename={`${subject}卷后提分分析.md`}
-                    label="导出"
-                  />
-                )}
+                <ExportButton
+                  content={`# ${subject}卷后提分分析\n\n年级：${customGrade || grade}\n考试：${examType}\n满分：${fullScore}\n本次得分：${currentScore}${targetScore ? `\n目标：${targetScore}` : ''}\n\n${result}`}
+                  filename={`${subject}卷后提分分析`}
+                  label="导出"
+                  disabled={loading || !result}
+                />
               </div>
               <div className="prose prose-invert max-w-none">
+                {loading && !result && <LoadingIndicator text="AI正在分析试卷..." />}
                 <MarkdownRenderer content={result} />
-                {loading && (
+                {loading && result && (
                   <span className="inline-block w-2 h-5 bg-indigo-400 animate-pulse ml-1" />
                 )}
               </div>

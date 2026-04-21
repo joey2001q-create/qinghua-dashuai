@@ -67,9 +67,20 @@ ${knowledge ? `知识点范围：${knowledge}` : ''}
     const content = await callAI(prompt)
 
     try {
-      const quiz = JSON.parse(content)
+      let jsonStr = content.trim()
+      const codeBlockMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/)
+      if (codeBlockMatch) {
+        jsonStr = codeBlockMatch[1].trim()
+      }
+      const firstBrace = jsonStr.indexOf('{')
+      const lastBrace = jsonStr.lastIndexOf('}')
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        jsonStr = jsonStr.slice(firstBrace, lastBrace + 1)
+      }
+      const quiz = JSON.parse(jsonStr)
       return NextResponse.json(quiz)
-    } catch {
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError, 'Content:', content)
       return NextResponse.json({
         question: '题目生成失败，请重试',
         options: ['A', 'B', 'C', 'D'],
