@@ -52,7 +52,7 @@ export async function recognizeImage(base64Image: string): Promise<OCRResult> {
   const imageData = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image
 
   const response = await fetch(
-    `https://aip.baidubce.com/rest/2.0/ocr/v1/accurate?access_token=${token}`,
+    `https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic?access_token=${token}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
