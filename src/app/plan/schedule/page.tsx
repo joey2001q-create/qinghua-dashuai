@@ -169,8 +169,8 @@ export default function SchedulePage() {
             ← 返回学习规划
           </Button>
 
-          <h1 className="text-2xl font-bold text-white mb-2 text-center">📅 学习计划</h1>
-          <p className="text-slate-400 mb-6 text-center">AI生成个性化三阶段冲刺方案（含艾宾浩斯复习节点）</p>
+          <h1 className="text-2xl font-bold text-white mb-2">📅 学习计划</h1>
+          <p className="text-slate-400 mb-6">AI生成个性化三阶段冲刺方案（含艾宾浩斯复习节点）</p>
 
           <Card className="mb-6">
             <h3 className="text-lg font-bold text-indigo-400 mb-4">📝 填写信息</h3>
