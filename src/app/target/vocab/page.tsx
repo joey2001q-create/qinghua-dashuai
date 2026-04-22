@@ -5,15 +5,13 @@ import { useRouter } from 'next/navigation'
 import { Header, Card, Button } from '@/components/common'
 import { WORDS, VocabWord } from '@/lib/vocab-words'
 
-const dayOptions = [10, 20, 30, 50]
-const perDayOptions = [20, 30, 50, 100]
+const TOTAL_WORDS = WORDS.length
 
 interface VocabProgress {
   currentIndex: number
   lastDate: string
   todayLearned: number
-  days: number
-  perDay: number
+  targetDays: number
   favorites: number[]
 }
 
@@ -21,8 +19,7 @@ const STORAGE_KEY = 'vocab_progress'
 
 export default function VocabPage() {
   const router = useRouter()
-  const [days, setDays] = useState(10)
-  const [perDay, setPerDay] = useState(20)
+  const [targetDays, setTargetDays] = useState(30)
   const [started, setStarted] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
@@ -34,6 +31,8 @@ export default function VocabPage() {
   const [isPlayingExample, setIsPlayingExample] = useState(false)
   const [todayLearned, setTodayLearned] = useState(0)
   const [showComplete, setShowComplete] = useState(false)
+
+  const perDay = Math.ceil(TOTAL_WORDS / targetDays)
 
   useEffect(() => {
     const shuffled = [...WORDS].sort(() => Math.random() - 0.5)
@@ -55,8 +54,7 @@ export default function VocabPage() {
         }
         
         setCurrentIndex(progress.currentIndex)
-        setDays(progress.days)
-        setPerDay(progress.perDay)
+        setTargetDays(progress.targetDays || 30)
         setFavorites(progress.favorites || [])
       }
     } catch (error) {
@@ -70,8 +68,7 @@ export default function VocabPage() {
         currentIndex: idx,
         lastDate: new Date().toDateString(),
         todayLearned: learned,
-        days,
-        perDay,
+        targetDays,
         favorites: favs,
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
@@ -197,6 +194,12 @@ export default function VocabPage() {
   const currentWord = words[currentIndex]
   const dayProgress = Math.floor(currentIndex / perDay) + 1
 
+  const getEndDate = () => {
+    const end = new Date()
+    end.setDate(end.getDate() + targetDays)
+    return end.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })
+  }
+
   return (
     <div className="min-h-screen bg-slate-900">
       <Header />
@@ -212,49 +215,52 @@ export default function VocabPage() {
 
           {!started ? (
             <Card>
-              <h3 className="text-lg font-bold text-indigo-400 mb-4">⚙️ 学习设置</h3>
+              <h3 className="text-lg font-bold text-indigo-400 mb-4">⚙️ 学习计划</h3>
               
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">选择完成周期</label>
-                  <div className="flex gap-2 flex-wrap">
-                    {dayOptions.map(d => (
-                      <button
-                        key={d}
-                        onClick={() => setDays(d)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${days === d ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
-                      >
-                        {d}天
-                      </button>
-                    ))}
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-sm text-slate-400">完成周期</label>
+                    <span className="text-lg font-bold text-indigo-400">{targetDays} 天</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    value={targetDays}
+                    onChange={(e) => setTargetDays(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  />
+                  <div className="flex justify-between text-xs text-slate-500 mt-1">
+                    <span>10天</span>
+                    <span>100天</span>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm text-slate-400 mb-2">每天学习量</label>
-                  <div className="flex gap-2 flex-wrap">
-                    {perDayOptions.map(p => (
-                      <button
-                        key={p}
-                        onClick={() => setPerDay(p)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${perDay === p ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
-                      >
-                        {p}词/天
-                      </button>
-                    ))}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-slate-800/50 rounded-xl">
+                  <div className="text-center">
+                    <p className="text-xs text-slate-500 mb-1">总单词数</p>
+                    <p className="text-2xl font-bold text-white">{TOTAL_WORDS}</p>
                   </div>
+                  <div className="text-center">
+                    <p className="text-xs text-slate-500 mb-1">每天学习</p>
+                    <p className="text-2xl font-bold text-emerald-400">{perDay} 词</p>
+                  </div>
+                </div>
+
+                <div className="text-center text-sm text-slate-500">
+                  <p>预计完成日期：<span className="text-white">{getEndDate()}</span></p>
                 </div>
 
                 <Button onClick={handleStart} variant="primary" className="w-full">
                   🚀 开始学习
                 </Button>
 
-                <div className="text-center text-sm text-slate-500 space-y-1">
-                  <p>共 {words.length} 词 · 每天 {perDay} 词 · {days} 天完成</p>
-                  {currentIndex > 0 && (
-                    <p className="text-emerald-400">已学习到第 {currentIndex + 1} 词，继续加油！</p>
-                  )}
-                </div>
+                {currentIndex > 0 && (
+                  <p className="text-center text-sm text-emerald-400">
+                    已学习到第 {currentIndex + 1} 词，继续加油！
+                  </p>
+                )}
               </div>
             </Card>
           ) : showComplete ? (
@@ -281,7 +287,7 @@ export default function VocabPage() {
               <Card>
                 <div className="flex justify-between items-center mb-3">
                   <div>
-                    <p className="text-xs text-slate-500">总进度 · 第 {dayProgress} 天</p>
+                    <p className="text-xs text-slate-500">总进度 · 第 {dayProgress} 天 / {targetDays} 天</p>
                     <p className="text-sm font-medium text-white">第 <span className="text-indigo-400">{currentIndex + 1}</span> / {words.length} 词</p>
                   </div>
                   <div className="text-right">
