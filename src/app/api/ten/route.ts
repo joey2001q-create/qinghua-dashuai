@@ -6,44 +6,34 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const { grade, subject, topic, content } = await request.json()
+    const { subject, question } = await request.json()
 
-    const systemPrompt = `你是一位经验丰富的${grade}教师，擅长帮助学生预习新知识。请根据学生提供的课本内容，生成一份预习导学单。
+    const systemPrompt = `你是一位经验丰富的${subject}老师，擅长用多种方法解题。请为以下题目提供10种不同的解法。
 
 要求：
-1. 提取核心知识点
-2. 标注重点和难点
-3. 提供预习思考题
-4. 给出学习方法建议
+1. 每种解法都要清晰、完整
+2. 解法之间要有明显的思路差异（如：代数法、几何法、分析法、综合法、反证法、归纳法等）
+3. 每种解法标注方法名称
+4. 适合学生理解和学习
 5. 用Markdown格式输出，结构清晰
 
+【重要】数学公式格式规范：
+- 行内公式用 $包裹，如：$x^2 + y^2 = 1$
+- 块级公式用 $$包裹，如：$$\\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$$
+- 分数用 \\frac{分子}{分母}
+- 根号用 \\sqrt{内容}
+- 上下标用 ^ 和 _
+- 希腊字母用 \\alpha \\beta \\theta 等
+- 绝对不要用 [ ] 或 ( ) 包裹公式，必须用 $ 或 $$
+
 输出格式：
-# 预习导学单
+## 解法一：[方法名称]
+[解题步骤，公式用$...$包裹]
 
-## 一、核心知识点
-- 知识点1
-- 知识点2
-...
+## 解法二：[方法名称]
+[解题步骤]
 
-## 二、重点标注
-⭐ 重点1：...
-⭐ 重点2：...
-
-## 三、难点解析
-❗ 难点1：...
-❗ 难点2：...
-
-## 四、预习思考题
-1. ...
-2. ...
-
-## 五、学习方法建议
-- 建议1
-- 建议2`
-
-    const userContent = content 
-      ? `科目：${subject}\n\n课本内容：\n${content}`
-      : `科目：${subject}\n知识点：${topic}`
+...以此类推到解法十`
 
     const response = await fetch(AI_CONFIG.API_URL, {
       method: 'POST',
@@ -55,7 +45,7 @@ export async function POST(request: NextRequest) {
         model: AI_CONFIG.MODEL_ID,
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userContent }
+          { role: 'user', content: `题目：\n${question}` }
         ],
         temperature: 0.7,
         max_tokens: 4096,
@@ -96,9 +86,9 @@ export async function POST(request: NextRequest) {
               const data = trimmed.slice(6)
               try {
                 const json = JSON.parse(data)
-                const chunk = json.choices?.[0]?.delta?.content
-                if (chunk) {
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`))
+                const content = json.choices?.[0]?.delta?.content
+                if (content) {
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`))
                 }
               } catch { /* skip */ }
             }
@@ -121,9 +111,9 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Preview API error:', error)
+    console.error('Ten solutions API error:', error)
     return NextResponse.json(
-      { content: '生成失败，请稍后重试。' },
+      { content: '抱歉，服务暂时不可用，请稍后再试。' },
       { status: 500 }
     )
   }

@@ -2,7 +2,8 @@
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import katex from 'katex'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
 
 interface MarkdownRendererProps {
@@ -23,50 +24,33 @@ function preprocessContent(content: string): string {
   
   processed = processed.replace(/^[•·]\s*/gm, '- ')
   
+  processed = processed.replace(/\\boxed\{([^}]+)\}/g, '$\\boxed{$1}$')
+  
+  processed = processed.replace(/\\begin\{aligned\}/g, '$\\begin{aligned}')
+  processed = processed.replace(/\\end\{aligned\}/g, '\\end{aligned}$')
+  
+  processed = processed.replace(/\\begin\{cases\}/g, '$\\begin{cases}')
+  processed = processed.replace(/\\end\{cases\}/g, '\\end{cases}$')
+  
+  processed = processed.replace(/\\begin\{matrix\}/g, '$\\begin{matrix}')
+  processed = processed.replace(/\\end\{matrix\}/g, '\\end{matrix}$')
+  
+  processed = processed.replace(/\\begin\{pmatrix\}/g, '$\\begin{pmatrix}')
+  processed = processed.replace(/\\end\{pmatrix\}/g, '\\end{pmatrix}$')
+  
+  processed = processed.replace(/\\begin\{bmatrix\}/g, '$\\begin{bmatrix}')
+  processed = processed.replace(/\\end\{bmatrix\}/g, '\\end{bmatrix}$')
+  
+  processed = processed.replace(/\\begin\{vmatrix\}/g, '$\\begin{vmatrix}')
+  processed = processed.replace(/\\end\{vmatrix\}/g, '\\end{vmatrix}$')
+  
+  processed = processed.replace(/\\begin\{equation\}/g, '$$\\begin{equation}')
+  processed = processed.replace(/\\end\{equation\}/g, '\\end{equation}$$')
+  
+  processed = processed.replace(/\\begin\{equation\*\}/g, '$$\\begin{equation*}')
+  processed = processed.replace(/\\end\{equation\*\}/g, '\\end{equation*}$$')
+  
   return processed
-}
-
-function renderLatex(text: string): string {
-  let result = text
-  
-  result = result.replace(/\$\$([\s\S]*?)\$\$/g, (_, latex) => {
-    try {
-      return katex.renderToString(latex.trim(), { displayMode: true, throwOnError: false })
-    } catch {
-      return `$$${latex}$$`
-    }
-  })
-  
-  result = result.replace(/\$([^$\n]+?)\$/g, (_, latex) => {
-    try {
-      return katex.renderToString(latex.trim(), { displayMode: false, throwOnError: false })
-    } catch {
-      return `$${latex}$`
-    }
-  })
-  
-  result = result.replace(/\\\[([\s\S]*?)\\\]/g, (_, latex) => {
-    try {
-      return katex.renderToString(latex.trim(), { displayMode: true, throwOnError: false })
-    } catch {
-      return `\\[${latex}\\]`
-    }
-  })
-  
-  result = result.replace(/\\\(([^)]+?)\\\)/g, (_, latex) => {
-    try {
-      return katex.renderToString(latex.trim(), { displayMode: false, throwOnError: false })
-    } catch {
-      return `\\(${latex}\\)`
-    }
-  })
-  
-  return result
-}
-
-function LatexText({ text }: { text: string }) {
-  const rendered = renderLatex(text)
-  return <span dangerouslySetInnerHTML={{ __html: rendered }} />
 }
 
 export default function MarkdownRenderer({ content, className = '' }: MarkdownRendererProps) {
@@ -75,7 +59,8 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
   return (
     <div className={`markdown-body ${className}`}>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
         components={{
           h1: ({ children }) => (
             <h1 className="text-2xl font-bold text-indigo-400 mt-6 mb-4 pb-2 border-b border-slate-700 flex items-center gap-2">
@@ -97,12 +82,9 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
               {children}
             </h4>
           ),
-          p: ({ children }) => {
-            if (typeof children === 'string') {
-              return <p className="text-slate-300 leading-relaxed mb-3"><LatexText text={children} /></p>
-            }
-            return <p className="text-slate-300 leading-relaxed mb-3">{children}</p>
-          },
+          p: ({ children }) => (
+            <p className="text-slate-300 leading-relaxed mb-3">{children}</p>
+          ),
           ul: ({ children }) => (
             <ul className="list-none space-y-2 mb-4 ml-2">{children}</ul>
           ),
@@ -124,10 +106,6 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
           code: ({ className: codeClassName, children, ...props }) => {
             const isInline = !codeClassName
             if (isInline) {
-              const codeStr = String(children)
-              if (codeStr.includes('\\frac') || codeStr.includes('\\sqrt') || codeStr.includes('\\sum') || codeStr.includes('\\int')) {
-                return <LatexText text={codeStr} />
-              }
               return (
                 <code className="px-2 py-0.5 bg-slate-700 text-pink-400 rounded text-sm font-mono" {...props}>
                   {children}

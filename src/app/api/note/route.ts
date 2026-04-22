@@ -6,19 +6,19 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const { grade, subject, topic, content } = await request.json()
+    const { content } = await request.json()
 
-    const systemPrompt = `你是一位经验丰富的${grade}教师，擅长帮助学生预习新知识。请根据学生提供的课本内容，生成一份预习导学单。
+    const systemPrompt = `你是一位学习笔记整理专家。请将学生上传的笔记内容进行整理归纳。
 
 要求：
-1. 提取核心知识点
-2. 标注重点和难点
-3. 提供预习思考题
-4. 给出学习方法建议
+1. 提取核心知识点，分门别类
+2. 补量重要性，标注重点、难点
+3. 补充可能遗漏的知识点
+4. 建立知识点之间的关联
 5. 用Markdown格式输出，结构清晰
 
 输出格式：
-# 预习导学单
+# 笔记整理
 
 ## 一、核心知识点
 - 知识点1
@@ -33,17 +33,13 @@ export async function POST(request: NextRequest) {
 ❗ 难点1：...
 ❗ 难点2：...
 
-## 四、预习思考题
-1. ...
-2. ...
+## 四、知识关联
+- A与B的关系：...
+- C是D的基础：...
 
-## 五、学习方法建议
-- 建议1
-- 建议2`
-
-    const userContent = content 
-      ? `科目：${subject}\n\n课本内容：\n${content}`
-      : `科目：${subject}\n知识点：${topic}`
+## 五、补充建议
+- 建议补充学习：...
+- 建议复习巩固：...`
 
     const response = await fetch(AI_CONFIG.API_URL, {
       method: 'POST',
@@ -55,7 +51,7 @@ export async function POST(request: NextRequest) {
         model: AI_CONFIG.MODEL_ID,
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userContent }
+          { role: 'user', content: `笔记内容：\n${content}` }
         ],
         temperature: 0.7,
         max_tokens: 4096,
@@ -96,9 +92,9 @@ export async function POST(request: NextRequest) {
               const data = trimmed.slice(6)
               try {
                 const json = JSON.parse(data)
-                const chunk = json.choices?.[0]?.delta?.content
-                if (chunk) {
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`))
+                const content = json.choices?.[0]?.delta?.content
+                if (content) {
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`))
                 }
               } catch { /* skip */ }
             }
@@ -121,9 +117,9 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Preview API error:', error)
+    console.error('Note API error:', error)
     return NextResponse.json(
-      { content: '生成失败，请稍后重试。' },
+      { content: '抱歉，服务暂时不可用，请稍后再试。' },
       { status: 500 }
     )
   }
