@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header, Card, Button, MarkdownRenderer, LoadingIndicator, UploadZone } from '@/components/common'
+import { Header, Card, Button, MarkdownRenderer, LoadingIndicator } from '@/components/common'
+import { exportAsDocx, exportAsMd } from '@/lib/export'
 
 const grades = ['小学', '初一', '初二', '初三', '高一', '高二', '高三']
 const subjects = ['数学', '物理', '化学', '语文', '英语', '历史', '地理', '生物', '政治']
@@ -37,9 +38,11 @@ export default function KGraphPage() {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [exporting, setExporting] = useState(false)
+  const [showExportMenu, setShowExportMenu] = useState(false)
   const resultRef = useRef<HTMLDivElement>(null)
   const mermaidRef = useRef<HTMLDivElement>(null)
   const isUserScrolling = useRef(false)
+  const exportMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (result && resultRef.current && !isUserScrolling.current) {
@@ -52,6 +55,16 @@ export default function KGraphPage() {
       renderMermaid()
     }
   }, [mermaidCode])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+        setShowExportMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const renderMermaid = async () => {
     if (!mermaidRef.current || !mermaidCode) return
@@ -95,60 +108,6 @@ export default function KGraphPage() {
           </details>
         </div>
       `
-    }
-  }
-
-  const svgToPng = async (svgElement: SVGSVGElement): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      try {
-        const svgData = new XMLSerializer().serializeToString(svgElement)
-        const svgBase64 = btoa(unescape(encodeURIComponent(svgData)))
-        const dataUrl = `data:image/svg+xml;base64,${svgBase64}`
-        resolve(dataUrl)
-      } catch (error) {
-        reject(error)
-      }
-    })
-  }
-
-  const handleExport = async () => {
-    if (!result) return
-    setExporting(true)
-
-    try {
-      let imageHtml = ''
-      
-      if (mermaidRef.current) {
-        const svgElement = mermaidRef.current.querySelector('svg')
-        if (svgElement) {
-          const svgDataUrl = await svgToPng(svgElement)
-          imageHtml = `\n\n## 知识图谱\n\n![知识图谱](${svgDataUrl})\n\n`
-        }
-      }
-
-      const content = `# ${topic} 知识图谱
-
-年级：${grade}
-科目：${subject}
-${imageHtml}
-## 说明
-
-${result.replace(/```mermaid\n[\s\S]*?\n```/g, '')}`
-
-      const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `知识图谱-${topic}.md`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error('Export error:', error)
-      alert('导出失败，请重试')
-    } finally {
-      setExporting(false)
     }
   }
 
@@ -260,6 +219,43 @@ ${result.replace(/```mermaid\n[\s\S]*?\n```/g, '')}`
     setSubject(hotSubject)
   }
 
+  const getExportContent = () => {
+    return `# ${topic} 知识图谱
+
+年级：${grade}
+科目：${subject}
+
+## 知识图谱
+
+\`\`\`mermaid
+${mermaidCode}
+\`\`\`
+
+## 说明
+
+${result.replace(/```mermaid\n[\s\S]*?\n```/g, '')}`
+  }
+
+  const handleExportMd = () => {
+    const content = getExportContent()
+    exportAsMd(content, `知识图谱-${topic}`)
+    setShowExportMenu(false)
+  }
+
+  const handleExportWord = async () => {
+    setExporting(true)
+    setShowExportMenu(false)
+    try {
+      const content = getExportContent()
+      await exportAsDocx(content, `知识图谱-${topic}`)
+    } catch (error) {
+      console.error('Export Word error:', error)
+      alert('导出Word失败，请重试')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-900">
       <Header />
@@ -364,13 +360,36 @@ ${result.replace(/```mermaid\n[\s\S]*?\n```/g, '')}`
             <Card ref={resultRef} onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-indigo-400">📊 知识图谱</h3>
-                <button
-                  onClick={handleExport}
-                  disabled={loading || !result || exporting}
-                  className="px-4 py-2 text-sm rounded-lg transition bg-slate-700 hover:bg-slate-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {exporting ? '导出中...' : '导出'}
-                </button>
+                <div className="relative" ref={exportMenuRef}>
+                  <button
+                    onClick={() => setShowExportMenu(!showExportMenu)}
+                    disabled={loading || !result || exporting}
+                    className="px-4 py-2 text-sm rounded-lg transition bg-slate-700 hover:bg-slate-600 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {exporting ? '导出中...' : '导出'}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {showExportMenu && (
+                    <div className="absolute right-0 top-full mt-1 z-50 bg-slate-800 border border-slate-600 rounded-lg shadow-xl overflow-hidden min-w-[140px]">
+                      <button
+                        onClick={handleExportMd}
+                        className="w-full px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-indigo-500/20 hover:text-white transition flex items-center gap-3"
+                      >
+                        <span>📝</span>
+                        <span>Markdown (.md)</span>
+                      </button>
+                      <button
+                        onClick={handleExportWord}
+                        className="w-full px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-indigo-500/20 hover:text-white transition flex items-center gap-3"
+                      >
+                        <span>📄</span>
+                        <span>Word (.docx)</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               
               {mermaidCode && (
