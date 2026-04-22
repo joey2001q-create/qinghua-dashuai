@@ -98,36 +98,13 @@ export default function KGraphPage() {
     }
   }
 
-  const svgToPng = (svgElement: SVGSVGElement): Promise<string> => {
+  const svgToPng = async (svgElement: SVGSVGElement): Promise<string> => {
     return new Promise((resolve, reject) => {
       try {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        if (!ctx) {
-          reject(new Error('无法创建canvas'))
-          return
-        }
-
         const svgData = new XMLSerializer().serializeToString(svgElement)
-        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
-        const url = URL.createObjectURL(svgBlob)
-
-        const img = new Image()
-        img.onload = () => {
-          canvas.width = img.width * 2
-          canvas.height = img.height * 2
-          ctx.scale(2, 2)
-          ctx.fillStyle = '#1e293b'
-          ctx.fillRect(0, 0, canvas.width, canvas.height)
-          ctx.drawImage(img, 0, 0)
-          URL.revokeObjectURL(url)
-          resolve(canvas.toDataURL('image/png'))
-        }
-        img.onerror = () => {
-          URL.revokeObjectURL(url)
-          reject(new Error('图片加载失败'))
-        }
-        img.src = url
+        const svgBase64 = btoa(unescape(encodeURIComponent(svgData)))
+        const dataUrl = `data:image/svg+xml;base64,${svgBase64}`
+        resolve(dataUrl)
       } catch (error) {
         reject(error)
       }
@@ -144,8 +121,8 @@ export default function KGraphPage() {
       if (mermaidRef.current) {
         const svgElement = mermaidRef.current.querySelector('svg')
         if (svgElement) {
-          const pngDataUrl = await svgToPng(svgElement)
-          imageHtml = `\n\n## 知识图谱\n\n![知识图谱](${pngDataUrl})\n\n`
+          const svgDataUrl = await svgToPng(svgElement)
+          imageHtml = `\n\n## 知识图谱\n\n![知识图谱](${svgDataUrl})\n\n`
         }
       }
 
