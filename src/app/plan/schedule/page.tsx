@@ -2,10 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header, Card, Button, ExportButton, LoadingIndicator } from '@/components/common'
-import MarkdownRenderer from '@/components/common/MarkdownRenderer'
-import ProgressBar from '@/components/common/ProgressBar'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts'
+import { Header, Card, Button, ExportButton, LoadingIndicator, MarkdownRenderer, ProgressBar } from '@/components/common'
 
 const gradeGroups = [
   { label: '小学', grades: ['小一', '小二', '小三', '小四', '小五', '小六'] },
@@ -162,12 +159,6 @@ export default function SchedulePage() {
   const gap = target - current
   const gapPercent = total > 0 ? ((gap / total) * 100).toFixed(1) : '0'
 
-  const barData = [
-    { name: '当前', 分数: current },
-    { name: '目标', 分数: target },
-    { name: '满分', 分数: total },
-  ]
-
   return (
     <div className="min-h-screen bg-slate-900">
       <Header />
@@ -178,13 +169,11 @@ export default function SchedulePage() {
             ← 返回学习规划
           </Button>
 
-          <h1 className="text-2xl font-bold text-white mb-2">📅 学习计划</h1>
-          <p className="text-slate-400 mb-6">AI生成个性化三阶段冲刺方案（含艾宾浩斯复习节点）</p>
+          <h1 className="text-2xl font-bold text-white mb-2 text-center">📅 学习计划</h1>
+          <p className="text-slate-400 mb-6 text-center">AI生成个性化三阶段冲刺方案（含艾宾浩斯复习节点）</p>
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-            <div className="xl:col-span-2">
-              <Card className="mb-6 xl:mb-0">
-                <h3 className="text-lg font-bold text-indigo-400 mb-4">📝 填写信息</h3>
+          <Card className="mb-6">
+            <h3 className="text-lg font-bold text-indigo-400 mb-4">📝 填写信息</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm text-slate-400 mb-1">学段</label>
@@ -333,10 +322,9 @@ export default function SchedulePage() {
                   </div>
                 </div>
               </Card>
-            </div>
 
             {showChart && (
-              <Card>
+              <Card className="mb-6">
                 <h3 className="text-lg font-bold text-emerald-400 mb-4">📊 分数分析</h3>
                 <div className="space-y-6">
                   <ProgressBar
@@ -361,28 +349,9 @@ export default function SchedulePage() {
                       <div className="text-xs text-slate-400">提升比例</div>
                     </div>
                   </div>
-
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={barData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                        <XAxis dataKey="name" stroke="#9ca3af" />
-                        <YAxis stroke="#9ca3af" />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: '#1e293b',
-                            border: '1px solid #374151',
-                            borderRadius: '8px',
-                          }}
-                        />
-                        <Bar dataKey="分数" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
                 </div>
               </Card>
             )}
-          </div>
 
           {(result || loading) && (
             <Card ref={resultRef} onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>

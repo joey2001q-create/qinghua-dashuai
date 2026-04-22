@@ -96,9 +96,12 @@ export default function QuizPage() {
           body: JSON.stringify({ grade: finalGrade, subject, knowledge, difficulty }),
         })
         const data = await response.json()
+        const cleanOptions = (data.options || []).map((opt: string) => {
+          return opt.replace(/^[A-D][.、:：]\s*/, '')
+        })
         quizzes.push({
           question: data.question,
-          options: data.options,
+          options: cleanOptions,
           correctIndex: data.correctIndex,
           explanation: data.explanation,
           knowledgePoint: data.knowledgePoint || '综合',

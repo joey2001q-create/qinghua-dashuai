@@ -8,25 +8,47 @@ export default function AnalysisPage() {
   const router = useRouter()
   const [text, setText] = useState('')
   const [image, setImage] = useState<string | null>(null)
+  const [ocrLoading, setOcrLoading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
     const reader = new FileReader()
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       if (ev.target?.result) {
-        setImage(ev.target.result as string)
+        const base64 = ev.target.result as string
+        setImage(base64)
+
+        setOcrLoading(true)
+        try {
+          const response = await fetch('/api/ocr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              image: base64,
+              fileType: file.type || file.name
+            }),
+          })
+          const data = await response.json()
+          if (data.text) {
+            setText(prev => prev ? `${prev}\n${data.text}` : data.text)
+          }
+        } catch (error) {
+          console.error('OCR error:', error)
+        } finally {
+          setOcrLoading(false)
+        }
       }
     }
     reader.readAsDataURL(file)
   }
 
   const analyze = async () => {
-    if (!text.trim() && !image) {
+    if (!text.trim()) {
       alert('请输入题目或上传图片')
       return
     }
@@ -38,7 +60,7 @@ export default function AnalysisPage() {
       const response = await fetch('/api/weak-analysis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, image }),
+        body: JSON.stringify({ text }),
       })
 
       if (!response.ok) throw new Error('请求失败')
@@ -131,9 +153,11 @@ export default function AnalysisPage() {
                 <textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  placeholder="输入你的错题题目..."
+                  placeholder={ocrLoading ? "OCR识别中..." : "输入你的错题题目，或上传图片自动识别..."}
                   className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white min-h-[120px] placeholder:text-slate-500"
+                  disabled={ocrLoading}
                 />
+                {ocrLoading && <p className="text-xs text-indigo-400 mt-1 animate-pulse">📄 OCR识别中，请稍候...</p>}
               </div>
 
               <Button onClick={analyze} variant="primary" className="w-full" disabled={loading}>

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header, Card, Button, UploadZone, MarkdownRenderer, ProgressBar, ExportButton, LoadingIndicator } from '@/components/common'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, PieChart, Pie, Cell } from 'recharts'
 
 const gradeGroups = [
   {
@@ -37,6 +37,8 @@ export default function PaperPage() {
   const [targetScore, setTargetScore] = useState('')
   const [text, setText] = useState('')
   const [images, setImages] = useState<string[]>([])
+  const [ocrText, setOcrText] = useState('')
+  const [ocrLoading, setOcrLoading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState('')
   const [showAnalysis, setShowAnalysis] = useState(false)
@@ -65,7 +67,28 @@ export default function PaperPage() {
         reader.readAsDataURL(f)
       }))
     )
-    setImages(prev => [...prev, ...base64s].slice(0, 10))
+    const newImages = [...images, ...base64s].slice(0, 10)
+    setImages(newImages)
+
+    if (newImages.length > 0) {
+      setOcrLoading(true)
+      try {
+        const lastImage = newImages[newImages.length - 1]
+        const response = await fetch('/api/ocr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: lastImage }),
+        })
+        const data = await response.json()
+        if (data.text) {
+          setOcrText(prev => prev ? `${prev}\n${data.text}` : data.text)
+        }
+      } catch (error) {
+        console.error('OCR error:', error)
+      } finally {
+        setOcrLoading(false)
+      }
+    }
   }
 
   const removeImage = (index: number) => {
@@ -137,7 +160,7 @@ export default function PaperPage() {
           fullScore: numFull,
           currentScore: numCurrent,
           targetScore: numTarget || undefined,
-          text,
+          text: ocrText || text,
         }),
       })
 
@@ -185,14 +208,21 @@ export default function PaperPage() {
   const target = Number(targetScore) || 0
   const total = Number(fullScore) || 100
   const gap = target - current
-  const gapPercent = total > 0 ? ((gap / total) * 100).toFixed(1) : 0
+  const gapPercent = total > 0 ? ((current / total) * 100).toFixed(1) : 0
   const lossScore = total - current
 
   const barData = [
     { name: '本次得分', 分数: current },
-    { name: '失分', 分数: lossScore > 0 ? lossScore : 0 },
-    ...(target > 0 ? [{ name: '目标', 分数: target }] : []),
+    { name: '目标', 分数: target > 0 ? target : 0 },
+    { name: '满分', 分数: total },
   ]
+
+  const scoreRateData = [
+    { name: '得分', value: current },
+    { name: '失分', value: total - current },
+  ]
+
+  const COLORS = ['#6366f1', '#ef4444']
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -207,154 +237,157 @@ export default function PaperPage() {
           <h1 className="text-2xl font-bold text-white mb-2">📊 卷后提分</h1>
           <p className="text-slate-400 mb-6">上传试卷或描述考试情况，AI分析失分原因并给出针对性提分方案</p>
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div className="xl:col-span-2">
-              <Card>
-                <h3 className="text-lg font-bold text-indigo-400 mb-4">📝 填写信息</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                  <div className="col-span-2 md:col-span-3 xl:col-span-4">
-                    <p className="text-sm text-slate-400 mb-2">选择年级</p>
-                    <div className="flex flex-wrap gap-2">
-                      {gradeGroups.map((group) => (
-                        <div key={group.label} className="flex flex-wrap gap-1">
-                          {group.grades.map((g) => (
-                            <button
-                              key={g}
-                              onClick={() => { setGrade(g); setCustomGrade('') }}
-                              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-                                grade === g
-                                  ? 'bg-indigo-500 text-white'
-                                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                              }`}
-                            >
-                              {g}
-                            </button>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                    <input
-                      type="text"
-                      value={customGrade}
-                      onChange={(e) => { setCustomGrade(e.target.value); setGrade('') }}
-                      placeholder="或自定义年级"
-                      className="mt-2 w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500 text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-slate-400 mb-1">考试类型</label>
-                    <select
-                      value={examType}
-                      onChange={(e) => setExamType(e.target.value)}
-                      className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
-                    >
-                      <option value="">请选择</option>
-                      {availableExamTypes.map(t => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-slate-400 mb-1">学科</label>
-                    <select
-                      value={subject}
-                      onChange={(e) => setSubject(e.target.value)}
-                      className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
-                    >
-                      <option value="">请选择</option>
-                      {availableSubjects.map(s => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-slate-400 mb-1">满分</label>
-                    <input
-                      type="number"
-                      value={fullScore}
-                      onChange={(e) => setFullScore(e.target.value)}
-                      placeholder="100"
-                      min="1"
-                      className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-slate-400 mb-1">本次得分</label>
-                    <input
-                      type="number"
-                      value={currentScore}
-                      onChange={(e) => setCurrentScore(e.target.value)}
-                      placeholder="85"
-                      min="0"
-                      className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-slate-400 mb-1">下次目标</label>
-                    <input
-                      type="number"
-                      value={targetScore}
-                      onChange={(e) => setTargetScore(e.target.value)}
-                      placeholder="95"
-                      min="0"
-                      className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
-                    />
-                  </div>
-
-                  <div className="col-span-2 md:col-span-3 xl:col-span-4">
-                    <UploadZone
-                      onUpload={handleUpload}
-                      multiple
-                      text="上传卷面图片（支持多选）"
-                      subtext="JPG / PNG，最多10张"
-                    />
-                  </div>
-
-                  {images.length > 0 && (
-                    <div className="col-span-2 md:col-span-3 xl:col-span-4 flex flex-wrap gap-2">
-                      {images.map((img, i) => (
-                        <div key={i} className="relative group">
-                          <img src={img} alt={`试卷${i + 1}`} className="w-20 h-20 object-cover rounded-lg" />
+          <div className="grid grid-cols-1 gap-6">
+            <Card>
+              <h3 className="text-lg font-bold text-indigo-400 mb-4">📝 填写信息</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="col-span-2 md:col-span-3 xl:col-span-4">
+                  <p className="text-sm text-slate-400 mb-2">选择年级</p>
+                  <div className="flex flex-wrap gap-2">
+                    {gradeGroups.map((group) => (
+                      <div key={group.label} className="flex flex-wrap gap-1">
+                        {group.grades.map((g) => (
                           <button
-                            onClick={() => removeImage(i)}
-                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full opacity-0 group-hover:opacity-100 transition"
+                            key={g}
+                            onClick={() => { setGrade(g); setCustomGrade('') }}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                              grade === g
+                                ? 'bg-indigo-500 text-white'
+                                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                            }`}
                           >
-                            ×
+                            {g}
                           </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={customGrade}
+                    onChange={(e) => { setCustomGrade(e.target.value); setGrade('') }}
+                    placeholder="或自定义年级"
+                    className="mt-2 w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500 text-sm"
+                  />
+                </div>
 
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">考试类型</label>
+                  <select
+                    value={examType}
+                    onChange={(e) => setExamType(e.target.value)}
+                    className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
+                  >
+                    <option value="">请选择</option>
+                    {availableExamTypes.map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">学科</label>
+                  <select
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
+                  >
+                    <option value="">请选择</option>
+                    {availableSubjects.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">满分</label>
+                  <input
+                    type="number"
+                    value={fullScore}
+                    onChange={(e) => setFullScore(e.target.value)}
+                    placeholder="100"
+                    min="1"
+                    className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">本次得分</label>
+                  <input
+                    type="number"
+                    value={currentScore}
+                    onChange={(e) => setCurrentScore(e.target.value)}
+                    placeholder="85"
+                    min="0"
+                    className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">下次目标</label>
+                  <input
+                    type="number"
+                    value={targetScore}
+                    onChange={(e) => setTargetScore(e.target.value)}
+                    placeholder="95"
+                    min="0"
+                    className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div className="col-span-2 md:col-span-3 xl:col-span-4">
+                  <UploadZone
+                    onUpload={handleUpload}
+                    multiple
+                    text="上传卷面图片（支持多选）"
+                    subtext="JPG / PNG，最多10张"
+                  />
+                </div>
+
+                {images.length > 0 && (
+                  <div className="col-span-2 md:col-span-3 xl:col-span-4 flex flex-wrap gap-2">
+                    {images.map((img, i) => (
+                      <div key={i} className="relative group">
+                        <img src={img} alt={`试卷${i + 1}`} className="w-20 h-20 object-cover rounded-lg" />
+                        <button
+                          onClick={() => removeImage(i)}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full opacity-0 group-hover:opacity-100 transition"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {(ocrText || ocrLoading) && (
                   <div className="col-span-2 md:col-span-3 xl:col-span-4">
-                    <label className="block text-sm text-slate-400 mb-1">或描述考试情况</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="block text-sm text-slate-400">📄 OCR提取结果</label>
+                      {ocrLoading && <span className="text-xs text-indigo-400 animate-pulse">识别中...</span>}
+                    </div>
                     <textarea
-                      value={text}
-                      onChange={(e) => setText(e.target.value)}
-                      placeholder="如：数学考试，选择题错3题，大题扣15分，主要失分在函数和几何"
-                      className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white min-h-[100px] placeholder:text-slate-500"
+                      value={ocrText}
+                      onChange={(e) => setOcrText(e.target.value)}
+                      placeholder="OCR提取的文字将显示在这里，您可以直接编辑修改..."
+                      className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white min-h-[120px] placeholder:text-slate-500 text-sm"
                     />
                   </div>
+                )}
 
-                  <div className="col-span-2 md:col-span-3 xl:col-span-4">
-                    <Button onClick={analyze} variant="orange" className="w-full" disabled={loading}>
-                      {loading ? (
-                        <span className="flex items-center gap-2">
-                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                          </svg>
-                          AI正在分析...
-                        </span>
-                      ) : (
-                        '🔍 开始分析'
-                      )}
-                    </Button>
-                  </div>
+                <div className="col-span-2 md:col-span-3 xl:col-span-4">
+                  <Button onClick={analyze} variant="orange" className="w-full" disabled={loading}>
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        AI正在分析...
+                      </span>
+                    ) : (
+                      '🔍 开始分析'
+                    )}
+                  </Button>
                 </div>
-              </Card>
-            </div>
+              </div>
+            </Card>
 
             {showAnalysis && (
               <Card>
@@ -379,36 +412,70 @@ export default function PaperPage() {
                       <div className="text-2xl font-bold text-rose-400">{lossScore > 0 ? lossScore : 0}</div>
                       <div className="text-xs text-slate-400">失分</div>
                     </div>
-                    {target > 0 && (
-                      <div className="text-center p-3 bg-slate-700/30 rounded-lg">
-                        <div className="text-2xl font-bold text-emerald-400">+{gap}</div>
-                        <div className="text-xs text-slate-400">需提升</div>
-                      </div>
-                    )}
-                    {target <= 0 && (
-                      <div className="text-center p-3 bg-slate-700/30 rounded-lg">
-                        <div className="text-2xl font-bold text-amber-400">{gapPercent}%</div>
-                        <div className="text-xs text-slate-400">得分率</div>
-                      </div>
-                    )}
+                    <div className="text-center p-3 bg-slate-700/30 rounded-lg">
+                      <div className="text-2xl font-bold text-amber-400">{gapPercent}%</div>
+                      <div className="text-xs text-slate-400">得分率</div>
+                    </div>
                   </div>
 
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={barData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                        <XAxis dataKey="name" stroke="#9ca3af" />
-                        <YAxis stroke="#9ca3af" />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: '#1e293b',
-                            border: '1px solid #374151',
-                            borderRadius: '8px',
-                          }}
-                        />
-                        <Bar dataKey="分数" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="h-64">
+                      <p className="text-sm text-slate-400 mb-2 text-center">得分率分布</p>
+                      <ResponsiveContainer width="100%" height="85%">
+                        <PieChart>
+                          <Pie
+                            data={scoreRateData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={90}
+                            paddingAngle={0}
+                            startAngle={0}
+                            endAngle={360}
+                            dataKey="value"
+                          >
+                            {scoreRateData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: '#1e293b',
+                              border: '1px solid #374151',
+                              borderRadius: '8px',
+                            }}
+                            formatter={(value: number) => [`${value}分`, '']}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="flex justify-center gap-4 text-xs">
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-indigo-500"></span>得分 {current}分
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-red-500"></span>失分 {total - current}分
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="h-64">
+                      <p className="text-sm text-slate-400 mb-2 text-center">分数对比</p>
+                      <ResponsiveContainer width="100%" height="85%">
+                        <BarChart data={barData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                          <XAxis dataKey="name" stroke="#9ca3af" />
+                          <YAxis stroke="#9ca3af" />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: '#1e293b',
+                              border: '1px solid #374151',
+                              borderRadius: '8px',
+                            }}
+                          />
+                          <Bar dataKey="分数" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
                 </div>
               </Card>
