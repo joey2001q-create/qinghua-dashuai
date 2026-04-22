@@ -197,7 +197,7 @@ export default function VocabPage() {
   const getEndDate = () => {
     const end = new Date()
     end.setDate(end.getDate() + targetDays)
-    return end.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })
+    return end.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })
   }
 
   return (

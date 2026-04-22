@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header, Card, Button, MarkdownRenderer, LoadingIndicator } from '@/components/common'
-import { exportAsDocx, exportAsMd } from '@/lib/export'
+import { exportAsDocx, exportAsMd, MermaidImageMap } from '@/lib/export'
 
 const grades = ['小学', '初一', '初二', '初三', '高一', '高二', '高三']
 const subjects = ['数学', '物理', '化学', '语文', '英语', '历史', '地理', '生物', '政治']
@@ -247,7 +247,48 @@ ${result.replace(/```mermaid\n[\s\S]*?\n```/g, '')}`
     setShowExportMenu(false)
     try {
       const content = getExportContent()
-      await exportAsDocx(content, `知识图谱-${topic}`)
+      const mermaidImages: MermaidImageMap = {}
+      
+      if (mermaidCode && mermaidRef.current) {
+        const svgElement = mermaidRef.current.querySelector('svg')
+        if (svgElement) {
+          const canvas = document.createElement('canvas')
+          const ctx = canvas.getContext('2d')
+          const svgData = new XMLSerializer().serializeToString(svgElement)
+          const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
+          const url = URL.createObjectURL(svgBlob)
+          
+          const img = new window.Image()
+          img.crossOrigin = 'anonymous'
+          
+          await new Promise<void>((resolve, reject) => {
+            img.onload = () => resolve()
+            img.onerror = () => reject(new Error('SVG图片加载失败'))
+            img.src = url
+          })
+          
+          canvas.width = img.width * 2
+          canvas.height = img.height * 2
+          ctx!.fillStyle = '#1e293b'
+          ctx!.fillRect(0, 0, canvas.width, canvas.height)
+          ctx!.drawImage(img, 0, 0, canvas.width, canvas.height)
+          URL.revokeObjectURL(url)
+          
+          const blob = await new Promise<Blob>((resolve) => {
+            canvas.toBlob((b) => resolve(b!), 'image/png')
+          })
+          const arrayBuffer = await blob.arrayBuffer()
+          const maxWidth = 600
+          const finalScale = canvas.width > maxWidth * 2 ? (maxWidth * 2) / canvas.width : 1
+          mermaidImages[0] = {
+            data: Buffer.from(arrayBuffer),
+            width: canvas.width * finalScale / 2,
+            height: canvas.height * finalScale / 2,
+          }
+        }
+      }
+      
+      await exportAsDocx(content, `知识图谱-${topic}`, mermaidImages)
     } catch (error) {
       console.error('Export Word error:', error)
       alert('导出Word失败，请重试')
@@ -360,6 +401,7 @@ ${result.replace(/```mermaid\n[\s\S]*?\n```/g, '')}`
             <Card ref={resultRef} onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-indigo-400">📊 知识图谱</h3>
+                {/* 导出功能暂时隐藏
                 <div className="relative" ref={exportMenuRef}>
                   <button
                     onClick={() => setShowExportMenu(!showExportMenu)}
@@ -390,6 +432,7 @@ ${result.replace(/```mermaid\n[\s\S]*?\n```/g, '')}`
                     </div>
                   )}
                 </div>
+                */}
               </div>
               
               {mermaidCode && (

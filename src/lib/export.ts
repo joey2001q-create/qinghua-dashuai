@@ -1,4 +1,4 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun } from 'docx'
 import { saveAs } from 'file-saver'
 
 export type ExportFormat = 'md' | 'docx'
@@ -19,10 +19,12 @@ function stripFilenameExt(filename: string): string {
 
 function parseMarkdownToSections(md: string) {
   const lines = md.split('\n')
-  const sections: { type: 'h1' | 'h2' | 'h3' | 'p' | 'li' | 'table' | 'hr' | 'blank'; content: string; rows?: string[][] }[] = []
+  const sections: { type: 'h1' | 'h2' | 'h3' | 'p' | 'li' | 'table' | 'hr' | 'blank' | 'mermaid'; content: string; rows?: string[][] }[] = []
   let i = 0
   let inTable = false
   let tableRows: string[][] = []
+  let inMermaid = false
+  let mermaidContent = ''
 
   const flushTable = () => {
     if (tableRows.length > 0) {
@@ -34,6 +36,24 @@ function parseMarkdownToSections(md: string) {
 
   while (i < lines.length) {
     const line = lines[i]
+
+    if (inMermaid) {
+      if (line.trim() === '```') {
+        sections.push({ type: 'mermaid', content: mermaidContent.trim() })
+        mermaidContent = ''
+        inMermaid = false
+      } else {
+        mermaidContent += line + '\n'
+      }
+      i++
+      continue
+    }
+
+    if (line.trim() === '```mermaid') {
+      inMermaid = true
+      i++
+      continue
+    }
 
     if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
       if (!inTable) inTable = true
@@ -94,9 +114,12 @@ function mdTextRuns(text: string): TextRun[] {
   return runs
 }
 
-export async function exportAsDocx(content: string, filename: string) {
+export type MermaidImageMap = Record<number, { data: Buffer; width: number; height: number }>
+
+export async function exportAsDocx(content: string, filename: string, mermaidImages?: MermaidImageMap) {
   const sections = parseMarkdownToSections(content)
   const children: (Paragraph | Table)[] = []
+  let mermaidIndex = 0
 
   for (const section of sections) {
     switch (section.type) {
@@ -134,6 +157,22 @@ export async function exportAsDocx(content: string, filename: string) {
           indent: { left: 360 },
         }))
         break
+      case 'mermaid': {
+        const imgData = mermaidImages?.[mermaidIndex]
+        if (imgData) {
+          children.push(new Paragraph({
+            children: [new ImageRun({
+              data: imgData.data,
+              transformation: { width: imgData.width, height: imgData.height },
+              type: 'png',
+            })],
+            spacing: { before: 200, after: 200 },
+            alignment: AlignmentType.CENTER,
+          }))
+        }
+        mermaidIndex++
+        break
+      }
       case 'table': {
         if (!section.rows || section.rows.length === 0) break
         const colCount = section.rows[0].length
