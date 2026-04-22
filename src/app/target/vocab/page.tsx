@@ -226,14 +226,14 @@ export default function VocabPage() {
                   <input
                     type="range"
                     min="10"
-                    max="100"
+                    max="300"
                     value={targetDays}
                     onChange={(e) => setTargetDays(Number(e.target.value))}
                     className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                   />
                   <div className="flex justify-between text-xs text-slate-500 mt-1">
                     <span>10天</span>
-                    <span>100天</span>
+                    <span>300天</span>
                   </div>
                 </div>
 
