@@ -460,10 +460,10 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
             </div>
           ) : (
             <>
-              <StepBar steps={steps} currentStep={step} />
+              <StepBar steps={steps} currentStep={step} className="mb-6" />
 
               {step === 1 && (
-                <Card>
+                <Card className="mb-6">
                   <h3 className="text-lg font-bold text-indigo-400 mb-4">📚 选择年级</h3>
                   <div className="space-y-4">
                     {gradeGroups.map((group) => (
@@ -486,9 +486,9 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
               )}
 
               {step === 2 && (
-                <Card>
+                <Card className="mb-6">
                   <h3 className="text-lg font-bold text-indigo-400 mb-4">📐 选择学科</h3>
-                  <div className="grid grid-cols-4 gap-2 mb-4">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-4">
                     {availableSubjects.map(s => (
                       <button key={s} onClick={() => setSubject(s)} className={`px-3 py-2 rounded-lg text-sm font-medium transition ${subject === s ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>{s}</button>
                     ))}
@@ -501,7 +501,7 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
               )}
 
               {step === 3 && (
-                <Card>
+                <Card className="mb-6">
                   <h3 className="text-lg font-bold text-indigo-400 mb-4">📖 知识模块（可选）</h3>
                   <textarea value={knowledge} onChange={(e) => setKnowledge(e.target.value)} placeholder="例如：文言文实词、阅读理解答题技巧&#10;可填写多个，用回车分隔" className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white min-h-[100px] placeholder:text-slate-500" />
                   <div className="flex gap-3 mt-4">
@@ -512,7 +512,7 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
               )}
 
               {step === 4 && (
-                <Card>
+                <Card className="mb-6">
                   <h3 className="text-lg font-bold text-indigo-400 mb-4">⚡ 训练设置</h3>
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <button onClick={() => setMode('quick')} className={`p-6 rounded-xl border-2 transition ${mode === 'quick' ? 'border-indigo-500 bg-indigo-500/10' : 'border-slate-600 hover:border-slate-500'}`}>
