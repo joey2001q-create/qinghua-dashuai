@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header, Card, Button, UploadZone, MarkdownRenderer, ExportButton, LoadingIndicator } from '@/components/common'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 
 const gradeGroups = [
   {
@@ -22,8 +21,6 @@ const gradeGroups = [
     subjects: ['数学', '语文', '英语', '物理', '化学', '历史', '政治', '生物']
   }
 ]
-
-const COVERAGE_COLORS = ['#10b981', '#f59e0b', '#ef4444']
 
 export default function PointsPage() {
   const router = useRouter()
@@ -151,12 +148,6 @@ export default function PointsPage() {
   const totalPoints = mastered + halfMastered + notMastered
   const coveragePercent = totalPoints > 0 ? ((mastered / totalPoints) * 100).toFixed(1) : 0
 
-  const pieData = [
-    { name: '已掌握', value: mastered },
-    { name: '半掌握', value: halfMastered },
-    { name: '未掌握', value: notMastered },
-  ].filter(d => d.value > 0)
-
   return (
     <div className="min-h-screen bg-slate-900">
       <Header />
@@ -170,8 +161,7 @@ export default function PointsPage() {
           <h1 className="text-2xl font-bold text-white mb-2">🎯 考点覆盖检测</h1>
           <p className="text-slate-400 mb-6">上传考试大纲或教材目录，AI智能提取考点并评估掌握程度</p>
 
-          <div className="grid grid-cols-1 gap-6">
-            <Card>
+          <Card className="mb-6">
               <h3 className="text-lg font-bold text-indigo-400 mb-4">📝 填写信息</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
                 <div>
@@ -251,7 +241,7 @@ export default function PointsPage() {
             </Card>
 
             {showCoverage && (
-              <Card>
+              <Card className="mb-6">
                 <h3 className="text-lg font-bold text-emerald-400 mb-4">📊 考点覆盖评估</h3>
                 <div className="space-y-6">
                   <div className="space-y-4">
@@ -317,41 +307,11 @@ export default function PointsPage() {
                           <div className="text-xs text-slate-400">未掌握</div>
                         </div>
                       </div>
-
-                      <div className="h-52">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={pieData}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={50}
-                              outerRadius={80}
-                              paddingAngle={3}
-                              dataKey="value"
-                              label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
-                            >
-                              {pieData.map((_, index) => (
-                                <Cell key={`cell-${index}`} fill={COVERAGE_COLORS[index % COVERAGE_COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: '#1e293b',
-                                border: '1px solid #374151',
-                                borderRadius: '8px',
-                              }}
-                            />
-                            <Legend />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
                     </>
                   )}
                 </div>
               </Card>
             )}
-          </div>
 
           {(result || loading) && (
             <Card ref={resultRef} className="mt-6" onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>

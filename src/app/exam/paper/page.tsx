@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header, Card, Button, UploadZone, MarkdownRenderer, ProgressBar, ExportButton, LoadingIndicator } from '@/components/common'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, PieChart, Pie, Cell } from 'recharts'
 
 const gradeGroups = [
   {
@@ -211,19 +210,6 @@ export default function PaperPage() {
   const gapPercent = total > 0 ? ((current / total) * 100).toFixed(1) : 0
   const lossScore = total - current
 
-  const barData = [
-    { name: '本次得分', 分数: current },
-    { name: '目标', 分数: target > 0 ? target : 0 },
-    { name: '满分', 分数: total },
-  ]
-
-  const scoreRateData = [
-    { name: '得分', value: current },
-    { name: '失分', value: total - current },
-  ]
-
-  const COLORS = ['#6366f1', '#ef4444']
-
   return (
     <div className="min-h-screen bg-slate-900">
       <Header />
@@ -237,8 +223,7 @@ export default function PaperPage() {
           <h1 className="text-2xl font-bold text-white mb-2">📊 卷后提分</h1>
           <p className="text-slate-400 mb-6">上传试卷或描述考试情况，AI分析失分原因并给出针对性提分方案</p>
 
-          <div className="grid grid-cols-1 gap-6">
-            <Card>
+          <Card className="mb-6">
               <h3 className="text-lg font-bold text-indigo-400 mb-4">📝 填写信息</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                 <div className="col-span-2 md:col-span-3 xl:col-span-4">
@@ -390,7 +375,7 @@ export default function PaperPage() {
             </Card>
 
             {showAnalysis && (
-              <Card>
+              <Card className="mb-6">
                 <h3 className="text-lg font-bold text-emerald-400 mb-4">📊 分数分析</h3>
                 <div className="space-y-6">
                   {target > 0 && (
@@ -417,70 +402,9 @@ export default function PaperPage() {
                       <div className="text-xs text-slate-400">得分率</div>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="h-64">
-                      <p className="text-sm text-slate-400 mb-2 text-center">得分率分布</p>
-                      <ResponsiveContainer width="100%" height="85%">
-                        <PieChart>
-                          <Pie
-                            data={scoreRateData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={90}
-                            paddingAngle={0}
-                            startAngle={0}
-                            endAngle={360}
-                            dataKey="value"
-                          >
-                            {scoreRateData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: '#1e293b',
-                              border: '1px solid #374151',
-                              borderRadius: '8px',
-                            }}
-                            formatter={(value: number) => [`${value}分`, '']}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                      <div className="flex justify-center gap-4 text-xs">
-                        <span className="flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-indigo-500"></span>得分 {current}分
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-red-500"></span>失分 {total - current}分
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="h-64">
-                      <p className="text-sm text-slate-400 mb-2 text-center">分数对比</p>
-                      <ResponsiveContainer width="100%" height="85%">
-                        <BarChart data={barData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                          <XAxis dataKey="name" stroke="#9ca3af" />
-                          <YAxis stroke="#9ca3af" />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: '#1e293b',
-                              border: '1px solid #374151',
-                              borderRadius: '8px',
-                            }}
-                          />
-                          <Bar dataKey="分数" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
                 </div>
               </Card>
             )}
-          </div>
 
           {(result || loading) && (
             <Card ref={resultRef} className="mt-6" onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>

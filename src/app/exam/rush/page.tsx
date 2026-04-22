@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header, Card, Button, StepBar, MarkdownRenderer, ProgressBar, ExportButton, LoadingIndicator } from '@/components/common'
 import { Subject } from '@/types'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts'
 
 const gradeGroups = [
   {
@@ -198,12 +197,6 @@ export default function RushPage() {
   const totalGap = totalTarget - totalCurrent
   const gapPercent = totalFull > 0 ? ((totalGap / totalFull) * 100).toFixed(1) : 0
 
-  const barData = subjectScores.map(s => ({
-    name: s.subject,
-    当前: Number(s.currentScore) || 0,
-    目标: Number(s.targetScore) || 0,
-  }))
-
   return (
     <div className="min-h-screen bg-slate-900">
       <Header />
@@ -217,12 +210,10 @@ export default function RushPage() {
           <h1 className="text-2xl font-bold text-white mb-2">🗓️ 考前冲刺计划</h1>
           <p className="text-slate-400 mb-6">设定目标，AI生成每日冲刺清单</p>
 
-          <StepBar steps={steps} currentStep={step} />
+          <StepBar steps={steps} currentStep={step} className="mb-6" />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
           {step === 1 && (
-            <Card>
+            <Card className="mb-6">
               <h3 className="text-lg font-bold text-indigo-400 mb-4">📚 选择年级</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -252,7 +243,7 @@ export default function RushPage() {
           )}
 
           {step === 2 && (
-                <Card>
+            <Card className="mb-6">
                   <h3 className="text-lg font-bold text-indigo-400 mb-4">📐 选择科目（1-3科）</h3>
                   <div className="grid grid-cols-4 gap-2 mb-4">
                     {availableSubjects.map((s) => (
@@ -279,10 +270,10 @@ export default function RushPage() {
                     </Button>
                   </div>
                 </Card>
-              )}
+          )}
 
-              {step === 3 && (
-                <Card>
+          {step === 3 && (
+            <Card className="mb-6">
                   <h3 className="text-lg font-bold text-indigo-400 mb-4">⏰ 备考信息</h3>
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -384,10 +375,10 @@ export default function RushPage() {
                     </Button>
                   </div>
                 </Card>
-              )}
+          )}
 
-              {step === 4 && result && (
-                <Card>
+          {step === 4 && result && (
+            <Card className="mb-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-emerald-400">✅ 计划已生成</h3>
                     <Button
@@ -412,69 +403,44 @@ export default function RushPage() {
                     <p>考试：{examName}（还有{daysUntilExam}天）</p>
                   </div>
                 </Card>
-              )}
-            </div>
+          )}
 
-            {showAnalysis && (
+          {showAnalysis && (
+            <Card className="mb-6">
+              <h3 className="text-lg font-bold text-emerald-400 mb-4">📊 分数分析</h3>
               <div className="space-y-6">
-                <Card>
-                  <h3 className="text-lg font-bold text-emerald-400 mb-4">📊 分数分析</h3>
-                  <div className="space-y-6">
-                    <ProgressBar
-                      current={totalCurrent}
-                      target={totalTarget}
-                      total={totalFull}
-                      label="总分提分进度"
-                      color="emerald"
-                    />
+                <ProgressBar
+                  current={totalCurrent}
+                  target={totalTarget}
+                  total={totalFull}
+                  label="总分提分进度"
+                  color="emerald"
+                />
 
-                    <div className="grid grid-cols-3 gap-4 pt-4">
-                      <div className="text-center p-3 bg-slate-700/30 rounded-lg">
-                        <div className="text-2xl font-bold text-indigo-400">{totalCurrent}</div>
-                        <div className="text-xs text-slate-400">当前总分</div>
-                      </div>
-                      <div className="text-center p-3 bg-slate-700/30 rounded-lg">
-                        <div className="text-2xl font-bold text-emerald-400">+{totalGap}</div>
-                        <div className="text-xs text-slate-400">需提升</div>
-                      </div>
-                      <div className="text-center p-3 bg-slate-700/30 rounded-lg">
-                        <div className="text-2xl font-bold text-amber-400">{gapPercent}%</div>
-                        <div className="text-xs text-slate-400">提升比例</div>
-                      </div>
-                    </div>
-
-                    {daysUntilExam && (
-                      <div className="text-center p-4 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-lg border border-indigo-500/30">
-                        <div className="text-3xl font-bold text-white">{getDaysUntilExam()}</div>
-                        <div className="text-sm text-slate-400">天后考试</div>
-                      </div>
-                    )}
-
-                    {barData.length > 0 && (
-                      <div className="h-48">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={barData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                            <XAxis dataKey="name" stroke="#9ca3af" />
-                            <YAxis stroke="#9ca3af" />
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: '#1e293b',
-                                border: '1px solid #374151',
-                                borderRadius: '8px',
-                              }}
-                            />
-                            <Bar dataKey="当前" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="目标" fill="#10b981" radius={[4, 4, 0, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    )}
+                <div className="grid grid-cols-3 gap-4 pt-4">
+                  <div className="text-center p-3 bg-slate-700/30 rounded-lg">
+                    <div className="text-2xl font-bold text-indigo-400">{totalCurrent}</div>
+                    <div className="text-xs text-slate-400">当前总分</div>
                   </div>
-                </Card>
+                  <div className="text-center p-3 bg-slate-700/30 rounded-lg">
+                    <div className="text-2xl font-bold text-emerald-400">+{totalGap}</div>
+                    <div className="text-xs text-slate-400">需提升</div>
+                  </div>
+                  <div className="text-center p-3 bg-slate-700/30 rounded-lg">
+                    <div className="text-2xl font-bold text-amber-400">{gapPercent}%</div>
+                    <div className="text-xs text-slate-400">提升比例</div>
+                  </div>
+                </div>
+
+                {daysUntilExam && (
+                  <div className="text-center p-4 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-lg border border-indigo-500/30">
+                    <div className="text-3xl font-bold text-white">{getDaysUntilExam()}</div>
+                    <div className="text-sm text-slate-400">天后考试</div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </Card>
+          )}
 
           {(result || loading) && (
             <Card ref={resultRef} className="mt-6" onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>
