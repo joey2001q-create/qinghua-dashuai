@@ -5,11 +5,12 @@ import { ReactNode } from 'react'
 interface StepBarProps {
   steps: string[]
   currentStep: number
+  className?: string
 }
 
-export default function StepBar({ steps, currentStep }: StepBarProps) {
+export default function StepBar({ steps, currentStep, className = '' }: StepBarProps) {
   return (
-    <div className="flex gap-1 p-3 bg-slate-800 rounded-xl overflow-x-auto">
+    <div className={`flex gap-1 p-3 bg-slate-800 rounded-xl overflow-x-auto ${className}`}>
       {steps.map((step, index) => (
         <span
           key={index}

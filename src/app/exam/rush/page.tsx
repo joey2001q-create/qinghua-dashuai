@@ -244,165 +244,165 @@ export default function RushPage() {
 
           {step === 2 && (
             <Card className="mb-6">
-                  <h3 className="text-lg font-bold text-indigo-400 mb-4">📐 选择科目（1-3科）</h3>
-                  <div className="grid grid-cols-4 gap-2 mb-4">
-                    {availableSubjects.map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => toggleSubject(s)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                          selectedSubjects.includes(s)
-                            ? 'bg-indigo-500 text-white'
-                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                        }`}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-sm text-slate-400 mb-4">
-                    已选：<span className="text-indigo-400 font-medium">{selectedSubjects.join('、') || '待选择'}</span>
+              <h3 className="text-lg font-bold text-indigo-400 mb-4">📐 选择科目（1-3科）</h3>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-4">
+                {availableSubjects.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => toggleSubject(s)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                      selectedSubjects.includes(s)
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm text-slate-400 mb-4">
+                已选：<span className="text-indigo-400 font-medium">{selectedSubjects.join('、') || '待选择'}</span>
                   </p>
-                  <div className="flex gap-3">
-                    <Button onClick={() => setStep(1)} variant="outline">← 上一步</Button>
-                    <Button onClick={() => setStep(3)} variant="primary" className="flex-1" disabled={!canProceed()}>
-                      下一步 →
-                    </Button>
-                  </div>
-                </Card>
+              <div className="flex gap-3">
+                <Button onClick={() => setStep(1)} variant="outline">← 上一步</Button>
+                <Button onClick={() => setStep(3)} variant="primary" className="flex-1" disabled={!canProceed()}>
+                  下一步 →
+                </Button>
+              </div>
+            </Card>
           )}
 
           {step === 3 && (
             <Card className="mb-6">
-                  <h3 className="text-lg font-bold text-indigo-400 mb-4">⏰ 备考信息</h3>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm text-slate-400 mb-1">考试名称</label>
-                        <select
-                          value={examName}
-                          onChange={(e) => setExamName(e.target.value)}
-                          className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
-                        >
-                          <option value="">请选择</option>
-                          {availableExamTypes.map(t => (
-                            <option key={t} value={t}>{t}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm text-slate-400 mb-1">距离考试天数</label>
-                        <input
-                          type="number"
-                          value={daysUntilExam}
-                          onChange={(e) => setDaysUntilExam(e.target.value)}
-                          placeholder="如：30"
-                          min="1"
-                          className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <p className="text-sm text-slate-400">各科目分数</p>
-                      {subjectScores.map((s) => (
-                        <div key={s.subject} className="p-3 bg-slate-700/30 rounded-lg">
-                          <p className="text-sm font-medium text-indigo-400 mb-2">{s.subject}</p>
-                          <div className="grid grid-cols-3 gap-2">
-                            <div>
-                              <label className="block text-xs text-slate-500 mb-1">当前得分</label>
-                              <input
-                                type="number"
-                                value={s.currentScore}
-                                onChange={(e) => updateSubjectScore(s.subject, 'currentScore', e.target.value)}
-                                placeholder="80"
-                                className="w-full px-3 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder:text-slate-500"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs text-slate-500 mb-1">满分</label>
-                              <input
-                                type="number"
-                                value={s.fullScore}
-                                onChange={(e) => updateSubjectScore(s.subject, 'fullScore', e.target.value)}
-                                className="w-full px-3 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder:text-slate-500"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs text-slate-500 mb-1">目标分数</label>
-                              <input
-                                type="number"
-                                value={s.targetScore}
-                                onChange={(e) => updateSubjectScore(s.subject, 'targetScore', e.target.value)}
-                                placeholder="95"
-                                className="w-full px-3 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder:text-slate-500"
-                              />
-                            </div>
-                          </div>
-                        </div>
+              <h3 className="text-lg font-bold text-indigo-400 mb-4">⏰ 备考信息</h3>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">考试名称</label>
+                    <select
+                      value={examName}
+                      onChange={(e) => setExamName(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
+                    >
+                      <option value="">请选择</option>
+                      {availableExamTypes.map(t => (
+                        <option key={t} value={t}>{t}</option>
                       ))}
-                    </div>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">距离考试天数</label>
+                    <input
+                      type="number"
+                      value={daysUntilExam}
+                      onChange={(e) => setDaysUntilExam(e.target.value)}
+                      placeholder="如：30"
+                      min="1"
+                      className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder:text-slate-500"
+                    />
+                  </div>
+                </div>
 
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">每天可投入时间</label>
-                      <select
-                        value={dailyHours}
-                        onChange={(e) => setDailyHours(e.target.value)}
-                        className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
-                      >
-                        <option value="1">1小时</option>
-                        <option value="2">2小时</option>
-                        <option value="3">3小时</option>
-                        <option value="4">4小时</option>
-                        <option value="5">5小时+</option>
-                      </select>
+                <div className="space-y-3">
+                  <p className="text-sm text-slate-400">各科目分数</p>
+                  {subjectScores.map((s) => (
+                    <div key={s.subject} className="p-3 bg-slate-700/30 rounded-lg">
+                      <p className="text-sm font-medium text-indigo-400 mb-2">{s.subject}</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-xs text-slate-500 mb-1">当前得分</label>
+                          <input
+                            type="number"
+                            value={s.currentScore}
+                            onChange={(e) => updateSubjectScore(s.subject, 'currentScore', e.target.value)}
+                            placeholder="80"
+                            className="w-full px-3 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder:text-slate-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-slate-500 mb-1">满分</label>
+                          <input
+                            type="number"
+                            value={s.fullScore}
+                            onChange={(e) => updateSubjectScore(s.subject, 'fullScore', e.target.value)}
+                            className="w-full px-3 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder:text-slate-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-slate-500 mb-1">目标分数</label>
+                          <input
+                            type="number"
+                            value={s.targetScore}
+                            onChange={(e) => updateSubjectScore(s.subject, 'targetScore', e.target.value)}
+                            placeholder="95"
+                            className="w-full px-3 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder:text-slate-500"
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-3 mt-4">
-                    <Button onClick={() => setStep(2)} variant="outline">← 上一步</Button>
-                    <Button onClick={generatePlan} variant="orange" className="flex-1" disabled={loading}>
-                      {loading ? (
-                        <span className="flex items-center gap-2">
-                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                          </svg>
-                          AI正在生成计划...
-                        </span>
-                      ) : (
-                        '🚀 生成冲刺计划'
-                      )}
-                    </Button>
-                  </div>
-                </Card>
+                  ))}
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">每天可投入时间</label>
+                  <select
+                    value={dailyHours}
+                    onChange={(e) => setDailyHours(e.target.value)}
+                    className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
+                  >
+                    <option value="1">1小时</option>
+                    <option value="2">2小时</option>
+                    <option value="3">3小时</option>
+                    <option value="4">4小时</option>
+                    <option value="5">5小时+</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-4">
+                <Button onClick={() => setStep(2)} variant="outline">← 上一步</Button>
+                <Button onClick={generatePlan} variant="orange" className="flex-1" disabled={loading}>
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      AI正在生成计划...
+                    </span>
+                  ) : (
+                    '🚀 生成冲刺计划'
+                  )}
+                </Button>
+              </div>
+            </Card>
           )}
 
           {step === 4 && result && (
             <Card className="mb-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-emerald-400">✅ 计划已生成</h3>
-                    <Button
-                      onClick={() => {
-                        setStep(1)
-                        setResult('')
-                        setGrade('')
-                        setCustomGrade('')
-                        setSelectedSubjects([])
-                        setSubjectScores([])
-                        setShowAnalysis(false)
-                      }}
-                      variant="ghost"
-                      size="sm"
-                    >
-                      🔄 重新开始
-                    </Button>
-                  </div>
-                  <div className="text-sm text-slate-400">
-                    <p>年级：{customGrade || grade}</p>
-                    <p>科目：{selectedSubjects.join('、')}</p>
-                    <p>考试：{examName}（还有{daysUntilExam}天）</p>
-                  </div>
-                </Card>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-emerald-400">✅ 计划已生成</h3>
+                <Button
+                  onClick={() => {
+                    setStep(1)
+                    setResult('')
+                    setGrade('')
+                    setCustomGrade('')
+                    setSelectedSubjects([])
+                    setSubjectScores([])
+                    setShowAnalysis(false)
+                  }}
+                  variant="ghost"
+                  size="sm"
+                >
+                  🔄 重新开始
+                </Button>
+              </div>
+              <div className="text-sm text-slate-400">
+                <p>年级：{customGrade || grade}</p>
+                <p>科目：{selectedSubjects.join('、')}</p>
+                <p>考试：{examName}（还有{daysUntilExam}天）</p>
+              </div>
+            </Card>
           )}
 
           {showAnalysis && (
