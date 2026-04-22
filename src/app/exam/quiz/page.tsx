@@ -379,7 +379,7 @@ ${wrongQuestions.map((q, i) => `### 第${i + 1}题\n**题目**：${q.question}\n
                       <span className="text-red-400 font-bold text-lg">✗ 回答错误</span>
                     )}
                   </div>
-                  {!currentAnswer === currentQuiz.correctIndex && (
+                  {currentAnswer !== currentQuiz.correctIndex && (
                     <p className="text-slate-300 mb-3">正确答案：{String.fromCharCode(65 + currentQuiz.correctIndex)}. {currentQuiz.options[currentQuiz.correctIndex]}</p>
                   )}
                   <p className="text-slate-400 text-sm border-t border-slate-700 pt-3">💡 {currentQuiz.explanation}</p>
