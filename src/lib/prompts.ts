@@ -1219,7 +1219,7 @@ export function getPromptVersions(id: string): PromptVersion[] | undefined {
   return prompt?.versionHistory
 }
 
-export function interpolatePrompt(template: string, variables: Record<string, string | number>): string {
+export function interpolatePrompt(template: string, variables: Record<string, string | number | boolean>): string {
   let result = template
   for (const [key, value] of Object.entries(variables)) {
     const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g')
