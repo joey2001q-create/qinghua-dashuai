@@ -8,42 +8,48 @@ export default function ExamPage() {
 
   const features = [
     {
+      icon: '🎯',
+      title: 'ABC计划表',
+      description: '智能目标分配 · 信心评估',
+      path: '/plan/abc',
+    },
+    {
       icon: '🗓️',
-      title: '考前冲刺计划',
+      title: '冲刺计划',
       description: '设定目标，AI生成每日冲刺清单',
       path: '/exam/rush',
     },
     {
-      icon: '📄',
-      title: '卷后提分',
-      description: '上传试卷，AI分析失分点',
-      path: '/exam/paper',
-    },
-    {
       icon: '🎯',
-      title: '考点覆盖检测',
+      title: '考点梳理',
       description: '检测你对各考点的掌握程度',
       path: '/exam/points',
     },
     {
+      icon: '📄',
+      title: '试卷分析',
+      description: '上传试卷，AI分析失分点',
+      path: '/exam/paper',
+    },
+    {
       icon: '🧠',
-      title: '题感训练',
+      title: '题感挑战',
       description: 'AI自适应训练，识别薄弱环节',
       path: '/exam/quiz',
     },
-    {
-      icon: '📊',
-      title: '失分原因分析器',
-      description: '输入成绩，AI诊断薄弱知识点',
-      path: '/exam/analysis',
-    },
-    {
-      icon: '🤖',
-      title: '学习搭子',
-      description: 'AI智能学习助手，随时提问即时解答',
-      path: null,
-      externalUrl: 'https://chatglm.cn/',
-    },
+    // {
+    //   icon: '📊',
+    //   title: '失分原因分析器',
+    //   description: '输入成绩，AI诊断薄弱知识点',
+    //   path: '/exam/analysis',
+    // },
+    // {
+    //   icon: '🤖',
+    //   title: '学习搭子',
+    //   description: 'AI智能学习助手，随时提问即时解答',
+    //   path: null,
+    //   externalUrl: 'https://chatglm.cn/',
+    // },
   ]
 
   return (

@@ -14,6 +14,24 @@ export default function TargetPage() {
       path: '/target/preview',
     },
     {
+      icon: '🗺️',
+      title: '图解知识点',
+      description: '可视化知识脉络图',
+      path: '/target/kgraph',
+    },
+    {
+      icon: '🧠',
+      title: '费曼学习法',
+      description: '讲给别人听懂，才算真掌握',
+      path: '/target/feiman',
+    },
+    {
+      icon: '📝',
+      title: '笔记整理',
+      description: '拍照上传，AI整理归纳',
+      path: '/target/note',
+    },
+    {
       icon: '🔟',
       title: '一题十解',
       description: '上传一道题，AI给出10种解法',
@@ -26,42 +44,23 @@ export default function TargetPage() {
       path: '/target/essay',
     },
     {
-      icon: '👨‍🏫',
-      title: '大帅代练',
-      description: '大帅老师1对1带练',
-      path: '/target/tutor',
+      icon: '🎮',
+      title: '英语游戏',
+      description: '单词连连看，趣味记单词',
+      path: '/target/game',
     },
-    {
-      icon: '🧠',
-      title: '费曼学习法',
-      description: '讲给别人听懂，才算真掌握',
-      path: '/target/feiman',
-    },
-    {
-      icon: '📝',
-      title: '学习笔记',
-      description: '拍照上传，AI整理归纳',
-      path: '/target/note',
-    },
-    {
-      icon: '📚',
-      title: '高考3500词',
-      description: 'AI智能背单词计划',
-      path: '/target/vocab',
-    },
-    {
-      icon: '🗺️',
-      title: '图解知识点',
-      description: '可视化知识脉络图',
-      path: '/target/kgraph',
-    },
-    {
-      icon: '🌐',
-      title: '学习天地',
-      description: 'AI学习助手 · 答疑解惑',
-      path: 'https://open.maic.chat/',
-      external: true,
-    },
+    // {
+    //   icon: '📚',
+    //   title: '高考3500词',
+    //   description: 'AI智能背单词计划',
+    //   path: '/target/vocab',
+    // },
+    // {
+    //   icon: '👨‍🏫',
+    //   title: '大帅代练',
+    //   description: '大帅老师1对1带练',
+    //   path: '/target/tutor',
+    // },
   ]
 
   return (

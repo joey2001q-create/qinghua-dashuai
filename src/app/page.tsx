@@ -7,17 +7,17 @@ export default function HomePage() {
   const router = useRouter()
 
   const features = [
-    {
-      icon: '📚',
-      title: '学习规划',
-      description: 'ABC目标提分表 · 学习计划',
-      tags: [
-        { label: '🎯 ABC提分', color: 'green' as const },
-        { label: '📅 学习计划', color: 'orange' as const },
-      ],
-      color: 'blue' as const,
-      path: '/plan',
-    },
+    // {
+    //   icon: '📚',
+    //   title: '学习规划',
+    //   description: 'ABC目标提分表 · 学习计划',
+    //   tags: [
+    //     { label: '🎯 ABC提分', color: 'green' as const },
+    //     { label: '📅 学习计划', color: 'orange' as const },
+    //   ],
+    //   color: 'blue' as const,
+    //   path: '/plan',
+    // },
     {
       icon: '🚀',
       title: '考试冲刺',
@@ -40,16 +40,38 @@ export default function HomePage() {
       color: 'red' as const,
       path: '/target',
     },
+    // {
+    //   icon: '💬',
+    //   title: '你的树洞',
+    //   description: '倾诉压力 · 释放情绪 · 心理陪伴',
+    //   tags: [
+    //     { label: '🌙 情绪释放', color: 'teal' as const },
+    //     { label: '🤝 心理陪伴', color: 'blue' as const },
+    //   ],
+    //   color: 'pink' as const,
+    //   path: '/treehole',
+    // },
     {
-      icon: '💬',
-      title: '你的树洞',
-      description: '倾诉压力 · 释放情绪 · 心理陪伴',
+      icon: '🌐',
+      title: '学习天地',
+      description: '在线课堂 · 学习搭子 · 知识动画',
       tags: [
-        { label: '🌙 情绪释放', color: 'teal' as const },
-        { label: '🤝 心理陪伴', color: 'blue' as const },
+        { label: '🎬 在线课堂', color: 'blue' as const },
+        { label: '🤖 学习搭子', color: 'purple' as const },
       ],
-      color: 'pink' as const,
-      path: '/treehole',
+      color: 'green' as const,
+      path: '/world',
+    },
+    {
+      icon: '🧠',
+      title: '大帅智脑',
+      description: 'AI智能问答 · 学科答疑',
+      tags: [
+        { label: '💬 智能对话', color: 'indigo' as const },
+        { label: '📚 学科答疑', color: 'teal' as const },
+      ],
+      color: 'blue' as const,
+      path: '/brain',
     },
   ]
 

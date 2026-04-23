@@ -1,18 +1,24 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const navItems = [
   { label: '首页', path: '/', icon: '🏠' },
-  { label: '规划', path: '/plan', icon: '📚' },
   { label: '冲刺', path: '/exam', icon: '🚀' },
   { label: '提分', path: '/target', icon: '🎯' },
-  { label: '树洞', path: '/treehole', icon: '💬' },
+  { label: '天地', path: '/world', icon: '🌐' },
+  { label: '智脑', path: '/brain', icon: '🧠' },
 ]
 
 export default function Header() {
   const pathname = usePathname()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/'
@@ -36,7 +42,7 @@ export default function Header() {
               key={item.path}
               href={item.path}
               className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-                isActive(item.path)
+                mounted && isActive(item.path)
                   ? 'text-indigo-400'
                   : 'text-white hover:text-slate-300'
               }`}

@@ -6,7 +6,7 @@ interface MainCardProps {
   icon: string
   title: string
   description: string
-  tags: { label: string; color: 'blue' | 'green' | 'orange' | 'purple' | 'teal' | 'red' | 'pink' }[]
+  tags: { label: string; color: 'blue' | 'green' | 'orange' | 'purple' | 'teal' | 'red' | 'pink' | 'indigo' }[]
   onClick: () => void
   color: 'blue' | 'orange' | 'red' | 'pink' | 'green'
 }
@@ -27,6 +27,7 @@ const tagColorMap = {
   teal: 'bg-teal-500/20 text-teal-400',
   red: 'bg-red-500/20 text-red-400',
   pink: 'bg-pink-500/20 text-pink-400',
+  indigo: 'bg-indigo-500/20 text-indigo-400',
 }
 
 export default function MainCard({ icon, title, description, tags, onClick, color }: MainCardProps) {
