@@ -51,11 +51,7 @@ export default function WorldPage() {
               >
                 <div className="text-4xl mb-4">{feature.icon}</div>
                 <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
-                <p className="text-slate-400 text-sm mb-3">{feature.description}</p>
-                <div className="flex items-center text-indigo-400 text-sm">
-                  <span>点击访问</span>
-                  <span className="ml-1">→</span>
-                </div>
+                <p className="text-slate-400 text-sm">{feature.description}</p>
               </Card>
             ))}
           </div>
