@@ -52,6 +52,64 @@ function preprocessContent(content: string): string {
   processed = processed.replace(/\\begin\{equation\*\}/g, '$$\\begin{equation*}')
   processed = processed.replace(/\\end\{equation\*\}/g, '\\end{equation*}$$')
   
+  processed = processed.replace(/√\(([^)]+)\)/g, '$\\sqrt{$1}$')
+  processed = processed.replace(/√(\d+)/g, '$\\sqrt{$1}$')
+  processed = processed.replace(/√([a-zA-Z])/g, '$\\sqrt{$1}$')
+  
+  processed = processed.replace(/(\d+)\/(\d+)/g, '$\\frac{$1}{$2}$')
+  
+  processed = processed.replace(/([a-zA-Z])\^(\d+)/g, '$$$1^{$2}$$')
+  processed = processed.replace(/([a-zA-Z])\^([a-zA-Z])/g, '$$$1^{$2}$$')
+  
+  processed = processed.replace(/([a-zA-Z])_(\d+)/g, '$$$1_{$2}$$')
+  processed = processed.replace(/([a-zA-Z])_([a-zA-Z])/g, '$$$1_{$2}$$')
+  
+  processed = processed.replace(/≤/g, '$\\leq$')
+  processed = processed.replace(/≥/g, '$\\geq$')
+  processed = processed.replace(/≠/g, '$\\neq$')
+  processed = processed.replace(/±/g, '$\\pm$')
+  processed = processed.replace(/×/g, '$\\times$')
+  processed = processed.replace(/÷/g, '$\\div$')
+  processed = processed.replace(/∞/g, '$\\infty$')
+  processed = processed.replace(/∑/g, '$\\sum$')
+  processed = processed.replace(/∏/g, '$\\prod$')
+  processed = processed.replace(/∫/g, '$\\int$')
+  processed = processed.replace(/∂/g, '$\\partial$')
+  processed = processed.replace(/∆/g, '$\\Delta$')
+  
+  processed = processed.replace(/α/g, '$\\alpha$')
+  processed = processed.replace(/β/g, '$\\beta$')
+  processed = processed.replace(/γ/g, '$\\gamma$')
+  processed = processed.replace(/δ/g, '$\\delta$')
+  processed = processed.replace(/ε/g, '$\\varepsilon$')
+  processed = processed.replace(/θ/g, '$\\theta$')
+  processed = processed.replace(/λ/g, '$\\lambda$')
+  processed = processed.replace(/μ/g, '$\\mu$')
+  processed = processed.replace(/π/g, '$\\pi$')
+  processed = processed.replace(/σ/g, '$\\sigma$')
+  processed = processed.replace(/φ/g, '$\\phi$')
+  processed = processed.replace(/ω/g, '$\\omega$')
+  processed = processed.replace(/Ω/g, '$\\Omega$')
+  
+  processed = processed.replace(/→/g, '$\\rightarrow$')
+  processed = processed.replace(/←/g, '$\\leftarrow$')
+  processed = processed.replace(/⇒/g, '$\\Rightarrow$')
+  processed = processed.replace(/⇐/g, '$\\Leftarrow$')
+  processed = processed.replace(/↔/g, '$\\leftrightarrow$')
+  
+  processed = processed.replace(/∈/g, '$\\in$')
+  processed = processed.replace(/∉/g, '$\\notin$')
+  processed = processed.replace(/⊂/g, '$\\subset$')
+  processed = processed.replace(/⊃/g, '$\\supset$')
+  processed = processed.replace(/∪/g, '$\\cup$')
+  processed = processed.replace(/∩/g, '$\\cap$')
+  processed = processed.replace(/∅/g, '$\\emptyset$')
+  
+  processed = processed.replace(/∠/g, '$\\angle$')
+  processed = processed.replace(/⊥/g, '$\\perp$')
+  processed = processed.replace(/∥/g, '$\\parallel$')
+  processed = processed.replace(/°/g, '$^\\circ$')
+  
   return processed
 }
 
