@@ -361,7 +361,10 @@ export default function VocabPage() {
                     {currentWord?.example && (
                       <div className="mt-4 p-3 bg-white/10 rounded-lg w-full">
                         <p className="text-xs opacity-70 mb-1">例句：</p>
-                        <p className="text-sm">{currentWord.example}</p>
+                        <p className="text-sm mb-1">{currentWord.example}</p>
+                        {currentWord.exampleCn && (
+                          <p className="text-xs opacity-80">{currentWord.exampleCn}</p>
+                        )}
                         <button
                           onClick={(e) => { e.stopPropagation(); speak(currentWord.example, 'example') }}
                           className="mt-2 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full text-xs transition"
