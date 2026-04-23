@@ -52,7 +52,8 @@ function calcBTarget(currentScore: number, targetScore: number, fullScore: numbe
   const scoreRatio = currentScore / fullScore
   const diminishingFactor = 1 - scoreRatio * 0.5
   const improvement = gap * (confidence / 10) * diminishingFactor
-  return Math.round((currentScore + improvement) * 10) / 10
+  const rawScore = currentScore + improvement
+  return Math.round(rawScore * 2) / 2
 }
 
 function getTrend(current: number, last: number): 'up' | 'stable' | 'down' {
@@ -92,7 +93,7 @@ export default function ABCPage() {
     return goals.map(goal => {
       const gap = goal.targetScore - goal.currentScore
       const bTarget = calcBTarget(goal.currentScore, goal.targetScore, goal.fullScore, goal.confidence)
-      const improvement = Math.round((bTarget - goal.currentScore) * 10) / 10
+      const improvement = Math.round((bTarget - goal.currentScore) * 2) / 2
       const trend = getTrend(goal.currentScore, goal.lastScore)
       return {
         ...goal,
@@ -107,7 +108,7 @@ export default function ABCPage() {
   }, [goals])
 
   const totalImprovement = useMemo(() => {
-    return calculatedGoals.reduce((sum, g) => sum + g.improvement, 0)
+    return Math.round(calculatedGoals.reduce((sum, g) => sum + g.improvement, 0) * 2) / 2
   }, [calculatedGoals])
 
   const radarData = useMemo(() => {
