@@ -42,7 +42,7 @@ export default function PaperPage() {
   const [result, setResult] = useState('')
   const [showAnalysis, setShowAnalysis] = useState(false)
   const resultRef = useRef<HTMLDivElement>(null)
-  const isUserScrolling = useRef(false)
+  const hasScrolledToResult = useRef(false)
 
   const currentGradeGroup = gradeGroups.find(g => g.grades.includes(grade))
   const availableExamTypes = customGrade
@@ -53,8 +53,9 @@ export default function PaperPage() {
     : (currentGradeGroup?.subjects || ['数学', '语文', '英语'])
 
   useEffect(() => {
-    if (result && resultRef.current && !isUserScrolling.current) {
+    if (result && resultRef.current && !hasScrolledToResult.current) {
       resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      hasScrolledToResult.current = true
     }
   }, [result])
 
@@ -147,6 +148,7 @@ export default function PaperPage() {
     setLoading(true)
     setResult('')
     setShowAnalysis(true)
+    hasScrolledToResult.current = false
 
     try {
       const response = await fetch('/api/analyze-paper', {
@@ -417,7 +419,7 @@ export default function PaperPage() {
                   disabled={loading || !result}
                 />
               </div>
-              <div className="prose prose-invert max-w-none max-h-[60vh] overflow-y-auto pr-2" onWheel={(e) => e.stopPropagation()}>
+              <div className="prose prose-invert max-w-none max-h-[60vh] overflow-y-auto pr-2">
                 {loading && !result && <LoadingIndicator text="AI正在分析试卷..." />}
                 <MarkdownRenderer content={result} />
                 {loading && result && (
