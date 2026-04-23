@@ -252,8 +252,8 @@ ${analysisResult ? `## AI分析与学习计划\n\n${analysisResult}` : ''}
 
       <main className="pt-20 pb-24 px-4">
         <div className="max-w-5xl mx-auto">
-          <Button variant="outline" size="sm" onClick={() => router.push('/plan')} className="mb-4">
-            ← 返回学习规划
+          <Button variant="outline" size="sm" onClick={() => router.push('/exam')} className="mb-4">
+            ← 返回考试冲刺
           </Button>
 
           <h1 className="text-2xl font-bold text-white mb-2">🎯 ABC目标提分表</h1>
