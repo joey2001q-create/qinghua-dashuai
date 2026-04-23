@@ -23,10 +23,12 @@ export default function FeimanPage() {
   const [loading, setLoading] = useState(false)
   const [charCount, setCharCount] = useState(0)
   const resultRef = useRef<HTMLDivElement>(null)
+  const hasScrolledRef = useRef(false)
 
   useEffect(() => {
-    if (aiContent && resultRef.current) {
+    if (aiContent && resultRef.current && !hasScrolledRef.current) {
       resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      hasScrolledRef.current = true
     }
   }, [aiContent, diagnosis])
 
@@ -43,6 +45,7 @@ export default function FeimanPage() {
     setLoading(true)
     setStep(2)
     setAiContent('')
+    hasScrolledRef.current = false
 
     try {
       const response = await fetch('/api/feiman', {
@@ -101,6 +104,7 @@ export default function FeimanPage() {
     setLoading(true)
     setStep(4)
     setDiagnosis('')
+    hasScrolledRef.current = false
 
     try {
       const response = await fetch('/api/chat', {
