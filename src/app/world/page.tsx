@@ -19,12 +19,6 @@ export default function WorldPage() {
       description: '智谱清言 AI 助手',
       url: 'https://chatglm.cn/',
     },
-    {
-      icon: '🎨',
-      title: '知识动画',
-      description: 'VizFlow 可视化学习',
-      url: 'https://www.vizflow.xyz/zh',
-    },
   ]
 
   return (
