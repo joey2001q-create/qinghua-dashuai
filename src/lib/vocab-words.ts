@@ -7,8 +7,7 @@ export interface VocabWord {
   exampleCn?: string
 }
 
-export const WORDS = [
-  // @ts-expect-error Array too large for TypeScript inference
+export const WORDS: VocabWord[] = [
   {word:"a",phonetic:"/ə/",pos:"",meaning:"(an) art. 一（个、件…）",example:"I have a pen.",exampleCn:"我有一支笔。"},
   {word:"abandon",phonetic:"/əˈbæn.dən/",pos:"v",meaning:"放弃, 遗弃",example:"Many baby girls have been abandoned on the streets of Beijing.",exampleCn:"许多女婴被遗弃在北京的街头。"},
   {word:"ability",phonetic:"/əˈ.bɪl.ɪ.ti/",pos:"n",meaning:"能力; 才能",example:"This phone has the ability to have its software upgraded wirelessly.",exampleCn:"这部手机具备无线升级软件的能力。"},
