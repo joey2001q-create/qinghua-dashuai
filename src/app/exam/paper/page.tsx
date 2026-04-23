@@ -407,7 +407,7 @@ export default function PaperPage() {
             )}
 
           {(result || loading) && (
-            <Card ref={resultRef} className="mt-6" onWheel={() => { isUserScrolling.current = true }} onTouchMove={() => { isUserScrolling.current = true }}>
+            <Card ref={resultRef} className="mt-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-indigo-400">📊 分析结果</h3>
                 <ExportButton
@@ -417,7 +417,7 @@ export default function PaperPage() {
                   disabled={loading || !result}
                 />
               </div>
-              <div className="prose prose-invert max-w-none">
+              <div className="prose prose-invert max-w-none max-h-[60vh] overflow-y-auto pr-2" onWheel={(e) => e.stopPropagation()}>
                 {loading && !result && <LoadingIndicator text="AI正在分析试卷..." />}
                 <MarkdownRenderer content={result} />
                 {loading && result && (
