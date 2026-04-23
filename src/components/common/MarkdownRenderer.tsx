@@ -14,6 +14,8 @@ interface MarkdownRendererProps {
 function preprocessContent(content: string): string {
   let processed = content
   
+  processed = processed.replace(/<br\s*\/?>/gi, '\n')
+  
   processed = processed.replace(/progress_tracking/gi, '📈 进度追踪')
   processed = processed.replace(/key_reminders/gi, '💡 重点提醒')
   processed = processed.replace(/student_analysis/gi, '📊 学生现状分析')
