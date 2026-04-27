@@ -63,6 +63,17 @@ export default function HomePage() {
       path: '/world',
     },
     {
+      icon: '🎮',
+      title: '边学边玩',
+      description: '高考3500词 · 趣味学习',
+      tags: [
+        { label: '📚 3500词', color: 'purple' as const },
+        { label: '🎯 闪卡记忆', color: 'teal' as const },
+      ],
+      color: 'purple' as const,
+      path: '/play',
+    },
+    {
       icon: '🧠',
       title: '大帅智脑',
       description: 'AI智能问答 · 学科答疑',

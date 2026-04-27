@@ -49,18 +49,6 @@ export default function TargetPage() {
       description: '单词连连看，趣味记单词',
       path: '/target/game',
     },
-    // {
-    //   icon: '📚',
-    //   title: '高考3500词',
-    //   description: 'AI智能背单词计划',
-    //   path: '/target/vocab',
-    // },
-    // {
-    //   icon: '👨‍🏫',
-    //   title: '大帅代练',
-    //   description: '大帅老师1对1带练',
-    //   path: '/target/tutor',
-    // },
   ]
 
   return (

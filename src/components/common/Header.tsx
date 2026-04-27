@@ -9,6 +9,7 @@ const navItems = [
   { label: '冲刺', path: '/exam', icon: '🚀' },
   { label: '提分', path: '/target', icon: '🎯' },
   { label: '天地', path: '/world', icon: '🌐' },
+  { label: '游戏', path: '/play', icon: '🎮' },
   { label: '智脑', path: '/brain', icon: '🧠' },
 ]
 

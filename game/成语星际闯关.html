@@ -1,0 +1,1944 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>成语星际闯关</title>
+  <style>
+    :root {
+      --ink: #182033;
+      --muted: #63708a;
+      --paper: #fffdf8;
+      --line: #d8e1ec;
+      --blue: #2864d8;
+      --cyan: #10a5b8;
+      --green: #1f9f6b;
+      --yellow: #f3b43f;
+      --red: #de4c42;
+      --violet: #7c57d6;
+      --shadow: 0 18px 40px rgba(21, 32, 55, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      color: var(--ink);
+      font-family: "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(90deg, rgba(40, 100, 216, 0.08) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(31, 159, 107, 0.08) 1px, transparent 1px),
+        linear-gradient(180deg, #f7fbff 0%, #edf7ef 48%, #fff3df 100%);
+      background-size: 44px 44px, 44px 44px, auto;
+      overflow-x: hidden;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .app {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 22px 0 30px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 220px;
+    }
+
+    .brand-mark {
+      width: 52px;
+      height: 52px;
+      border: 2px solid #1f2b42;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #fff7ce;
+      box-shadow: 6px 6px 0 #1f2b42;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-mark svg {
+      width: 42px;
+      height: 42px;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      line-height: 1.1;
+      margin: 0;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-top: 4px;
+      font-size: 0.92rem;
+    }
+
+    .mode-switch {
+      display: flex;
+      gap: 6px;
+      padding: 5px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: 0 10px 24px rgba(31, 43, 66, 0.08);
+    }
+
+    .mode-btn,
+    .icon-btn,
+    .primary-btn,
+    .ghost-btn {
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+      color: var(--ink);
+    }
+
+    .mode-btn {
+      min-width: 88px;
+      padding: 10px 12px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .mode-btn.active {
+      background: #1f2b42;
+      color: white;
+      box-shadow: 0 8px 16px rgba(31, 43, 66, 0.22);
+    }
+
+    .mode-btn:hover,
+    .choice:hover,
+    .icon-btn:hover,
+    .primary-btn:hover,
+    .ghost-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .game-board {
+      border: 2px solid #1f2b42;
+      border-radius: 8px;
+      background: rgba(255, 253, 248, 0.95);
+      box-shadow: var(--shadow);
+      min-height: 680px;
+      overflow: hidden;
+    }
+
+    .board-head {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-bottom: 2px solid #1f2b42;
+      background: #fff;
+    }
+
+    .stat {
+      padding: 14px 16px;
+      border-right: 1px solid var(--line);
+      min-width: 0;
+    }
+
+    .stat:last-child {
+      border-right: 0;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .stat-value {
+      display: block;
+      margin-top: 4px;
+      font-size: 1.35rem;
+      font-weight: 900;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .progress-track {
+      height: 14px;
+      background:
+        repeating-linear-gradient(90deg, rgba(24, 32, 51, 0.11) 0 1px, transparent 1px 28px),
+        #edf2f8;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--green), var(--yellow), var(--blue));
+      transition: width 360ms ease;
+    }
+
+    .stage {
+      padding: 22px;
+    }
+
+    .scene {
+      display: grid;
+      grid-template-columns: 1.04fr 0.96fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .visual-panel {
+      min-height: 230px;
+      border: 2px solid #1f2b42;
+      border-radius: 8px;
+      background: #fffdf8;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .visual-panel svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 230px;
+    }
+
+    .visual-stamp {
+      position: absolute;
+      left: 14px;
+      top: 14px;
+      padding: 7px 10px;
+      border: 1px solid rgba(31, 43, 66, 0.22);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.78);
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 900;
+      backdrop-filter: blur(8px);
+    }
+
+    .question-panel {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .level-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 0.9rem;
+    }
+
+    .type-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 72px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: #e8f6f8;
+      color: #087483;
+      font-weight: 900;
+    }
+
+    .question-text {
+      margin: 0;
+      font-size: 1.65rem;
+      line-height: 1.42;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .tip-box {
+      min-height: 52px;
+      border-left: 5px solid var(--yellow);
+      padding: 10px 12px;
+      background: #fff9df;
+      border-radius: 8px;
+      color: #6b5016;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+      perspective: 1200px;
+    }
+
+    .choice {
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      display: block;
+      width: 100%;
+      height: 126px;
+      min-height: 126px;
+      padding: 0;
+      font-size: 1.28rem;
+      font-weight: 900;
+      text-align: center;
+      overflow-wrap: anywhere;
+      perspective: 1000px;
+    }
+
+    .choice-card {
+      display: block;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 126px;
+      transform-style: preserve-3d;
+      transition: transform 520ms cubic-bezier(0.2, 0.72, 0.2, 1);
+    }
+
+    .choice.flipped .choice-card {
+      transform: rotateY(180deg);
+    }
+
+    .choice-face {
+      position: absolute;
+      inset: 0;
+      border: 2px solid #1f2b42;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 6px 0 #1f2b42;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 14px;
+      overflow: hidden;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .choice-front {
+      font-size: 1.28rem;
+    }
+
+    .choice-back {
+      transform: rotateY(180deg);
+      align-items: flex-start;
+      justify-content: center;
+      flex-direction: column;
+      gap: 6px;
+      text-align: left;
+    }
+
+    .choice-word {
+      display: block;
+      width: 100%;
+      color: var(--ink);
+      font-size: 1rem;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .choice-meaning {
+      display: block;
+      width: 100%;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.38;
+      font-weight: 800;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .choice.correct .choice-face {
+      background: #dff7e8;
+      border-color: #168454;
+      color: #115a3c;
+      box-shadow: 0 6px 0 #168454;
+    }
+
+    .choice.correct .choice-word,
+    .choice.correct .choice-meaning {
+      color: #115a3c;
+    }
+
+    .choice.wrong .choice-face {
+      background: #ffe5e1;
+      border-color: #b43a32;
+      color: #8b2d27;
+      box-shadow: 0 6px 0 #b43a32;
+    }
+
+    .choice.wrong .choice-word,
+    .choice.wrong .choice-meaning {
+      color: #8b2d27;
+    }
+
+    .choice.eliminated {
+      opacity: 0.28;
+      pointer-events: none;
+      filter: grayscale(0.8);
+    }
+
+    .choice:disabled {
+      cursor: default;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    .left-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .icon-btn,
+    .ghost-btn {
+      min-height: 44px;
+      padding: 0 14px;
+      background: #f4f7fb;
+      border: 1px solid var(--line);
+      font-weight: 900;
+    }
+
+    .icon-btn:disabled,
+    .primary-btn:disabled {
+      opacity: 0.45;
+      cursor: default;
+      transform: none;
+    }
+
+    .primary-btn {
+      min-height: 46px;
+      min-width: 118px;
+      padding: 0 18px;
+      background: #1f2b42;
+      color: white;
+      font-weight: 900;
+      box-shadow: 0 8px 18px rgba(31, 43, 66, 0.2);
+    }
+
+    .side {
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel {
+      border: 2px solid #1f2b42;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 14px 34px rgba(31, 43, 66, 0.1);
+      overflow: hidden;
+    }
+
+    .panel-title {
+      margin: 0;
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      font-size: 1rem;
+      background: #fffdf8;
+    }
+
+    .rank-card {
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr);
+      gap: 12px;
+      padding: 14px;
+      align-items: center;
+    }
+
+    .rank-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 8px;
+      background: #fff1b8;
+      border: 2px solid #1f2b42;
+      display: grid;
+      place-items: center;
+      box-shadow: 5px 5px 0 #1f2b42;
+    }
+
+    .rank-icon svg {
+      width: 42px;
+      height: 42px;
+    }
+
+    .rank-name {
+      font-size: 1.15rem;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .rank-note {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .badge {
+      min-height: 76px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .badge.unlocked {
+      border-color: #1f2b42;
+      background: #fff7d8;
+      box-shadow: 0 5px 0 #1f2b42;
+    }
+
+    .badge-name {
+      font-weight: 900;
+      font-size: 0.9rem;
+    }
+
+    .badge-meta {
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.3;
+    }
+
+    .mini-list {
+      padding: 8px 14px 14px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .mini-item {
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 1px solid #ecf0f5;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 0.9rem;
+    }
+
+    .mini-item strong {
+      color: var(--ink);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      translate: -50% 20px;
+      min-width: min(420px, calc(100% - 32px));
+      padding: 12px 16px;
+      border: 2px solid #1f2b42;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 16px 34px rgba(24, 32, 51, 0.2);
+      font-weight: 900;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease, translate 180ms ease;
+      z-index: 20;
+    }
+
+    .toast.show {
+      opacity: 1;
+      translate: -50% 0;
+    }
+
+    .burst {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 8px;
+      height: 14px;
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 25;
+      animation: fall 900ms ease forwards;
+    }
+
+    .answer-flash {
+      animation: pop 230ms ease;
+    }
+
+    .float-score {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: #1f2b42;
+      color: #fff;
+      font-weight: 900;
+      animation: floatUp 760ms ease forwards;
+      pointer-events: none;
+    }
+
+    .end-screen {
+      padding: 34px 22px;
+      display: grid;
+      place-items: center;
+      min-height: 560px;
+      text-align: center;
+      background:
+        linear-gradient(90deg, rgba(40, 100, 216, 0.08) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(243, 180, 63, 0.1) 1px, transparent 1px),
+        #fffdf8;
+      background-size: 34px 34px;
+    }
+
+    .end-box {
+      width: min(620px, 100%);
+    }
+
+    .end-art {
+      width: 190px;
+      height: 150px;
+      margin: 0 auto 14px;
+    }
+
+    .end-title {
+      margin: 0 0 8px;
+      font-size: 2rem;
+      line-height: 1.2;
+    }
+
+    .end-copy {
+      margin: 0 auto 18px;
+      color: var(--muted);
+      font-weight: 800;
+      line-height: 1.55;
+      max-width: 520px;
+    }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .score-cell {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 12px;
+    }
+
+    .score-cell span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 900;
+    }
+
+    .score-cell strong {
+      display: block;
+      font-size: 1.35rem;
+      margin-top: 4px;
+    }
+
+    @keyframes fall {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--x), var(--y)) rotate(var(--r));
+      }
+    }
+
+    @keyframes pop {
+      0% {
+        transform: scale(0.98);
+      }
+      60% {
+        transform: scale(1.03);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    @keyframes floatUp {
+      0% {
+        opacity: 0;
+        translate: 0 10px;
+      }
+      20% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        translate: 0 -30px;
+      }
+    }
+
+    @keyframes bob {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+
+    @keyframes swing {
+      0%, 100% {
+        transform: rotate(-3deg);
+      }
+      50% {
+        transform: rotate(3deg);
+      }
+    }
+
+    .bob {
+      animation: bob 2.4s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    .swing {
+      animation: swing 2.1s ease-in-out infinite;
+      transform-origin: 50% 12%;
+    }
+
+    @media (max-width: 940px) {
+      .topbar,
+      .layout,
+      .scene {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        display: grid;
+      }
+
+      .mode-switch {
+        overflow-x: auto;
+      }
+
+      .layout {
+        display: grid;
+      }
+
+      .side {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .app {
+        width: min(100% - 20px, 1180px);
+        padding-top: 12px;
+      }
+
+      h1 {
+        font-size: 1.4rem;
+      }
+
+      .brand-mark {
+        width: 46px;
+        height: 46px;
+        box-shadow: 4px 4px 0 #1f2b42;
+      }
+
+      .board-head,
+      .choices,
+      .score-row,
+      .side {
+        grid-template-columns: 1fr;
+      }
+
+      .stat {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        padding: 11px 14px;
+      }
+
+      .stat:last-child {
+        border-bottom: 0;
+      }
+
+      .stage {
+        padding: 14px;
+      }
+
+      .visual-panel,
+      .visual-panel svg {
+        min-height: 220px;
+      }
+
+      .question-text {
+        font-size: 1.28rem;
+      }
+
+      .choice {
+        height: 136px;
+        min-height: 136px;
+        font-size: 1.1rem;
+      }
+
+      .choice-card {
+        min-height: 136px;
+      }
+
+      .actions,
+      .left-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        width: 100%;
+      }
+
+      .primary-btn,
+      .icon-btn,
+      .ghost-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="img">
+            <rect x="12" y="10" width="40" height="46" rx="5" fill="#fffdf8" stroke="#1f2b42" stroke-width="3" />
+            <path d="M20 22h24M20 32h18M20 42h24" stroke="#2864d8" stroke-width="4" stroke-linecap="round" />
+            <path d="M43 10l7 8-8-1z" fill="#f3b43f" stroke="#1f2b42" stroke-width="3" />
+          </svg>
+        </div>
+        <div>
+          <h1>成语星际闯关</h1>
+          <div class="subtitle">1000 个常用成语 · 闯关、连击、集徽章</div>
+        </div>
+      </div>
+      <nav class="mode-switch" aria-label="游戏模式">
+        <button class="mode-btn active" data-mode="quest">闯关</button>
+        <button class="mode-btn" data-mode="speed">速战</button>
+        <button class="mode-btn" data-mode="review">错题</button>
+      </nav>
+    </header>
+
+    <section class="layout">
+      <div class="game-board" id="gameBoard">
+        <div class="board-head">
+          <div class="stat">
+            <span class="stat-label">得分</span>
+            <span class="stat-value" id="scoreValue">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">连击</span>
+            <span class="stat-value" id="streakValue">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">能量</span>
+            <span class="stat-value" id="lifeValue">3</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">计时</span>
+            <span class="stat-value" id="timeValue">--</span>
+          </div>
+        </div>
+        <div class="progress-track" aria-hidden="true">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div id="stageRoot"></div>
+      </div>
+
+      <aside class="side">
+        <section class="panel">
+          <h2 class="panel-title">今日称号</h2>
+          <div class="rank-card">
+            <div class="rank-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64">
+                <path d="M18 42h28l-5 12H23z" fill="#f3b43f" stroke="#1f2b42" stroke-width="3" />
+                <path d="M16 42c-2-10 2-22 16-30 14 8 18 20 16 30z" fill="#6ed6e5" stroke="#1f2b42" stroke-width="3" />
+                <circle cx="32" cy="30" r="8" fill="#fffdf8" stroke="#1f2b42" stroke-width="3" />
+                <path d="M32 12v-6M22 18l-4-5M42 18l4-5" stroke="#1f2b42" stroke-width="3" stroke-linecap="round" />
+              </svg>
+            </div>
+            <div>
+              <div class="rank-name" id="rankName">成语新星</div>
+              <div class="rank-note" id="rankNote">答对 1 题就点亮第一枚徽章。</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel-title">徽章墙</h2>
+          <div class="badge-grid" id="badgeGrid"></div>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel-title">学习档案</h2>
+          <div class="mini-list">
+            <div class="mini-item"><span>最高分</span><strong id="bestScore">0</strong></div>
+            <div class="mini-item"><span>已掌握</span><strong id="learnedCount">0</strong></div>
+            <div class="mini-item"><span>错题本</span><strong id="wrongCount">0</strong></div>
+            <div class="mini-item"><span>最长连击</span><strong id="bestStreak">0</strong></div>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const BANK = [
+      {
+        id: "jing-di-zhi-wa",
+        type: "图景",
+        visual: "well",
+        prompt: "画面里的人只看见井口那么大的天空，最像哪个成语？",
+        answer: "井底之蛙",
+        choices: ["井底之蛙", "胸有成竹", "亡羊补牢", "熟能生巧"],
+        tip: "比喻眼界狭窄，见识有限。",
+        example: "多读书、多旅行，才能不做井底之蛙。"
+      },
+      {
+        id: "hua-she-tian-zu",
+        type: "图景",
+        visual: "snake",
+        prompt: "蛇已经画好了，又多添了不该有的脚。",
+        answer: "画蛇添足",
+        choices: ["画蛇添足", "刻舟求剑", "买椟还珠", "半途而废"],
+        tip: "事情已经够好，再加多余的东西反而坏事。",
+        example: "这段作文结尾很有力，硬加一句就有点画蛇添足。"
+      },
+      {
+        id: "shou-zhu-dai-tu",
+        type: "图景",
+        visual: "stump",
+        prompt: "守在树桩旁边等好运再次出现。",
+        answer: "守株待兔",
+        choices: ["守株待兔", "闻鸡起舞", "锲而不舍", "水滴石穿"],
+        tip: "比喻不主动努力，只想碰运气。",
+        example: "学习不能守株待兔，要每天练一点。"
+      },
+      {
+        id: "ke-zhou-qiu-jian",
+        type: "图景",
+        visual: "boat",
+        prompt: "剑掉进水里，只在船边刻记号。",
+        answer: "刻舟求剑",
+        choices: ["刻舟求剑", "叶公好龙", "雪中送炭", "一鼓作气"],
+        tip: "比喻办事拘泥，不懂情况已经变化。",
+        example: "规则变了还照旧处理，就是刻舟求剑。"
+      },
+      {
+        id: "xiong-you-cheng-zhu",
+        type: "释义",
+        visual: "bamboo",
+        prompt: "做事以前已经有完整的主意和计划。",
+        answer: "胸有成竹",
+        choices: ["胸有成竹", "掩耳盗铃", "滥竽充数", "自相矛盾"],
+        tip: "心里先有竹子的样子，下笔才稳。",
+        example: "他演讲前准备充分，走上台时胸有成竹。"
+      },
+      {
+        id: "wang-yang-bu-lao",
+        type: "释义",
+        visual: "fence",
+        prompt: "出了问题后赶紧补救，还来得及。",
+        answer: "亡羊补牢",
+        choices: ["亡羊补牢", "揠苗助长", "囫囵吞枣", "邯郸学步"],
+        tip: "羊丢了再修羊圈，仍能防止继续损失。",
+        example: "这次考试没考好，整理错题就是亡羊补牢。"
+      },
+      {
+        id: "yan-er-dao-ling",
+        type: "释义",
+        visual: "bell",
+        prompt: "自己欺骗自己，以为别人也不知道。",
+        answer: "掩耳盗铃",
+        choices: ["掩耳盗铃", "三顾茅庐", "纸上谈兵", "鹤立鸡群"],
+        tip: "捂住自己的耳朵偷铃铛，铃声别人还是听得见。",
+        example: "作业没写却假装忘带，是掩耳盗铃。"
+      },
+      {
+        id: "lan-yu-chong-shu",
+        type: "释义",
+        visual: "flute",
+        prompt: "没有真本领，却混在行家里充数。",
+        answer: "滥竽充数",
+        choices: ["滥竽充数", "负荆请罪", "熟能生巧", "买椟还珠"],
+        tip: "不会吹竽的人混在乐队里。",
+        example: "小组展示要人人准备，不能滥竽充数。"
+      },
+      {
+        id: "hu-jia-hu-wei",
+        type: "释义",
+        visual: "tiger",
+        prompt: "借着别人的威势吓唬人。",
+        answer: "狐假虎威",
+        choices: ["狐假虎威", "杯弓蛇影", "心有灵犀", "破釜沉舟"],
+        tip: "自己不强，却借强者的名头摆架子。",
+        example: "靠班长名义乱发号令，就是狐假虎威。"
+      },
+      {
+        id: "bei-gong-she-ying",
+        type: "图景",
+        visual: "cup",
+        prompt: "杯子里的弓影被误看成了蛇。",
+        answer: "杯弓蛇影",
+        choices: ["杯弓蛇影", "对牛弹琴", "一箭双雕", "雪中送炭"],
+        tip: "比喻疑神疑鬼，自己吓自己。",
+        example: "听到一点响动就紧张，像杯弓蛇影。"
+      },
+      {
+        id: "yi-jian-shuang-diao",
+        type: "释义",
+        visual: "target",
+        prompt: "一次行动同时达到两个目的。",
+        answer: "一箭双雕",
+        choices: ["一箭双雕", "三顾茅庐", "胸有成竹", "亡羊补牢"],
+        tip: "比喻做一件事得到两方面的好处。",
+        example: "骑车上学既锻炼又环保，一箭双雕。"
+      },
+      {
+        id: "dui-niu-tan-qin",
+        type: "释义",
+        visual: "zither",
+        prompt: "对不懂道理的人讲高深道理，白费力气。",
+        answer: "对牛弹琴",
+        choices: ["对牛弹琴", "闻鸡起舞", "叶公好龙", "水滴石穿"],
+        tip: "弹得再好，对方也听不懂。",
+        example: "讲题要看同学基础，不能对牛弹琴。"
+      },
+      {
+        id: "wo-xin-chang-dan",
+        type: "释义",
+        visual: "fire",
+        prompt: "刻苦自励，忍受艰难，立志报仇或成功。",
+        answer: "卧薪尝胆",
+        choices: ["卧薪尝胆", "半途而废", "守株待兔", "画蛇添足"],
+        tip: "睡柴草、尝苦胆，提醒自己不忘目标。",
+        example: "球队失利后卧薪尝胆，终于拿到冠军。"
+      },
+      {
+        id: "wen-ji-qi-wu",
+        type: "释义",
+        visual: "rooster",
+        prompt: "听见鸡叫就起床练剑，形容有志之士及时奋发。",
+        answer: "闻鸡起舞",
+        choices: ["闻鸡起舞", "亡羊补牢", "滥竽充数", "刻舟求剑"],
+        tip: "形容有志之士及时奋发。",
+        example: "清晨背单词，也有闻鸡起舞的劲头。"
+      },
+      {
+        id: "zhi-shang-tan-bing",
+        type: "释义",
+        visual: "strategy",
+        prompt: "只会空谈理论，不能解决实际问题。",
+        answer: "纸上谈兵",
+        choices: ["纸上谈兵", "破釜沉舟", "三顾茅庐", "负荆请罪"],
+        tip: "只在纸面上讲打仗，真正上阵就不行。",
+        example: "科学实验要动手，不能纸上谈兵。"
+      },
+      {
+        id: "po-fu-chen-zhou",
+        type: "释义",
+        visual: "cauldron",
+        prompt: "下定决心，不留退路。",
+        answer: "破釜沉舟",
+        choices: ["破釜沉舟", "心有灵犀", "邯郸学步", "买椟还珠"],
+        tip: "砸锅沉船，表示必须向前。",
+        example: "决赛前全队破釜沉舟，拼到最后一秒。"
+      },
+      {
+        id: "san-gu-mao-lu",
+        type: "故事",
+        visual: "cottage",
+        prompt: "刘备多次拜访诸葛亮，表现出诚心求贤。",
+        answer: "三顾茅庐",
+        choices: ["三顾茅庐", "掩耳盗铃", "胸有成竹", "熟能生巧"],
+        tip: "“顾”是拜访，三次登门说明诚意很足。",
+        example: "为了请老师指导，社团成员三顾茅庐。"
+      },
+      {
+        id: "hu-lun-tun-zao",
+        type: "释义",
+        visual: "jujube",
+        prompt: "读书或学习不加分析，整个吞下去。",
+        answer: "囫囵吞枣",
+        choices: ["囫囵吞枣", "水滴石穿", "一鼓作气", "雪中送炭"],
+        tip: "枣子整颗吞下，没有细细品味。",
+        example: "背课文要理解，不能囫囵吞枣。"
+      },
+      {
+        id: "mai-du-huan-zhu",
+        type: "释义",
+        visual: "jewel",
+        prompt: "只看外表，舍本逐末，反而丢掉真正贵重的东西。",
+        answer: "买椟还珠",
+        choices: ["买椟还珠", "鹤立鸡群", "自相矛盾", "锲而不舍"],
+        tip: "买下盒子，却把珍珠退回去。",
+        example: "只看封面不看内容，就像买椟还珠。"
+      },
+      {
+        id: "ya-miao-zhu-zhang",
+        type: "释义",
+        visual: "seedling",
+        prompt: "急于求成，反而把事情弄坏。",
+        answer: "揠苗助长",
+        choices: ["揠苗助长", "井底之蛙", "滥竽充数", "对牛弹琴"],
+        tip: "把禾苗拔高，看似长快了，其实伤了根。",
+        example: "一天刷太多难题不消化，就是揠苗助长。"
+      },
+      {
+        id: "han-dan-xue-bu",
+        type: "释义",
+        visual: "steps",
+        prompt: "生硬模仿别人，没学成反而丢了自己的本领。",
+        answer: "邯郸学步",
+        choices: ["邯郸学步", "亡羊补牢", "一箭双雕", "杯弓蛇影"],
+        tip: "学别人走路，结果自己的步子也忘了。",
+        example: "写作文可以借鉴，不能邯郸学步。"
+      },
+      {
+        id: "ye-gong-hao-long",
+        type: "释义",
+        visual: "dragon",
+        prompt: "嘴上说喜欢，真正遇到时却害怕或退缩。",
+        answer: "叶公好龙",
+        choices: ["叶公好龙", "闻鸡起舞", "雪中送炭", "负荆请罪"],
+        tip: "叶公爱龙只是表面，真龙来了却害怕。",
+        example: "说爱演讲，一上台就躲，可别叶公好龙。"
+      },
+      {
+        id: "zi-xiang-mao-dun",
+        type: "释义",
+        visual: "spear",
+        prompt: "自己的说法前后冲突。",
+        answer: "自相矛盾",
+        choices: ["自相矛盾", "画蛇添足", "三顾茅庐", "半途而废"],
+        tip: "最锋利的矛和最坚固的盾同时出现，逻辑说不通。",
+        example: "他说从不迟到又承认迟到三次，明显自相矛盾。"
+      },
+      {
+        id: "shu-neng-sheng-qiao",
+        type: "释义",
+        visual: "wheel",
+        prompt: "练得多了，就能找到巧妙办法。",
+        answer: "熟能生巧",
+        choices: ["熟能生巧", "守株待兔", "狐假虎威", "纸上谈兵"],
+        tip: "反复练习，手感和方法都会出现。",
+        example: "每天朗读五分钟，熟能生巧。"
+      },
+      {
+        id: "shui-di-shi-chuan",
+        type: "释义",
+        visual: "stone",
+        prompt: "只要坚持很久，小水滴也能把石头滴穿。",
+        answer: "水滴石穿",
+        choices: ["水滴石穿", "半途而废", "守株待兔", "画蛇添足"],
+        tip: "比喻力量虽小，只要坚持也能成功。",
+        example: "每天积累两个成语，终会水滴石穿。"
+      },
+      {
+        id: "xue-zhong-song-tan",
+        type: "释义",
+        visual: "snow",
+        prompt: "在别人急需时给予帮助。",
+        answer: "雪中送炭",
+        choices: ["雪中送炭", "杯弓蛇影", "囫囵吞枣", "刻舟求剑"],
+        tip: "天冷下雪时送来炭火，帮助最及时。",
+        example: "同桌借我笔参加考试，真是雪中送炭。"
+      },
+      {
+        id: "ban-tu-er-fei",
+        type: "释义",
+        visual: "road",
+        prompt: "事情没做完就停止。",
+        answer: "半途而废",
+        choices: ["半途而废", "一鼓作气", "锲而不舍", "卧薪尝胆"],
+        tip: "路走到一半就放弃。",
+        example: "练字最怕半途而废。"
+      },
+      {
+        id: "yi-gu-zuo-qi",
+        type: "故事",
+        visual: "drum",
+        prompt: "趁着劲头正盛，一下子把事情做完。",
+        answer: "一鼓作气",
+        choices: ["一鼓作气", "滥竽充数", "井底之蛙", "买椟还珠"],
+        tip: "第一次击鼓时士气最旺。",
+        example: "周末一鼓作气完成读书报告。"
+      },
+      {
+        id: "xin-you-ling-xi",
+        type: "释义",
+        visual: "hearts",
+        prompt: "彼此心意相通，不用说也能明白。",
+        answer: "心有灵犀",
+        choices: ["心有灵犀", "对牛弹琴", "揠苗助长", "自相矛盾"],
+        tip: "两个人像有灵巧的感应。",
+        example: "搭档一个眼神，我就知道该换位置，真是心有灵犀。"
+      },
+      {
+        id: "he-li-ji-qun",
+        type: "释义",
+        visual: "crane",
+        prompt: "人的才能或仪表在一群人中很突出。",
+        answer: "鹤立鸡群",
+        choices: ["鹤立鸡群", "叶公好龙", "亡羊补牢", "纸上谈兵"],
+        tip: "高高的白鹤站在鸡群里，非常显眼。",
+        example: "她的朗诵清亮自然，在比赛中鹤立鸡群。"
+      },
+      {
+        id: "qie-er-bu-she",
+        type: "释义",
+        visual: "chisel",
+        prompt: "一直雕刻下去，不肯停止，比喻坚持不懈。",
+        answer: "锲而不舍",
+        choices: ["锲而不舍", "守株待兔", "狐假虎威", "半途而废"],
+        tip: "“锲”是雕刻，坚持雕下去就会有结果。",
+        example: "背古诗要锲而不舍，日积月累才牢。"
+      },
+      {
+        id: "fu-jing-qing-zui",
+        type: "故事",
+        visual: "apology",
+        prompt: "背着荆条向人认错，请求处罚。",
+        answer: "负荆请罪",
+        choices: ["负荆请罪", "三顾茅庐", "胸有成竹", "刻舟求剑"],
+        tip: "表示真诚地向别人道歉。",
+        example: "误会同学后，他主动负荆请罪。"
+      }
+    ];
+
+    const COMMON_IDIOMS = Array.from(new Set(`
+井底之蛙 画蛇添足 守株待兔 刻舟求剑 胸有成竹 亡羊补牢 掩耳盗铃 滥竽充数 狐假虎威 杯弓蛇影 一箭双雕 对牛弹琴 卧薪尝胆 闻鸡起舞 纸上谈兵 破釜沉舟 三顾茅庐 囫囵吞枣 买椟还珠 揠苗助长 邯郸学步 叶公好龙 自相矛盾 熟能生巧 水滴石穿 雪中送炭 半途而废 一鼓作气 心有灵犀 鹤立鸡群 锲而不舍 负荆请罪 一心一意 三心二意 五湖四海 七上八下 九牛一毛 十全十美 百发百中 千方百计 万众一心 万无一失 万紫千红 千言万语 千军万马 千变万化 千辛万苦 千姿百态 千奇百怪 千呼万唤 千钧一发 千载难逢 千篇一律 千真万确 百折不挠 百依百顺 百战百胜 百里挑一 百花齐放 百感交集 百闻不如一见 百思不得其解 百尺竿头 更进一步 大公无私 大义灭亲 大惊小怪 大同小异 大材小用 大器晚成 大名鼎鼎 大摇大摆 大显身手 大海捞针 大功告成 大快人心 大势所趋 大千世界 大失所望 大有作为 大有可为 大难不死 大起大落 大智若愚 大步流星 大开眼界 大言不惭 大张旗鼓 大相径庭 大声疾呼 大庭广众 大放异彩 大手大脚 大刀阔斧 大胆包天 大敌当前 大雪纷飞 大雨倾盆 小心翼翼 小题大做 小巧玲珑 小家碧玉 小鸟依人 小道消息 小肚鸡肠 小恩小惠 小试牛刀 小惩大诫 小人得志 小本经营 小康之家 小国寡民 小己得失 小鹿乱撞 小心谨慎 小巫见大巫 小不忍则乱大谋 风和日丽 风平浪静 风雨同舟 风吹草动 风调雨顺 风驰电掣 风花雪月 风尘仆仆 风起云涌 风雨无阻 风餐露宿 风声鹤唳 风卷残云 风流倜傥 风华正茂 风度翩翩 风雨交加 风云变幻 风烛残年 风马牛不相及 雨过天晴 雨后春笋 雨打风吹 雨丝风片 雨顺风调 雨露之恩 云开雾散 云淡风轻 云蒸霞蔚 云消雾散 云泥之别 云集响应 云龙风虎 云谲波诡 云程万里 云行雨施 云中白鹤 山清水秀 山高水长 山穷水尽 山明水秀 山重水复 山盟海誓 山南海北 山崩地裂 山珍海味 山呼海啸 山河壮丽 山长水远 山高路远 山高皇帝远 山雨欲来风满楼 水到渠成 水落石出 水深火热 水乳交融 水泄不通 水涨船高 水火不容 水木清华 水天一色 水磨工夫 水中捞月 水清无鱼 水性杨花 水土不服 火树银花 火上浇油 火冒三丈 火眼金睛 火烧眉毛 火急火燎 火中取栗 火海刀山 火光冲天 火耕水耨 火伞高张 火灭烟消 火尽灰冷 火烛小心 刀山火海 灯火辉煌 灯红酒绿 星火燎原 如火如荼 炉火纯青 天长地久 天经地义 天翻地覆 天南地北 天涯海角 天伦之乐 天衣无缝 天真烂漫 天高地厚 天花乱坠 天罗地网 天寒地冻 天昏地暗 天荒地老 天壤之别 天作之合 天时地利 天马行空 天各一方 天外有天 天公地道 天造地设 天之骄子 天网恢恢 天旋地转 天灾人祸 天理难容 天怒人怨 天下无双 天下太平 天下为公 天下大乱 天方夜谭 天崩地裂 天高云淡 天诛地灭 地久天长 地大物博 地动山摇 地广人稀 地覆天翻 地老天荒 地利人和 地灵人杰 地主之谊 地狱变相 地北天南 地棘天荆 地塌天荒 地平天成 日新月异 日积月累 日理万机 日薄西山 日月如梭 日久天长 日暮途穷 日上三竿 日复一日 日以继夜 日行千里 日月无光 日月同辉 日月经天 日不暇给 日落西山 日出而作 日暮道远 日坐愁城 月明星稀 月下老人 月白风清 月黑风高 月落星沉 月圆花好 月朗风清 月异日新 月旦春秋 月地云阶 月章星句 月晕而风 月满则亏 月露风云 月里嫦娥 星罗棋布 星移斗转 星星之火 星驰电走 星月交辉 星罗云布 春暖花开 春华秋实 春风得意 春风化雨 春意盎然 春色满园 春寒料峭 春花秋月 春光明媚 春回大地 春兰秋菊 春蚓秋蛇 春秋鼎盛 春梦无痕 春去秋来 春风满面 春深似海 夏日可畏 夏炉冬扇 秋高气爽 秋风落叶 秋毫无犯 秋水伊人 秋收冬藏 秋月春风 秋风扫叶 秋实春华 冬暖夏凉 冬裘夏葛 冬日可爱 寒冬腊月 花好月圆 花团锦簇 花枝招展 花言巧语 花天酒地 花容月貌 花花世界 花红柳绿 花前月下 花里胡哨 花香鸟语 花甲之年 花样翻新 花遮柳隐 花明柳暗 花残月缺 鸟语花香 锦上添花 妙笔生花 走马观花 镜花水月 昙花一现 移花接木 柳暗花明 草长莺飞 草木皆兵 草船借箭 草率从事 草菅人命 草草了事 草木知威 草蛇灰线 草行露宿 草创未就 草庐三顾 草满囹圄 草衣木食 寸草春晖 打草惊蛇 疾风知劲草 斩草除根 奇花异草 闲花野草 龙飞凤舞 龙腾虎跃 龙马精神 龙争虎斗 龙潭虎穴 龙吟虎啸 龙蛇混杂 龙凤呈祥 龙盘虎踞 龙行虎步 龙蟠虎踞 龙骧虎步 龙肝凤髓 龙眉凤目 龙章凤姿 龙跃凤鸣 龙生九子 车水马龙 望子成龙 来龙去脉 群龙无首 画龙点睛 老态龙钟 虎头蛇尾 虎背熊腰 虎视眈眈 虎口拔牙 虎口余生 虎落平阳 虎头虎脑 虎踞龙盘 虎啸风生 虎变龙蒸 如虎添翼 骑虎难下 谈虎色变 调虎离山 放虎归山 养虎为患 狼吞虎咽 生龙活虎 藏龙卧虎 马到成功 马不停蹄 马马虎虎 马首是瞻 马革裹尸 马放南山 马失前蹄 马齿徒增 马耳东风 马如游龙 马足车尘 马鹿易形 一马当先 一马平川 兵荒马乱 招兵买马 指鹿为马 心猿意马 塞翁失马 青梅竹马 蛛丝马迹 汗马功劳 老马识途 快马加鞭 走马上任 羊肠小道 羊入虎口 羊质虎皮 羊狠狼贪 羊落虎口 羊续悬鱼 顺手牵羊 三羊开泰 歧路亡羊 多歧亡羊 挂羊头卖狗肉 牛刀小试 牛鬼蛇神 牛毛细雨 牛鼎烹鸡 牛头马面 牛衣对泣 牛溲马勃 汗牛充栋 泥牛入海 老牛破车 庖丁解牛 气冲斗牛 鸡犬不宁 鸡飞狗跳 鸡鸣狗盗 鸡犬升天 鸡毛蒜皮 鸡零狗碎 鸡犬相闻 鸡虫得失 鸡飞蛋打 鸡皮鹤发 鸡犬不留 鸡口牛后 呆若木鸡 杀鸡取卵 杀鸡儆猴 牝鸡司晨 偷鸡摸狗 鸡同鸭讲 狗急跳墙 狗仗人势 狗尾续貂 狗血喷头 狗拿耗子 狗苟蝇营 狗吠非主 狐朋狗友 狼心狗肺 蝇营狗苟 鸡飞狗走 鼠目寸光 鼠肚鸡肠 鼠窃狗偷 鼠牙雀角 鼠首偾事 鼠窜狼奔 贼眉鼠眼 胆小如鼠 抱头鼠窜 投鼠忌器 首鼠两端 獐头鼠目 猫鼠同眠 蛇鼠一窝 蛇蝎心肠 蛇口蜂针 蛇头鼠眼 蛇影杯弓 笔走龙蛇 虚与委蛇 惊蛇入草 兔死狐悲 兔起鹘落 兔走乌飞 兔丝燕麦 兔角牛翼 兔死狗烹 狡兔三窟 见兔顾犬 动如脱兔 犬兔俱毙 白兔赤乌 乌飞兔走 待兔守株 神采奕奕 神机妙算 神通广大 神气十足 神出鬼没 神魂颠倒 神清气爽 神色自若 神采飞扬 神来之笔 神不守舍 神乎其神 神经过敏 神龙见首 神采焕发 鬼斧神工 鬼鬼祟祟 鬼使神差 鬼哭狼嚎 鬼迷心窍 鬼哭神嚎 鬼头鬼脑 心神不宁 出神入化 聚精会神 全神贯注 六神无主 人山人海 人来人往 人云亦云 人才济济 人杰地灵 人定胜天 人尽其才 人情世故 人浮于事 人声鼎沸 人心所向 人心惶惶 人仰马翻 人迹罕至 人命关天 人面桃花 人言可畏 人微言轻 人之常情 人去楼空 人多势众 人间天堂 人老珠黄 人困马乏 人人自危 人财两空 人各有志 人急智生 人强马壮 人寿年丰 自言自语 自作自受 自给自足 自高自大 自暴自弃 自力更生 自强不息 自知之明 自以为是 自投罗网 自惭形秽 自告奋勇 自命不凡 自圆其说 自食其力 自食其果 自怨自艾 自取灭亡 自始至终 自由自在 自生自灭 自吹自擂 自得其乐 自顾不暇 自欺欺人 自立门户 自讨苦吃 自鸣得意 自私自利 心平气和 心旷神怡 心急如焚 心惊胆战 心满意足 心领神会 心灰意冷 心花怒放 心不在焉 心直口快 心照不宣 心甘情愿 心安理得 心悦诚服 心乱如麻 心驰神往 心有余悸 心如刀割 心灵手巧 心口如一 心腹大患 心血来潮 心狠手辣 心事重重 心明眼亮 心潮澎湃 心领神悟 心力交瘁 心宽体胖 心心相印 口若悬河 口是心非 口口声声 口蜜腹剑 口干舌燥 口诛笔伐 口齿伶俐 口出狂言 口不择言 口传心授 口耳相传 口服心服 口角春风 口如悬河 口碑载道 哑口无言 异口同声 守口如瓶 矢口否认 有口皆碑 出口成章 信口开河 脱口而出 张口结舌 目不转睛 目瞪口呆 目中无人 目不暇接 目光如炬 目光短浅 目空一切 目无全牛 目不识丁 目迷五色 目不忍睹 目不斜视 目光炯炯 目若悬珠 目送手挥 目濡耳染 目挑心招 目指气使 耳聪目明 耳闻目睹 耳目一新 举世瞩目 刮目相看 历历在目 手忙脚乱 手舞足蹈 手到擒来 手足无措 手不释卷 手疾眼快 手下留情 手高眼低 手眼通天 手足情深 手无寸铁 手到病除 手挥目送 手脚干净 手零脚碎 手足之情 手胼足胝 拍手称快 措手不及 爱不释手 妙手回春 得心应手 游手好闲 袖手旁观 触手可及 束手无策 拱手相让 足智多谋 足不出户 足足有余 足高气扬 足踏实地 足衣足食 足食丰衣 足音跫然 足茧手胝 足不履影 举足轻重 知足常乐 美中不足 微不足道 不足为奇 不足挂齿 裹足不前 丰衣足食 捷足先登 眉开眼笑 眉飞色舞 眉清目秀 眉来眼去 眉目传情 眉头眼尾 眉高眼低 眉目如画 眉睫之祸 眉眼高低 眉语目笑 低眉顺眼 慈眉善目 愁眉苦脸 横眉冷对 喜上眉梢 迫在眉睫 扬眉吐气 耳濡目染 耳熟能详 耳提面命 耳听八方 耳鬓厮磨 耳根清净 耳目众多 耳目昭彰 耳闻则诵 耳不忍闻 耳红面赤 洗耳恭听 震耳欲聋 充耳不闻 如雷贯耳 忠言逆耳 面红耳赤 头头是道 头破血流 头重脚轻 头昏脑涨 头晕目眩 头角峥嵘 头疼脑热 头面人物 头足异处 头会箕敛 头痛医头 头上安头 出人头地 蓬头垢面 崭露头角 改头换面 交头接耳 埋头苦干 垂头丧气 迎头赶上 源头活水 品头论足 面面俱到 面面相觑 面目全非 面不改色 面黄肌瘦 面如土色 面授机宜 面无人色 面目一新 面如冠玉 面折庭争 面有难色 面命耳提 四面八方 八面玲珑 洗心革面 独当一面 网开一面 别开生面 眼花缭乱 眼高手低 眼疾手快 眼明手快 眼观六路 眼空四海 眼不见为净 眼中有铁 眼穿肠断 眼笑眉飞 眼尖手快 眼明心亮 望眼欲穿 另眼相看 冷眼旁观 睡眼惺忪 有眼无珠 唇亡齿寒 唇枪舌剑 唇红齿白 唇齿相依 唇焦口燥 唇辅相连 唇敝舌腐 齿白唇红 齿亡舌存 咬牙切齿 伶牙俐齿 明眸皓齿 何足挂齿 咬文嚼字 张牙舞爪 身临其境 身不由己 身经百战 身先士卒 身强力壮 身败名裂 身体力行 身无分文 身怀六甲 身价百倍 身首异处 身心交瘁 身轻言微 身外之物 身在曹营心在汉 以身作则 奋不顾身 洁身自好 设身处地 粉身碎骨 名列前茅 名副其实 名不虚传 名落孙山 名正言顺 名垂青史 名扬四海 名存实亡 名噪一时 名利双收 名山大川 名不副实 名过其实 名目繁多 名缰利锁 名闻遐迩 名符其实 名震一时 名满天下 名士风流 名师出高徒 臭名昭著 闻名遐迩 顾名思义 实至名归 明知故问 明察秋毫 明目张胆 明哲保身 明辨是非 明枪暗箭 明争暗斗 明日黄花 明镜高悬 明珠暗投 明月清风 明火执仗 明媒正娶 明德惟馨 明升暗降 明修栈道 暗度陈仓 光明磊落 开宗明义 简明扼要 泾渭分明 暗箭伤人 暗送秋波 暗无天日 暗渡陈仓 暗香疏影 暗中摸索 暗淡无光 暗室不欺 暗室亏心 弃暗投明 若明若暗 光明正大 光彩夺目 光阴似箭 光怪陆离 光宗耀祖 光风霁月 光天化日 光前裕后 光芒万丈 光可鉴人 光阴荏苒 光复旧物 光辉灿烂 光彩照人 波光粼粼 容光焕发 韬光养晦 五光十色 兴高采烈 兴致勃勃 兴师动众 兴风作浪 兴利除弊 兴国安邦 兴旺发达 兴味索然 兴妖作怪 兴灭继绝 兴会淋漓 兴致索然 兴兵动众 兴云作雨 兴词构讼 百废俱兴 望洋兴叹 方兴未艾 即兴之作 高瞻远瞩 高山流水 高枕无忧 高谈阔论 高屋建瓴 高朋满座 高深莫测 高不可攀 高风亮节 高抬贵手 高歌猛进 高人一等 高山仰止 高视阔步 高耸入云 高情远致 高官厚禄 高下在心 高才捷足 高阳酒徒 高义薄云 高不成低不就 好高骛远 居高临下 登高望远 低声下气 低三下四 低头哈腰 低吟浅唱 低唱浅斟 低情曲意 低回不已 低首下心 低心下意 低头丧气 低头搭脑 低估冒算 山高水低 半低不高 前赴后继 前仰后合 前功尽弃 前车之鉴 前因后果 前呼后拥 前所未有 前途无量 前思后想
+    `.trim().split(/\s+/))).slice(0, 1000);
+
+    const SIMPLE_VISUAL_KEYS = ["simple-0", "simple-1", "simple-2", "simple-3", "simple-4", "simple-5", "simple-6", "simple-7"];
+    const FEATURED_BY_ANSWER = new Map(BANK.map(item => [item.answer, item]));
+    const COMMON_IDIOM_SET = new Set(COMMON_IDIOMS);
+    const DIRECT_MEANINGS = new Map([
+      ["一心一意", "心思专一，没有别的念头。"],
+      ["三心二意", "心思不专一，主意变来变去。"],
+      ["五湖四海", "指全国各地或世界各地，范围很广。"],
+      ["七上八下", "心里慌乱不安，拿不定主意。"],
+      ["九牛一毛", "数量极少，微不足道。"],
+      ["十全十美", "各方面都很完美，没有缺点。"],
+      ["百发百中", "射箭或做事每次都准确成功。"],
+      ["千方百计", "想尽各种办法。"],
+      ["万众一心", "很多人团结一致，心往一处想。"],
+      ["万无一失", "非常稳妥，绝不会出差错。"],
+      ["万紫千红", "形容百花齐放、色彩繁多。"],
+      ["千言万语", "有很多很多话要说。"],
+      ["千军万马", "形容队伍庞大、声势浩大。"],
+      ["千变万化", "变化非常多。"],
+      ["千辛万苦", "经历了许多艰难困苦。"],
+      ["千姿百态", "姿态多种多样，各不相同。"],
+      ["千奇百怪", "奇怪的样子很多。"],
+      ["千呼万唤", "一再呼唤、催促。"],
+      ["千钧一发", "情况极其危急。"],
+      ["千载难逢", "很久才遇到一次，非常难得。"],
+      ["千篇一律", "文章或事物形式单调，几乎都一样。"],
+      ["千真万确", "非常真实可靠。"],
+      ["百折不挠", "无论受多少挫折都不退缩。"],
+      ["百依百顺", "什么都依从别人。"],
+      ["百战百胜", "每次作战都能胜利。"],
+      ["百里挑一", "在很多人或物中挑出的优秀者。"],
+      ["百花齐放", "比喻各种事物自由发展、共同繁荣。"],
+      ["百感交集", "许多感受交织在一起。"],
+      ["大公无私", "办事公正，没有私心。"],
+      ["大义灭亲", "为了正义不袒护亲人。"],
+      ["大惊小怪", "对平常事表现得过分惊讶。"],
+      ["大同小异", "大体相同，只有小差别。"],
+      ["大材小用", "把大才能用在小事情上。"],
+      ["大器晚成", "有大才能的人往往较晚才成功。"],
+      ["大名鼎鼎", "名气很大。"],
+      ["大摇大摆", "走路或态度很神气，毫不顾忌。"],
+      ["大显身手", "充分展示本领。"],
+      ["大海捞针", "范围太大，寻找非常困难。"],
+      ["大功告成", "重要事情顺利完成。"],
+      ["大快人心", "坏人坏事受到惩罚，使人痛快。"],
+      ["大失所望", "原来的希望完全落空。"],
+      ["大智若愚", "有大智慧的人表面看似平凡。"],
+      ["小心翼翼", "十分谨慎，一点也不敢疏忽。"],
+      ["小题大做", "把小事情当成大事情处理。"],
+      ["小巧玲珑", "小而精致灵巧。"],
+      ["风和日丽", "天气晴朗暖和。"],
+      ["风平浪静", "没有风浪，比喻平静无事。"],
+      ["风雨同舟", "共同经历困难。"],
+      ["风调雨顺", "风雨适合农时，形容年景好。"],
+      ["风驰电掣", "速度非常快。"],
+      ["风起云涌", "事物迅速发展，声势很大。"],
+      ["雨过天晴", "风雨过去天放晴，比喻困难结束。"],
+      ["雨后春笋", "新事物大量迅速出现。"],
+      ["山清水秀", "山水风景清幽美丽。"],
+      ["山穷水尽", "陷入没有出路的困境。"],
+      ["水到渠成", "条件成熟，事情自然成功。"],
+      ["水落石出", "事情真相完全显露出来。"],
+      ["水深火热", "生活处境极其艰难痛苦。"],
+      ["火上浇油", "使矛盾或怒气更加严重。"],
+      ["火冒三丈", "怒气非常大。"],
+      ["火烧眉毛", "事情非常紧急。"],
+      ["天衣无缝", "比喻事物周密完美，没有破绽。"],
+      ["天真烂漫", "心地单纯自然，毫不做作。"],
+      ["天下太平", "社会安定，没有动乱。"],
+      ["天下大乱", "天下动荡混乱。"],
+      ["日新月异", "每天每月都有新变化，进步很快。"],
+      ["日积月累", "长时间一点一点积累。"],
+      ["日理万机", "每天处理很多重要事务。"],
+      ["月明星稀", "月亮明亮，星星显得稀少。"],
+      ["春暖花开", "春天气候温暖，花儿开放。"],
+      ["春华秋实", "春天开花，秋天结果，比喻有耕耘才有收获。"],
+      ["花好月圆", "比喻美好圆满。"],
+      ["花言巧语", "虚假而好听的话。"],
+      ["草木皆兵", "极度惊慌，把草木都当成敌人。"],
+      ["画龙点睛", "关键处一笔使整体更精彩。"],
+      ["龙马精神", "精神健旺、奋发向上。"],
+      ["虎头蛇尾", "开头声势大，结尾草率。"],
+      ["马到成功", "一开始行动就取得成功。"],
+      ["鸡犬不宁", "搅得大家都不得安宁。"],
+      ["鼠目寸光", "眼光短浅，没有远见。"],
+      ["神机妙算", "计谋高明，预料准确。"],
+      ["神采奕奕", "精神饱满，神情光彩照人。"],
+      ["人山人海", "人非常多。"],
+      ["人云亦云", "别人怎么说自己也跟着怎么说。"],
+      ["人才济济", "有才能的人很多。"],
+      ["自高自大", "自以为了不起，看不起别人。"],
+      ["自强不息", "自己努力向上，永不松懈。"],
+      ["自知之明", "了解自己的能力和不足。"],
+      ["自相矛盾", "自己的说法或做法前后冲突。"],
+      ["心平气和", "心情平静，态度温和。"],
+      ["心急如焚", "心里急得像火烧一样。"],
+      ["心花怒放", "心里高兴得像花盛开一样。"],
+      ["口若悬河", "说话滔滔不绝，很能言谈。"],
+      ["哑口无言", "张口结舌，说不出话。"],
+      ["目光短浅", "眼光不远，只看眼前。"],
+      ["高瞻远瞩", "站得高，看得远，比喻眼光远大。"],
+      ["眉开眼笑", "非常高兴，满脸笑容。"],
+      ["愁眉苦脸", "发愁难过的样子。"],
+      ["名副其实", "名称或名声与实际相符合。"],
+      ["名不副实", "名称或名声与实际不相符合。"],
+      ["明争暗斗", "明里暗里都在争斗。"],
+      ["光明正大", "行为正派，毫不隐瞒。"],
+      ["兴高采烈", "兴致高，情绪热烈。"],
+      ["兴味索然", "一点兴趣也没有。"],
+      ["前功尽弃", "以前的努力全部白费。"]
+    ]);
+    const MEANING_RULES = [
+      { keys: ["山", "水", "海", "江", "河", "湖"], text: "常用来描写自然景象、广阔场面或处境变化。" },
+      { keys: ["风", "雨", "云", "雪", "雷", "电"], text: "常用来描写天气气势，也常借来形容变化和声势。" },
+      { keys: ["春", "夏", "秋", "冬", "花", "草"], text: "常用来描写季节、景物或生命蓬勃的状态。" },
+      { keys: ["龙", "虎", "马", "牛", "鸡", "狗", "鼠", "蛇", "兔", "羊"], text: "借动物形象来表现人的状态、气势或处境。" },
+      { keys: ["心", "神", "情", "意"], text: "多用来表现人的心情、精神或态度。" },
+      { keys: ["口", "目", "眼", "耳", "手", "足", "头", "面", "眉", "身"], text: "借人的动作、神态或身体部位来表现状态。" },
+      { keys: ["明", "暗", "光", "黑", "白", "红", "绿", "青", "黄", "紫"], text: "借颜色、光暗或视觉感受来表达特点。" },
+      { keys: ["学", "才", "德", "智", "勇", "仁", "义", "礼", "信"], text: "常用来评价品德、学问、才能或做事品质。" },
+      { keys: ["大", "小", "多", "少", "高", "低", "长", "短"], text: "通过大小、多少、高低或长短的对比来强调特点。" },
+      { keys: ["前", "后", "东", "西", "南", "北", "左", "右"], text: "借方向或位置变化来表现行动、处境或关系。" },
+      { keys: ["新", "旧", "清", "浑", "真", "假", "虚", "实"], text: "通过新旧、真假、清浊或虚实来表达判断。" },
+      { keys: ["喜", "怒", "哀", "乐", "苦", "甘", "甜", "酸"], text: "常用来表现情绪、滋味或人生感受。" },
+      { keys: ["成", "功", "事", "行", "走", "飞", "沉", "浮", "生", "死"], text: "常用来表现事情的发展、成败或人生处境。" }
+    ];
+    const OPPOSITE_QUESTIONS = [
+      { base: "三心二意", answer: "一心一意", baseMeaning: "心思不专一", answerMeaning: "心思专一" },
+      { base: "风平浪静", answer: "风起云涌", baseMeaning: "平静无事", answerMeaning: "变化迅猛、声势很大" },
+      { base: "天下太平", answer: "天下大乱", baseMeaning: "安定平静", answerMeaning: "动荡混乱" },
+      { base: "心平气和", answer: "心急如焚", baseMeaning: "平静温和", answerMeaning: "非常着急" },
+      { base: "哑口无言", answer: "口若悬河", baseMeaning: "说不出话", answerMeaning: "说话滔滔不绝" },
+      { base: "目光短浅", answer: "高瞻远瞩", baseMeaning: "只看眼前", answerMeaning: "眼光长远" },
+      { base: "愁眉苦脸", answer: "眉开眼笑", baseMeaning: "发愁难过", answerMeaning: "高兴欢喜" },
+      { base: "名副其实", answer: "名不副实", baseMeaning: "名声和实际相符", answerMeaning: "名声和实际不相符" },
+      { base: "明争暗斗", answer: "光明正大", baseMeaning: "暗中争斗", answerMeaning: "正派坦荡" },
+      { base: "兴味索然", answer: "兴高采烈", baseMeaning: "没有兴趣", answerMeaning: "兴致很高" },
+      { base: "百折不挠", answer: "半途而废", baseMeaning: "遇到挫折也不退缩", answerMeaning: "事情没做完就放弃" },
+      { base: "前功尽弃", answer: "大功告成", baseMeaning: "以前努力白费", answerMeaning: "重要事情完成" }
+    ].filter(item => COMMON_IDIOM_SET.has(item.base) && COMMON_IDIOM_SET.has(item.answer));
+    const OPPOSITE_BY_ANSWER = new Map(OPPOSITE_QUESTIONS.map(item => [item.answer, item]));
+
+    function buildMeaningForDatabase(idiom) {
+      const featured = FEATURED_BY_ANSWER.get(idiom);
+      if (featured) return featured.tip;
+      const opposite = OPPOSITE_BY_ANSWER.get(idiom);
+      if (opposite) return opposite.answerMeaning;
+      if (DIRECT_MEANINGS.has(idiom)) return DIRECT_MEANINGS.get(idiom);
+      const rule = MEANING_RULES.find(item => item.keys.some(key => idiom.includes(key)));
+      return rule ? rule.text : "表达一种常见情景、态度或道理。";
+    }
+
+    const IDIOM_DB = COMMON_IDIOMS.map((word, index) => ({
+      id: `common-${String(index + 1).padStart(4, "0")}`,
+      word,
+      meaning: buildMeaningForDatabase(word),
+      visual: SIMPLE_VISUAL_KEYS[index % SIMPLE_VISUAL_KEYS.length]
+    }));
+    const IDIOM_MEANING_DB = new Map(IDIOM_DB.map(item => [item.word, item.meaning]));
+
+    function describeIdiom(idiom) {
+      return IDIOM_MEANING_DB.get(idiom) || "表达一种常见情景、态度或道理。";
+    }
+
+    function idiomMeaning(idiom) {
+      return IDIOM_MEANING_DB.get(idiom) || describeIdiom(idiom);
+    }
+
+    function makeCommonChoices(answer, index) {
+      const answerMeaning = describeIdiom(answer);
+      let pool = COMMON_IDIOMS.filter(item => PRECISE_MEANING_SET.has(item) && item !== answer && describeIdiom(item) !== answerMeaning);
+      if (pool.length < 3) pool = COMMON_IDIOMS.filter(item => PRECISE_MEANING_SET.has(item) && item !== answer);
+      return [answer, ...shuffle(pool).slice(0, 3)];
+    }
+
+    function makeOppositeChoices(answer, base) {
+      const pool = COMMON_IDIOMS.filter(item => PRECISE_MEANING_SET.has(item) && item !== answer && item !== base);
+      return [answer, base, ...shuffle(pool).slice(0, 2)];
+    }
+
+    function makeCommonQuestion(entry, fallbackIndex = 0) {
+      const idiom = typeof entry === "string" ? entry : entry.word;
+      const index = typeof entry === "string" ? fallbackIndex : Number(entry.id.replace("common-", "")) - 1;
+      const storedMeaning = typeof entry === "string" ? describeIdiom(idiom) : entry.meaning;
+      const visual = typeof entry === "string" ? SIMPLE_VISUAL_KEYS[index % SIMPLE_VISUAL_KEYS.length] : entry.visual;
+      const opposite = OPPOSITE_BY_ANSWER.get(idiom);
+      if (opposite) {
+        return {
+          id: typeof entry === "string" ? `common-${String(index + 1).padStart(4, "0")}` : entry.id,
+          type: "反义",
+          visual,
+          prompt: `哪个成语的意思和“${opposite.base}”相反？`,
+          answer: idiom,
+          choices: makeOppositeChoices(idiom, opposite.base),
+          tip: `“${opposite.base}”偏向：${opposite.baseMeaning}；“${idiom}”偏向：${opposite.answerMeaning}。`,
+          example: `“${idiom}”和“${opposite.base}”意思相对。`
+        };
+      }
+      return {
+        id: typeof entry === "string" ? `common-${String(index + 1).padStart(4, "0")}` : entry.id,
+        type: "释义",
+        visual,
+        prompt: `下面哪个成语最符合这个解释：${storedMeaning}`,
+        answer: idiom,
+        choices: makeCommonChoices(idiom, index),
+        tip: storedMeaning,
+        example: `常用成语：${idiom}。${storedMeaning}`
+      };
+    }
+
+    const PRECISE_MEANING_SET = new Set([...DIRECT_MEANINGS.keys(), ...BANK.map(item => item.answer)]);
+    const FULL_BANK = IDIOM_DB.map((entry, index) => FEATURED_BY_ANSWER.get(entry.word) || makeCommonQuestion(entry, index));
+    const QUESTION_BANK = FULL_BANK.filter(item => PRECISE_MEANING_SET.has(item.answer) || OPPOSITE_BY_ANSWER.has(item.answer));
+    const FULL_BANK_IDS = new Set(FULL_BANK.map(item => item.id));
+
+    function learnedCountOf(saved) {
+      return saved.learned.filter(id => FULL_BANK_IDS.has(id)).length;
+    }
+
+    const STORE_KEY = "chengyu-star-quest-v1";
+    const MODE_META = {
+      quest: { label: "闯关", size: 12, lives: 3, seconds: 0 },
+      speed: { label: "速战", size: 18, lives: 99, seconds: 60 },
+      review: { label: "错题", size: 12, lives: 3, seconds: 0 }
+    };
+    const BADGES = [
+      { id: "first", name: "首战告捷", text: "答对 1 题", ok: s => s.totalCorrect >= 1 },
+      { id: "combo5", name: "五连星", text: "连击达到 5", ok: s => s.bestStreak >= 5 },
+      { id: "combo10", name: "十连冠", text: "连击达到 10", ok: s => s.bestStreak >= 10 },
+      { id: "learn100", name: "百词小将", text: "掌握 100 个", ok: s => learnedCountOf(s) >= 100 },
+      { id: "learn300", name: "三百词官", text: "掌握 300 个", ok: s => learnedCountOf(s) >= 300 },
+      { id: "review", name: "错题清扫", text: "清空错题本", ok: s => s.totalCorrect >= 6 && s.wrong.length === 0 }
+    ];
+
+    const $ = selector => document.querySelector(selector);
+    const stageRoot = $("#stageRoot");
+    const toast = $("#toast");
+    const store = readStore();
+    let audioCtx = null;
+    let timerId = null;
+
+    let state = {
+      mode: "quest",
+      deck: [],
+      index: 0,
+      score: 0,
+      streak: 0,
+      bestRunStreak: 0,
+      lives: 3,
+      answered: false,
+      hintUsed: false,
+      eliminated: "",
+      deadline: 0,
+      finished: false
+    };
+
+    function readStore() {
+      const fallback = {
+        totalCorrect: 0,
+        bestScore: 0,
+        bestStreak: 0,
+        learned: [],
+        wrong: []
+      };
+      try {
+        const raw = localStorage.getItem(STORE_KEY);
+        return raw ? { ...fallback, ...JSON.parse(raw) } : fallback;
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function saveStore() {
+      localStorage.setItem(STORE_KEY, JSON.stringify(store));
+    }
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function sampleDeck(mode) {
+      let pool = QUESTION_BANK;
+      if (mode === "review") {
+        const wrongSet = new Set(store.wrong);
+        pool = QUESTION_BANK.filter(item => wrongSet.has(item.id));
+        if (pool.length === 0) {
+          pool = QUESTION_BANK.filter(item => !store.learned.includes(item.id));
+        }
+      }
+      return shuffle(pool)
+        .slice(0, MODE_META[mode].size)
+        .map(item => ({ ...item, playChoices: shuffle(item.choices) }));
+    }
+
+    function start(mode) {
+      clearInterval(timerId);
+      const meta = MODE_META[mode];
+      state = {
+        mode,
+        deck: sampleDeck(mode),
+        index: 0,
+        score: 0,
+        streak: 0,
+        bestRunStreak: 0,
+        lives: meta.lives,
+        answered: false,
+        hintUsed: false,
+        eliminated: "",
+        deadline: meta.seconds ? Date.now() + meta.seconds * 1000 : 0,
+        finished: false
+      };
+      document.querySelectorAll(".mode-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.mode === mode);
+      });
+      if (state.deadline) {
+        timerId = setInterval(() => {
+          updateHud();
+          if (!state.finished && Date.now() >= state.deadline) finish(false, "时间到");
+        }, 250);
+      }
+      renderQuestion();
+      renderProfile();
+    }
+
+    function currentQuestion() {
+      return state.deck[state.index];
+    }
+
+    function updateHud() {
+      $("#scoreValue").textContent = state.score;
+      $("#streakValue").textContent = `${state.streak}x`;
+      $("#lifeValue").textContent = state.mode === "speed" ? "∞" : "◆".repeat(Math.max(0, state.lives));
+      if (state.deadline) {
+        const left = Math.max(0, Math.ceil((state.deadline - Date.now()) / 1000));
+        $("#timeValue").textContent = `${left}s`;
+      } else {
+        $("#timeValue").textContent = "--";
+      }
+      const progress = state.deck.length ? (state.index / state.deck.length) * 100 : 0;
+      $("#progressFill").style.width = `${Math.min(100, progress)}%`;
+    }
+
+    function renderQuestion() {
+      if (state.index >= state.deck.length) {
+        finish(true, "通关");
+        return;
+      }
+      const q = currentQuestion();
+      state.answered = false;
+      state.hintUsed = false;
+      state.eliminated = "";
+      updateHud();
+      stageRoot.innerHTML = `
+        <section class="stage">
+          <div class="scene">
+            <div class="visual-panel" id="visualPanel">
+              <span class="visual-stamp">${MODE_META[state.mode].label} ${state.index + 1}/${state.deck.length}</span>
+              ${renderArt(q.visual)}
+            </div>
+            <div class="question-panel">
+              <div>
+                <div class="level-line">
+                  <span>第 ${state.index + 1} 关</span>
+                  <span class="type-pill">${q.type}</span>
+                </div>
+                <p class="question-text">${escapeHtml(q.prompt)}</p>
+              </div>
+              <div class="tip-box" id="tipBox">${state.mode === "speed" ? "速战模式：答得越快，分数越高。" : "答对后会点亮掌握记录，连击越高分数越香。"}</div>
+            </div>
+          </div>
+          <div class="choices" id="choices">
+            ${q.playChoices.map(choice => `
+              <button class="choice" data-choice="${escapeAttr(choice)}" aria-label="${escapeAttr(choice)}">
+                <span class="choice-card">
+                  <span class="choice-face choice-front">${escapeHtml(choice)}</span>
+                  <span class="choice-face choice-back">
+                    <span class="choice-word">${escapeHtml(choice)}</span>
+                    <span class="choice-meaning">${escapeHtml(idiomMeaning(choice))}</span>
+                  </span>
+                </span>
+              </button>
+            `).join("")}
+          </div>
+          <div class="actions">
+            <div class="left-actions">
+              <button class="icon-btn" id="hintBtn" aria-label="提示">提示</button>
+              <button class="ghost-btn" id="restartBtn">重来</button>
+            </div>
+            <button class="primary-btn" id="nextBtn" disabled>下一关</button>
+          </div>
+        </section>
+      `;
+      $("#choices").addEventListener("click", event => {
+        const button = event.target.closest(".choice");
+        if (button) choose(button.dataset.choice, button);
+      });
+      $("#hintBtn").addEventListener("click", useHint);
+      $("#restartBtn").addEventListener("click", () => start(state.mode));
+      $("#nextBtn").addEventListener("click", next);
+    }
+
+    function choose(choice, button) {
+      if (state.answered || state.finished) return;
+      const q = currentQuestion();
+      const correct = choice === q.answer;
+      state.answered = true;
+      document.querySelectorAll(".choice").forEach(btn => {
+        btn.disabled = true;
+        btn.classList.add("flipped");
+        if (btn.dataset.choice === q.answer) btn.classList.add("correct");
+      });
+      button.classList.add(correct ? "correct" : "wrong");
+      button.classList.add("answer-flash");
+      $("#hintBtn").disabled = true;
+      $("#nextBtn").disabled = false;
+      if (correct) {
+        const fastBonus = state.deadline ? Math.max(0, Math.ceil((state.deadline - Date.now()) / 1000)) : 0;
+        const points = 100 + state.streak * 18 + Math.min(60, fastBonus) - (state.hintUsed ? 20 : 0);
+        state.score += Math.max(40, points);
+        state.streak += 1;
+        state.bestRunStreak = Math.max(state.bestRunStreak, state.streak);
+        store.totalCorrect += 1;
+        store.bestScore = Math.max(store.bestScore, state.score);
+        store.bestStreak = Math.max(store.bestStreak, state.bestRunStreak);
+        if (!store.learned.includes(q.id)) store.learned.push(q.id);
+        store.wrong = store.wrong.filter(id => id !== q.id);
+        saveStore();
+        floatScore(`+${Math.max(40, points)}`);
+        burst(button);
+        sound("good");
+        $("#tipBox").textContent = `${q.example}`;
+        showToast(state.streak >= 3 ? `连击 ${state.streak}！手感来了` : "答对了，继续冲");
+      } else {
+        state.streak = 0;
+        if (state.mode !== "speed") state.lives -= 1;
+        if (!store.wrong.includes(q.id)) store.wrong.push(q.id);
+        saveStore();
+        sound("bad");
+        $("#tipBox").textContent = `${q.tip} 例句：${q.example}`;
+        showToast(state.lives <= 0 && state.mode !== "speed" ? "能量用完，整理一下再出发" : "差一点，记住这个坑");
+      }
+      updateHud();
+      renderProfile();
+      if (state.lives <= 0 && state.mode !== "speed") {
+        $("#nextBtn").textContent = "查看战绩";
+      }
+    }
+
+    function useHint() {
+      if (state.answered || state.hintUsed) return;
+      const q = currentQuestion();
+      const wrongChoices = q.playChoices.filter(choice => choice !== q.answer);
+      const candidate = wrongChoices[Math.floor(Math.random() * wrongChoices.length)];
+      state.hintUsed = true;
+      state.eliminated = candidate;
+      document.querySelectorAll(".choice").forEach(btn => {
+        if (btn.dataset.choice === candidate) btn.classList.add("eliminated");
+      });
+      $("#hintBtn").disabled = true;
+      $("#tipBox").textContent = q.tip;
+      showToast("排除 1 个干扰项");
+      sound("hint");
+    }
+
+    function next() {
+      if (!state.answered) return;
+      if (state.lives <= 0 && state.mode !== "speed") {
+        finish(false, "能量用完");
+        return;
+      }
+      state.index += 1;
+      renderQuestion();
+    }
+
+    function finish(win, reason) {
+      if (state.finished) return;
+      state.finished = true;
+      clearInterval(timerId);
+      store.bestScore = Math.max(store.bestScore, state.score);
+      store.bestStreak = Math.max(store.bestStreak, state.bestRunStreak);
+      saveStore();
+      $("#progressFill").style.width = "100%";
+      updateHud();
+      renderProfile();
+      const cleared = state.deck.length ? Math.min(state.index + (win ? 0 : 1), state.deck.length) : 0;
+      stageRoot.innerHTML = `
+        <section class="end-screen">
+          <div class="end-box">
+            <div class="end-art">${renderEndArt(win)}</div>
+            <h2 class="end-title">${win ? "漂亮通关" : reason}</h2>
+            <p class="end-copy">${endLine(win)}</p>
+            <div class="score-row">
+              <div class="score-cell"><span>本局得分</span><strong>${state.score}</strong></div>
+              <div class="score-cell"><span>最高连击</span><strong>${state.bestRunStreak}</strong></div>
+              <div class="score-cell"><span>已挑战</span><strong>${cleared}/${state.deck.length}</strong></div>
+            </div>
+            <div class="actions" style="justify-content:center">
+              <button class="primary-btn" id="againBtn">再闯一次</button>
+              <button class="ghost-btn" id="reviewBtn">练错题</button>
+            </div>
+          </div>
+        </section>
+      `;
+      $("#againBtn").addEventListener("click", () => start(state.mode === "review" ? "quest" : state.mode));
+      $("#reviewBtn").addEventListener("click", () => start("review"));
+      if (win) {
+        burst($("#gameBoard"));
+        showToast("新一轮成语能量已入账");
+      }
+    }
+
+    function endLine(win) {
+      if (win && state.mode === "review") return "错题越来越少，说明脑子里的成语地图正在变清楚。";
+      if (win && state.mode === "speed") return "这速度很有压迫感，下一局可以冲更高连击。";
+      if (win) return "这局节奏很稳，继续玩会解锁更多徽章。";
+      if (store.wrong.length > 0) return "错题本已经记下它们，点“练错题”就能立刻反杀。";
+      return "换一组题再来，连击会很快回来的。";
+    }
+
+    function renderProfile() {
+      const unlocked = BADGES.filter(badge => badge.ok(store));
+      const rank = rankFor(store);
+      $("#rankName").textContent = rank.name;
+      $("#rankNote").textContent = rank.note;
+      $("#bestScore").textContent = store.bestScore;
+      $("#learnedCount").textContent = `${learnedCountOf(store)}/${FULL_BANK.length}`;
+      $("#wrongCount").textContent = store.wrong.length;
+      $("#bestStreak").textContent = store.bestStreak;
+      $("#badgeGrid").innerHTML = BADGES.map(badge => {
+        const ok = badge.ok(store);
+        return `
+          <div class="badge ${ok ? "unlocked" : ""}">
+            <div class="badge-name">${ok ? "已得 " : ""}${badge.name}</div>
+            <div class="badge-meta">${badge.text}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function rankFor(s) {
+      const learned = learnedCountOf(s);
+      if (learned >= 800) return { name: "成语馆长", note: "1000 词库快被你点亮了，阅读会越来越顺。" };
+      if (learned >= 300) return { name: "成语博士", note: "掌握量已经很扎实，继续冲全词库。" };
+      if (learned >= 100) return { name: "百词小将", note: "成语储备开始成规模了。" };
+      if (s.bestStreak >= 10) return { name: "连击高手", note: "十连的手感不是运气，是判断力。" };
+      if (learned >= 12) return { name: "词海探员", note: "掌握数量上来了，例句会越看越顺。" };
+      if (s.totalCorrect >= 1) return { name: "成语新星", note: "第一枚徽章已近在眼前。" };
+      return { name: "成语新星", note: "答对 1 题就点亮第一枚徽章。" };
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1500);
+    }
+
+    function floatScore(text) {
+      const visual = $("#visualPanel");
+      if (!visual) return;
+      const el = document.createElement("div");
+      el.className = "float-score";
+      el.textContent = text;
+      visual.appendChild(el);
+      setTimeout(() => el.remove(), 780);
+    }
+
+    function burst(target) {
+      const rect = target.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const colors = ["#2864d8", "#10a5b8", "#1f9f6b", "#f3b43f", "#de4c42", "#7c57d6"];
+      for (let i = 0; i < 28; i += 1) {
+        const piece = document.createElement("span");
+        piece.className = "burst";
+        piece.style.left = `${cx}px`;
+        piece.style.top = `${cy}px`;
+        piece.style.background = colors[i % colors.length];
+        piece.style.setProperty("--x", `${Math.random() * 260 - 130}px`);
+        piece.style.setProperty("--y", `${Math.random() * 190 - 150}px`);
+        piece.style.setProperty("--r", `${Math.random() * 480 - 240}deg`);
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 940);
+      }
+    }
+
+    function sound(kind) {
+      try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const now = audioCtx.currentTime;
+        const map = {
+          good: [660, 880],
+          bad: [220, 160],
+          hint: [420, 520]
+        };
+        const notes = map[kind] || map.hint;
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(notes[0], now);
+        osc.frequency.exponentialRampToValueAtTime(notes[1], now + 0.12);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      } catch (error) {
+        return;
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value);
+    }
+
+    function renderEndArt(win) {
+      const color = win ? "#f3b43f" : "#6ed6e5";
+      return `
+        <svg viewBox="0 0 220 170" width="100%" height="100%" aria-hidden="true">
+          <rect x="36" y="86" width="148" height="52" rx="8" fill="#fffdf8" stroke="#1f2b42" stroke-width="4"/>
+          <path d="M56 86c10-38 32-58 54-58s44 20 54 58z" fill="${color}" stroke="#1f2b42" stroke-width="4"/>
+          <circle cx="110" cy="76" r="28" fill="#fff" stroke="#1f2b42" stroke-width="4"/>
+          <path d="M96 77h28M99 89c8 7 16 7 23 0" stroke="#1f2b42" stroke-width="4" stroke-linecap="round"/>
+          <path d="M74 138l-12 20M146 138l12 20" stroke="#1f2b42" stroke-width="5" stroke-linecap="round"/>
+          <path d="M75 44l-15-18M145 44l15-18" stroke="#1f2b42" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      `;
+    }
+
+    function renderArt(key) {
+      const labels = {
+        well: "井", snake: "蛇", stump: "木", boat: "舟", bamboo: "竹", fence: "羊", bell: "铃", flute: "竽",
+        tiger: "虎", cup: "杯", target: "箭", zither: "琴", fire: "胆", rooster: "鸡", strategy: "兵", cauldron: "釜",
+        cottage: "庐", jujube: "枣", jewel: "珠", seedling: "苗", steps: "步", dragon: "龙", spear: "矛", wheel: "熟",
+        stone: "石", snow: "雪", road: "途", drum: "鼓", hearts: "心", crane: "鹤", chisel: "锲", apology: "罪"
+      };
+      const simpleLabels = ["成", "语", "学", "星", "问", "答", "记", "悟"];
+      const colors = ["#2864d8", "#10a5b8", "#1f9f6b", "#f3b43f", "#de4c42", "#7c57d6", "#d28a43", "#5f6778"];
+      const number = Number(String(key || "").replace("simple-", ""));
+      const index = Number.isFinite(number) ? number % simpleLabels.length : Math.abs(hashKey(key)) % simpleLabels.length;
+      const label = labels[key] || simpleLabels[index];
+      const color = colors[index];
+      return `
+        <svg viewBox="0 0 460 300" aria-hidden="true">
+          <rect x="28" y="28" width="404" height="244" rx="8" fill="#fffdf8" stroke="#1f2b42" stroke-width="5"/>
+          <circle class="bob" cx="230" cy="142" r="70" fill="${color}" opacity="0.18"/>
+          <circle cx="230" cy="142" r="58" fill="#ffffff" stroke="#1f2b42" stroke-width="5"/>
+          <text x="230" y="164" text-anchor="middle" font-size="64" font-weight="900" fill="${color}" font-family="PingFang SC, Microsoft YaHei, sans-serif">${escapeHtml(label)}</text>
+          <path d="M142 226h176" stroke="#1f2b42" stroke-width="8" stroke-linecap="round"/>
+          <path d="M174 246h112" stroke="${color}" stroke-width="7" stroke-linecap="round"/>
+        </svg>
+      `;
+    }
+
+    function hashKey(value) {
+      return Array.from(String(value || "chengyu")).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    }
+
+    document.querySelectorAll(".mode-btn").forEach(btn => {
+      btn.addEventListener("click", () => start(btn.dataset.mode));
+    });
+
+    renderProfile();
+    start("quest");
+  </script>
+</body>
+</html>

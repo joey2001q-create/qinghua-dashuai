@@ -8,7 +8,7 @@ interface MainCardProps {
   description: string
   tags: { label: string; color: 'blue' | 'green' | 'orange' | 'purple' | 'teal' | 'red' | 'pink' | 'indigo' }[]
   onClick: () => void
-  color: 'blue' | 'orange' | 'red' | 'pink' | 'green'
+  color: 'blue' | 'orange' | 'red' | 'pink' | 'green' | 'purple'
 }
 
 const colorMap = {
@@ -17,6 +17,7 @@ const colorMap = {
   red: 'from-red-500 to-red-400',
   pink: 'from-pink-500 to-pink-400',
   green: 'from-emerald-500 to-emerald-400',
+  purple: 'from-purple-500 to-purple-400',
 }
 
 const tagColorMap = {

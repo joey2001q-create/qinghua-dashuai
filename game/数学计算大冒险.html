@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0a0218" />
+<title>🌌 霓虹星际大冒险</title>
+<style>
+  :root{
+    --cyan: #00f0ff;
+    --magenta: #ff2bd6;
+    --pink: #ff006e;
+    --purple: #a855f7;
+    --blue: #4361ee;
+    --yellow: #fff700;
+    --green: #39ff88;
+    --red: #ff3b6b;
+    --bg-0: #050010;
+    --bg-1: #0e0530;
+    --bg-2: #1a0a3e;
+    --glass: rgba(20, 10, 50, 0.55);
+    --glass-strong: rgba(30, 15, 70, 0.75);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    color: #e8e8ff;
+    background: #050010;
+    min-height: 100vh;
+    overflow-x: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    position: relative;
+  }
+
+  /* ====== 深空动态背景 ====== */
+  .nebula{
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse at 20% 30%, rgba(168, 85, 247, 0.35), transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(255, 43, 214, 0.25), transparent 55%),
+      radial-gradient(ellipse at 60% 80%, rgba(0, 240, 255, 0.25), transparent 50%),
+      radial-gradient(ellipse at 30% 90%, rgba(67, 97, 238, 0.3), transparent 55%),
+      linear-gradient(180deg, #050010 0%, #0e0530 50%, #1a0a3e 100%);
+    background-size: 200% 200%, 200% 200%, 200% 200%, 200% 200%, 100% 100%;
+    animation: nebulaShift 30s ease infinite;
+    pointer-events: none;
+  }
+  @keyframes nebulaShift{
+    0%,100%{ background-position: 0% 0%, 100% 0%, 50% 100%, 0% 100%, 0 0; }
+    50%{ background-position: 100% 50%, 0% 50%, 0% 0%, 100% 50%, 0 0; }
+  }
+  #fxCanvas{
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  }
+  .scanlines{
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,0) 0px,
+      rgba(255,255,255,0) 2px,
+      rgba(255,255,255,0.015) 2px,
+      rgba(255,255,255,0.015) 4px
+    );
+    mix-blend-mode: overlay;
+  }
+
+  /* ====== App 容器 ====== */
+  .app{
+    position: relative;
+    z-index: 10;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 14px;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+
+  /* ====== 顶部状态栏 ====== */
+  .topbar{
+    background: var(--glass);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(0,240,255,0.25);
+    border-radius: 18px;
+    padding: 10px 14px;
+    display: flex; align-items: center; justify-content: space-around;
+    gap: 8px;
+    box-shadow:
+      0 0 20px rgba(0, 240, 255, 0.2),
+      inset 0 0 20px rgba(168, 85, 247, 0.1);
+    flex-wrap: wrap;
+  }
+  .stat{
+    display: flex; align-items: center; gap: 6px;
+    font-weight: 700;
+    font-size: clamp(13px, 3.2vw, 16px);
+  }
+  .stat .icon{ font-size: 1.25em; filter: drop-shadow(0 0 4px currentColor); }
+  .stat .label{ color: rgba(232,232,255,0.55); font-weight: 500; font-size: 0.82em; }
+  .stat .value{
+    color: #fff; min-width: 18px; text-align: left;
+    text-shadow: 0 0 8px var(--cyan), 0 0 14px var(--cyan);
+  }
+
+  /* ====== 主卡片 ====== */
+  .card{
+    background: var(--glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    border-radius: 24px;
+    padding: clamp(16px, 4vw, 28px);
+    margin-top: 14px;
+    flex: 1;
+    display: flex; flex-direction: column;
+    box-shadow:
+      0 0 40px rgba(168, 85, 247, 0.25),
+      0 0 80px rgba(0, 240, 255, 0.08),
+      inset 0 0 30px rgba(255, 43, 214, 0.05);
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before{
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent 30%, rgba(0,240,255,0.05) 50%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ====== 标题 ====== */
+  h1.title{
+    font-size: clamp(26px, 7vw, 42px);
+    text-align: center;
+    margin-bottom: 6px;
+    letter-spacing: 4px;
+    color: #fff;
+    text-shadow:
+      0 0 5px var(--cyan),
+      0 0 12px var(--cyan),
+      0 0 25px var(--magenta),
+      0 0 45px var(--magenta);
+    animation: titlePulse 2.5s ease infinite;
+  }
+  @keyframes titlePulse{
+    0%,100%{
+      text-shadow:
+        0 0 5px var(--cyan),
+        0 0 12px var(--cyan),
+        0 0 25px var(--magenta),
+        0 0 45px var(--magenta);
+    }
+    50%{
+      text-shadow:
+        0 0 8px var(--magenta),
+        0 0 18px var(--magenta),
+        0 0 35px var(--cyan),
+        0 0 60px var(--cyan);
+    }
+  }
+  .subtitle{
+    text-align: center;
+    color: rgba(232,232,255,0.65);
+    margin-bottom: 18px;
+    font-size: clamp(12px, 2.8vw, 15px);
+    letter-spacing: 1px;
+  }
+
+  .section-title{
+    font-weight: 700;
+    font-size: clamp(14px, 3.4vw, 17px);
+    color: var(--cyan);
+    margin: 14px 0 10px;
+    display: flex; align-items: center; gap: 8px;
+    text-shadow: 0 0 10px var(--cyan);
+    letter-spacing: 2px;
+  }
+
+  /* ====== 选项网格 ====== */
+  .grid{
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  }
+  .opt{
+    background: rgba(20, 10, 50, 0.55);
+    border: 1.5px solid rgba(0,240,255,0.3);
+    border-radius: 14px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-weight: 700;
+    font-size: clamp(13px, 3.2vw, 16px);
+    color: #d8d8ff;
+    position: relative;
+    overflow: hidden;
+  }
+  .opt::after{
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(0,240,255,0.15), transparent 70%);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .opt .emoji{ display: block; font-size: 1.7em; margin-bottom: 4px; filter: drop-shadow(0 0 6px rgba(255,255,255,0.4)); }
+  .opt small{ font-weight: 500; font-size: 0.75em; opacity: 0.7; }
+  .opt:hover{ transform: translateY(-2px); border-color: var(--cyan); box-shadow: 0 0 18px rgba(0,240,255,0.4); }
+  .opt:hover::after{ opacity: 1; }
+  .opt.active{
+    background: linear-gradient(135deg, rgba(255, 43, 214, 0.3), rgba(0, 240, 255, 0.3));
+    border-color: var(--magenta);
+    color: #fff;
+    box-shadow:
+      0 0 20px var(--magenta),
+      inset 0 0 20px rgba(0,240,255,0.2);
+    text-shadow: 0 0 8px #fff;
+    transform: translateY(-2px);
+  }
+
+  /* ====== 按钮 ====== */
+  .btn{
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 14px 24px;
+    border: 1.5px solid;
+    border-radius: 999px;
+    font-size: clamp(15px, 3.8vw, 18px);
+    font-weight: 800;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.25s;
+    width: 100%;
+    margin-top: 14px;
+    background: rgba(20, 10, 50, 0.6);
+    letter-spacing: 2px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .btn-primary{
+    border-color: var(--cyan);
+    box-shadow:
+      0 0 20px rgba(0,240,255,0.5),
+      inset 0 0 20px rgba(0,240,255,0.15);
+    text-shadow: 0 0 10px var(--cyan);
+  }
+  .btn-primary:hover{
+    box-shadow:
+      0 0 30px var(--cyan),
+      0 0 50px rgba(255, 43, 214, 0.4),
+      inset 0 0 25px rgba(0,240,255,0.25);
+    transform: translateY(-2px);
+  }
+  .btn-secondary{
+    border-color: var(--magenta);
+    box-shadow: 0 0 20px rgba(255, 43, 214, 0.5);
+    text-shadow: 0 0 10px var(--magenta);
+  }
+  .btn-ghost{
+    border-color: rgba(232, 232, 255, 0.4);
+    color: rgba(232, 232, 255, 0.8);
+    box-shadow: none;
+  }
+  .btn:active{ transform: scale(0.97); }
+
+  /* ====== 游戏页 ====== */
+  .game{ display: none; }
+  .game.active{ display: flex; }
+
+  .gameTopbar{
+    display: flex; align-items: center; justify-content: space-around;
+    gap: 8px;
+    background: rgba(10, 5, 30, 0.7);
+    border: 1px solid rgba(0,240,255,0.25);
+    border-radius: 16px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    font-size: clamp(13px, 3.2vw, 15px);
+    font-weight: 700;
+  }
+
+  /* 火箭进度轨迹 */
+  .progress-wrap{
+    position: relative;
+    height: 50px;
+    margin-bottom: 8px;
+    border-radius: 999px;
+    overflow: visible;
+  }
+  .progress-track{
+    position: absolute;
+    left: 16px; right: 16px; top: 50%;
+    height: 4px; transform: translateY(-50%);
+    background: rgba(0,240,255,0.15);
+    border-radius: 999px;
+    box-shadow: 0 0 10px rgba(0,240,255,0.2);
+  }
+  .progress-trail{
+    position: absolute;
+    left: 16px; top: 50%;
+    height: 4px; transform: translateY(-50%);
+    background: linear-gradient(90deg, var(--magenta), var(--cyan));
+    border-radius: 999px;
+    width: 0%;
+    box-shadow: 0 0 12px var(--cyan), 0 0 20px var(--magenta);
+    transition: width 0.5s ease;
+  }
+  .planet-marker{
+    position: absolute;
+    top: 50%; transform: translate(-50%, -50%);
+    font-size: 22px;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.6));
+    transition: all 0.3s;
+  }
+  .planet-marker.reached{ filter: drop-shadow(0 0 14px var(--yellow)) drop-shadow(0 0 20px var(--cyan)); transform: translate(-50%, -50%) scale(1.25); }
+  .rocket-icon{
+    position: absolute;
+    top: 50%; transform: translate(-50%, -50%) rotate(0deg);
+    font-size: 28px;
+    transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 0 8px var(--cyan)) drop-shadow(0 0 14px var(--magenta));
+    z-index: 5;
+    animation: rocketBob 0.8s ease-in-out infinite alternate;
+  }
+  @keyframes rocketBob{
+    from{ transform: translate(-50%, -50%) translateY(-2px) rotate(-3deg); }
+    to{ transform: translate(-50%, -50%) translateY(2px) rotate(3deg); }
+  }
+  .rocket-icon.boost{ animation: rocketBoost 0.3s ease-in-out infinite alternate; }
+  @keyframes rocketBoost{
+    from{ transform: translate(-50%, -50%) scale(1.1) rotate(-5deg); filter: drop-shadow(0 0 15px var(--cyan)) drop-shadow(0 0 25px var(--yellow)); }
+    to{ transform: translate(-50%, -50%) scale(1.2) rotate(5deg); filter: drop-shadow(0 0 20px var(--yellow)) drop-shadow(0 0 35px var(--magenta)); }
+  }
+
+  /* ====== 题目区 ====== */
+  .question-area{
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 10px 0;
+    position: relative;
+    min-height: 180px;
+  }
+  .question{
+    font-size: clamp(36px, 10vw, 64px);
+    font-weight: 900;
+    color: #fff;
+    margin: 8px 0 18px;
+    letter-spacing: 6px;
+    line-height: 1.2;
+    min-height: 1.2em;
+    text-shadow:
+      0 0 8px var(--cyan),
+      0 0 16px var(--cyan),
+      0 0 28px rgba(0,240,255,0.6);
+    animation: qFlyIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .question .op{
+    color: var(--magenta);
+    text-shadow: 0 0 10px var(--magenta), 0 0 20px var(--magenta), 0 0 30px var(--pink);
+    padding: 0 6px;
+  }
+  .question .blank{
+    display: inline-block;
+    min-width: 1.2em;
+    color: var(--yellow);
+    text-shadow: 0 0 10px var(--yellow), 0 0 20px var(--yellow);
+    animation: blink 1s ease-in-out infinite;
+  }
+  @keyframes blink{ 50%{ opacity: 0.45; } }
+  @keyframes qFlyIn{
+    from{ opacity: 0; transform: translateX(80px) scale(0.8); }
+    to{ opacity: 1; transform: translateX(0) scale(1); }
+  }
+  .question.pop{ animation: qPop 0.45s ease; }
+  @keyframes qPop{
+    0%{ transform: scale(1); }
+    50%{ transform: scale(1.15); text-shadow: 0 0 20px var(--green), 0 0 40px var(--green); }
+    100%{ transform: scale(1); }
+  }
+  .question.shake{ animation: qShake 0.5s; }
+  @keyframes qShake{
+    0%, 100%{ transform: translateX(0); }
+    20%{ transform: translateX(-8px); }
+    40%{ transform: translateX(8px); }
+    60%{ transform: translateX(-6px); }
+    80%{ transform: translateX(6px); }
+  }
+
+  .answer-display{
+    font-size: clamp(28px, 8vw, 48px);
+    font-weight: 900;
+    color: var(--yellow);
+    min-height: 1.2em;
+    margin-bottom: 6px;
+    letter-spacing: 8px;
+    text-shadow: 0 0 12px var(--yellow), 0 0 24px var(--yellow);
+  }
+  .answer-display.empty{ color: rgba(255,247,0,0.25); text-shadow: none; }
+  .answer-display.correct{ color: var(--green); text-shadow: 0 0 14px var(--green), 0 0 28px var(--green); animation: aPop 0.5s; }
+  .answer-display.shake{ color: var(--red); text-shadow: 0 0 14px var(--red); animation: qShake 0.4s; }
+  @keyframes aPop{
+    0%{ transform: scale(1); }
+    50%{ transform: scale(1.35); }
+    100%{ transform: scale(1); }
+  }
+
+  .feedback{
+    font-size: clamp(15px, 3.6vw, 18px);
+    font-weight: 700;
+    min-height: 1.5em;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .feedback.correct{ color: var(--green); text-shadow: 0 0 10px var(--green); }
+  .feedback.wrong{ color: var(--red); text-shadow: 0 0 10px var(--red); }
+
+  /* ====== 数字键盘（玻璃 + 霓虹） ====== */
+  .keypad{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .key{
+    background: rgba(20, 10, 50, 0.55);
+    border: 1.5px solid rgba(0,240,255,0.45);
+    border-radius: 16px;
+    padding: 16px 0;
+    font-size: clamp(20px, 5.5vw, 28px);
+    font-weight: 800;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    text-shadow: 0 0 8px var(--cyan);
+    box-shadow:
+      0 0 12px rgba(0,240,255,0.25),
+      inset 0 0 12px rgba(0,240,255,0.1);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .key:hover{ border-color: var(--cyan); box-shadow: 0 0 18px var(--cyan), inset 0 0 18px rgba(0,240,255,0.2); }
+  .key:active, .key.pressed{
+    transform: translateY(2px) scale(0.96);
+    box-shadow: 0 0 25px var(--cyan), inset 0 0 25px rgba(0,240,255,0.4);
+    border-color: #fff;
+  }
+  .key.action{
+    border-color: rgba(255, 165, 0, 0.6);
+    color: #ffb84d;
+    text-shadow: 0 0 8px #ffb84d;
+    box-shadow: 0 0 12px rgba(255, 165, 0, 0.3);
+  }
+  .key.submit{
+    border-color: var(--magenta);
+    color: #fff;
+    text-shadow: 0 0 10px var(--magenta);
+    box-shadow: 0 0 18px var(--magenta), inset 0 0 18px rgba(255,43,214,0.2);
+    background: linear-gradient(135deg, rgba(255,43,214,0.2), rgba(255,0,110,0.2));
+  }
+  .key.submit:hover{ box-shadow: 0 0 26px var(--magenta), inset 0 0 26px rgba(255,43,214,0.35); }
+
+  /* ====== 浮动文字 ====== */
+  .floating-text{
+    position: fixed;
+    font-size: clamp(28px, 7vw, 46px);
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 9999;
+    animation: floatText 1.3s ease-out forwards;
+    letter-spacing: 2px;
+  }
+  @keyframes floatText{
+    0%{ transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+    20%{ transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+    100%{ transform: translate(-50%, -180%) scale(1); opacity: 0; }
+  }
+
+  /* ====== 连击徽章 ====== */
+  .combo{
+    position: fixed;
+    right: 14px; top: 78px;
+    background: rgba(20, 10, 50, 0.85);
+    border: 2px solid var(--red);
+    color: #fff;
+    font-weight: 900;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: clamp(14px, 3.6vw, 18px);
+    box-shadow: 0 0 20px var(--red), 0 0 40px rgba(255, 59, 107, 0.5);
+    text-shadow: 0 0 8px var(--red), 0 0 16px var(--yellow);
+    transform: scale(0); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+  .combo.show{ transform: scale(1); animation: comboPulse 0.6s ease infinite alternate; }
+  @keyframes comboPulse{
+    from{ box-shadow: 0 0 20px var(--red), 0 0 40px rgba(255, 59, 107, 0.5); }
+    to{ box-shadow: 0 0 30px var(--yellow), 0 0 60px var(--red); }
+  }
+
+  /* 屏幕边缘红色警示 */
+  .edge-flash{
+    position: fixed; inset: 0; pointer-events: none; z-index: 50;
+    box-shadow: inset 0 0 0px var(--red);
+    transition: box-shadow 0.3s ease;
+  }
+  .edge-flash.red{ box-shadow: inset 0 0 80px 30px rgba(255, 59, 107, 0.7); }
+  .edge-flash.cyan{ box-shadow: inset 0 0 80px 30px rgba(0, 240, 255, 0.5); }
+  .edge-flash.combo{ box-shadow: inset 0 0 100px 40px rgba(255, 0, 110, 0.6); animation: edgePulse 0.4s ease infinite alternate; }
+  @keyframes edgePulse{
+    from{ box-shadow: inset 0 0 80px 30px rgba(255, 0, 110, 0.4); }
+    to{ box-shadow: inset 0 0 120px 50px rgba(255, 247, 0, 0.5); }
+  }
+
+  /* 超新星模式 */
+  body.supernova .nebula{
+    animation: nebulaShift 30s ease infinite, supernovaHue 4s linear infinite;
+  }
+  @keyframes supernovaHue{
+    0%,100%{ filter: hue-rotate(0deg) saturate(1.3); }
+    50%{ filter: hue-rotate(180deg) saturate(2); }
+  }
+
+  /* ====== Boss 战 ====== */
+  .boss-banner{
+    position: fixed; left: 50%; top: 30%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 200;
+    text-align: center;
+    pointer-events: none;
+  }
+  .boss-banner.show{ animation: bossIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+  @keyframes bossIn{
+    0%{ transform: translate(-50%, -50%) scale(0) rotate(-180deg); opacity: 0; }
+    50%{ transform: translate(-50%, -50%) scale(1.3) rotate(0deg); opacity: 1; }
+    80%{ transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+    100%{ transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 0; }
+  }
+  .boss-banner .alien{
+    font-size: 90px;
+    filter: drop-shadow(0 0 20px var(--magenta)) drop-shadow(0 0 40px var(--pink));
+    animation: alienShake 0.3s ease infinite alternate;
+  }
+  @keyframes alienShake{
+    from{ transform: translateX(-5px) rotate(-5deg); }
+    to{ transform: translateX(5px) rotate(5deg); }
+  }
+  .boss-banner .text{
+    font-size: clamp(28px, 7vw, 46px);
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 12px var(--magenta), 0 0 25px var(--pink), 0 0 40px var(--red);
+    letter-spacing: 6px;
+    margin-top: 6px;
+  }
+
+  /* Boss 进度面板 */
+  .boss-bar{
+    background: rgba(40, 10, 30, 0.8);
+    border: 2px solid var(--magenta);
+    border-radius: 16px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    display: none;
+    align-items: center; gap: 10px;
+    box-shadow: 0 0 18px var(--magenta);
+    color: #fff;
+    font-weight: 700;
+  }
+  .boss-bar.active{ display: flex; animation: bossBarShake 0.4s ease infinite alternate; }
+  @keyframes bossBarShake{
+    from{ transform: translateX(-1px); }
+    to{ transform: translateX(1px); }
+  }
+  .boss-bar .alien-mini{ font-size: 26px; filter: drop-shadow(0 0 6px var(--pink)); }
+  .boss-bar .hp-track{ flex: 1; height: 10px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden; }
+  .boss-bar .hp{ height: 100%; background: linear-gradient(90deg, var(--green), var(--yellow), var(--red)); width: 100%; transition: width 0.4s; box-shadow: 0 0 8px var(--green); }
+  .boss-bar .timer{ color: var(--yellow); text-shadow: 0 0 8px var(--yellow); font-weight: 900; min-width: 36px; text-align: right; }
+
+  /* ====== 结算页 ====== */
+  .result{ display: none; text-align: center; }
+  .result.active{ display: flex; }
+  .result .end-planet{
+    font-size: 96px; margin: 8px 0 4px;
+    filter: drop-shadow(0 0 24px var(--cyan)) drop-shadow(0 0 40px var(--magenta));
+    animation: planetFloat 3s ease infinite alternate;
+  }
+  @keyframes planetFloat{
+    from{ transform: translateY(0) rotate(0deg); }
+    to{ transform: translateY(-10px) rotate(8deg); }
+  }
+  .result .medal{
+    font-size: 80px;
+    animation: medalDrop 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+    filter: drop-shadow(0 0 16px var(--yellow)) drop-shadow(0 0 28px var(--magenta));
+  }
+  @keyframes medalDrop{
+    0%{ transform: translateY(-300px) rotate(-180deg); opacity: 0; }
+    60%{ transform: translateY(20px) rotate(20deg); opacity: 1; }
+    80%{ transform: translateY(-10px) rotate(-10deg); }
+    100%{ transform: translateY(0) rotate(0); }
+  }
+  .result h2{
+    font-size: clamp(22px, 5.5vw, 30px);
+    margin-bottom: 4px;
+    color: #fff;
+    text-shadow: 0 0 10px var(--cyan), 0 0 20px var(--magenta);
+    letter-spacing: 4px;
+  }
+  .result .grade{
+    font-size: clamp(56px, 14vw, 88px);
+    font-weight: 900;
+    color: #fff;
+    text-shadow:
+      0 0 12px var(--yellow),
+      0 0 25px var(--magenta),
+      0 0 50px var(--cyan);
+    margin: 6px 0 12px;
+    letter-spacing: 2px;
+    animation: gradePulse 1.5s ease infinite alternate;
+  }
+  @keyframes gradePulse{
+    from{ text-shadow: 0 0 12px var(--yellow), 0 0 25px var(--magenta), 0 0 50px var(--cyan); }
+    to{ text-shadow: 0 0 20px var(--cyan), 0 0 40px var(--yellow), 0 0 70px var(--magenta); }
+  }
+  .stars{ font-size: clamp(28px, 7vw, 40px); letter-spacing: 8px; margin: 6px 0; filter: drop-shadow(0 0 10px var(--yellow)); }
+  .star-empty{ opacity: 0.2; filter: none; }
+
+  .result-stats{
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin: 12px 0;
+  }
+  .result-stats .box{
+    background: rgba(20, 10, 50, 0.55);
+    border: 1px solid rgba(0,240,255,0.3);
+    border-radius: 14px;
+    padding: 12px 4px;
+    backdrop-filter: blur(8px);
+  }
+  .result-stats .box .v{
+    font-size: clamp(18px, 4.6vw, 26px);
+    font-weight: 900;
+    color: var(--cyan);
+    text-shadow: 0 0 8px var(--cyan);
+  }
+  .result-stats .box .l{ font-size: clamp(11px, 2.8vw, 13px); color: rgba(232,232,255,0.6); margin-top: 4px; }
+
+  .badges{
+    display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+    margin: 10px 0;
+  }
+  .badge{
+    background: linear-gradient(135deg, rgba(255,43,214,0.3), rgba(0,240,255,0.3));
+    border: 1px solid var(--magenta);
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: clamp(11px, 2.8vw, 13px);
+    font-weight: 700;
+    text-shadow: 0 0 6px #fff;
+    box-shadow: 0 0 12px rgba(255,43,214,0.4);
+    animation: badgeIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  }
+  @keyframes badgeIn{
+    from{ transform: scale(0); opacity: 0; }
+    to{ transform: scale(1); opacity: 1; }
+  }
+
+  .info-text{
+    text-align: center;
+    color: rgba(232,232,255,0.55);
+    font-size: clamp(11px, 2.8vw, 13px);
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+
+  footer{
+    text-align: center;
+    color: rgba(232,232,255,0.4);
+    padding: 12px 0 4px;
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+
+  /* 响应式 */
+  @media (min-width: 900px){
+    .app{ max-width: 880px; padding: 22px; }
+    .keypad{ gap: 12px; }
+  }
+  @media (max-height: 660px){
+    .question{ font-size: clamp(30px, 8vw, 50px); margin: 6px 0 12px; }
+    .answer-display{ font-size: clamp(24px, 7vw, 40px); }
+    .key{ padding: 12px 0; }
+    .question-area{ min-height: 140px; }
+  }
+
+  .hidden{ display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="nebula"></div>
+<canvas id="fxCanvas"></canvas>
+<div class="scanlines"></div>
+<div class="edge-flash" id="edgeFlash"></div>
+
+<div class="app">
+
+  <!-- 顶部状态栏 -->
+  <div class="topbar">
+    <div class="stat" title="金币"><span class="icon">🪙</span><span class="label">金币</span><span class="value" id="coinDisplay">0</span></div>
+    <div class="stat" title="星核"><span class="icon">💎</span><span class="label">星核</span><span class="value" id="starcoreDisplay">0</span></div>
+    <div class="stat" title="星星"><span class="icon">⭐</span><span class="label">星</span><span class="value" id="starDisplay">0</span></div>
+    <div class="stat" title="最高连击"><span class="icon">🔥</span><span class="label">连击</span><span class="value" id="bestComboDisplay">0</span></div>
+    <div class="stat" title="等级"><span class="icon">🎖️</span><span class="label">Lv</span><span class="value" id="levelDisplay">1</span></div>
+  </div>
+
+  <!-- 主页 -->
+  <div class="card home" id="homeScreen">
+    <h1 class="title">霓虹星际大冒险</h1>
+    <p class="subtitle">⚡ 飞越行星 · 击败外星人 · 成为数学之王 ⚡</p>
+
+    <div class="section-title">📡 选择运算</div>
+    <div class="grid" id="opsGrid">
+      <div class="opt active" data-ops="+"><span class="emoji">➕</span>加法</div>
+      <div class="opt" data-ops="-"><span class="emoji">➖</span>减法</div>
+      <div class="opt" data-ops="+,-"><span class="emoji">🧮</span>加减混合</div>
+      <div class="opt" data-ops="×"><span class="emoji">✖️</span>乘法</div>
+      <div class="opt" data-ops="÷"><span class="emoji">➗</span>除法</div>
+      <div class="opt" data-ops="×,÷"><span class="emoji">🎯</span>乘除混合</div>
+      <div class="opt" data-ops="+,-,×,÷"><span class="emoji">🌈</span>四则混合</div>
+    </div>
+
+    <div class="section-title">🪐 选择星球（难度）</div>
+    <div class="grid" id="diffGrid">
+      <div class="opt active" data-diff="easy"><span class="emoji">🌍</span>地球<br><small>10以内</small></div>
+      <div class="opt" data-diff="medium"><span class="emoji">🔴</span>火星<br><small>20以内</small></div>
+      <div class="opt" data-diff="hard"><span class="emoji">🪐</span>木星<br><small>100以内</small></div>
+      <div class="opt" data-diff="expert"><span class="emoji">🌑</span>冥王星<br><small>三位数</small></div>
+    </div>
+
+    <div class="section-title">🎮 飞行模式</div>
+    <div class="grid" id="modeGrid">
+      <div class="opt active" data-mode="classic"><span class="emoji">🚀</span>星际闯关<br><small>10题 + Boss</small></div>
+      <div class="opt" data-mode="time"><span class="emoji">⏰</span>极速冲刺<br><small>60秒</small></div>
+      <div class="opt" data-mode="endless"><span class="emoji">♾️</span>无尽虚空<br><small>错3次结束</small></div>
+    </div>
+
+    <button class="btn btn-primary" id="startBtn">⚡ 启动引擎 ⚡</button>
+    <p class="info-text">连击 5 进入加速 · 连击 10 烟花特效 · 连击 20 启动超新星</p>
+  </div>
+
+  <!-- 游戏页 -->
+  <div class="card game" id="gameScreen">
+    <div class="gameTopbar">
+      <div class="stat"><span class="icon">📊</span><span id="progressText">1 / 10</span></div>
+      <div class="stat"><span class="icon">✅</span><span id="correctText" style="color:var(--green); text-shadow:0 0 8px var(--green);">0</span></div>
+      <div class="stat"><span class="icon">⏱️</span><span id="timerText" style="color:var(--yellow);text-shadow:0 0 8px var(--yellow);">00:00</span></div>
+    </div>
+
+    <!-- Boss 进度条 -->
+    <div class="boss-bar" id="bossBar">
+      <span class="alien-mini">👾</span>
+      <span>BOSS</span>
+      <div class="hp-track"><div class="hp" id="bossHp"></div></div>
+      <span class="timer" id="bossTimer">15</span>
+    </div>
+
+    <!-- 火箭进度轨迹 -->
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-track"></div>
+      <div class="progress-trail" id="progressTrail"></div>
+      <span class="planet-marker" id="m0" style="left: 16px;">🌍</span>
+      <span class="planet-marker" id="m1" style="left: 25%;">🔴</span>
+      <span class="planet-marker" id="m2" style="left: 50%;">🪐</span>
+      <span class="planet-marker" id="m3" style="left: 75%;">🪐</span>
+      <span class="planet-marker" id="m4" style="left: calc(100% - 16px);">🌑</span>
+      <span class="rocket-icon" id="rocketIcon" style="left: 16px;">🚀</span>
+    </div>
+
+    <div class="question-area">
+      <div class="question" id="questionText">3 + 5 = ?</div>
+      <div class="answer-display empty" id="answerDisplay">_</div>
+      <div class="feedback" id="feedback">&nbsp;</div>
+    </div>
+
+    <div class="keypad">
+      <button class="key" data-k="1">1</button>
+      <button class="key" data-k="2">2</button>
+      <button class="key" data-k="3">3</button>
+      <button class="key" data-k="4">4</button>
+      <button class="key" data-k="5">5</button>
+      <button class="key" data-k="6">6</button>
+      <button class="key" data-k="7">7</button>
+      <button class="key" data-k="8">8</button>
+      <button class="key" data-k="9">9</button>
+      <button class="key action" data-k="clear">⌫</button>
+      <button class="key" data-k="0">0</button>
+      <button class="key submit" data-k="ok">✓</button>
+    </div>
+
+    <button class="btn btn-ghost" id="quitBtn" style="margin-top:10px;">🏠 返回主页</button>
+  </div>
+
+  <!-- Boss 入场动画 -->
+  <div class="boss-banner" id="bossBanner">
+    <div class="alien">👾</div>
+    <div class="text">BOSS 来袭！</div>
+  </div>
+
+  <!-- 结算页 -->
+  <div class="card result" id="resultScreen">
+    <div class="end-planet" id="endPlanet">🪐</div>
+    <div class="medal" id="medalEmoji">🏆</div>
+    <h2 id="resultTitle">任务完成！</h2>
+    <div class="grade" id="resultGrade">A+</div>
+    <div class="stars" id="resultStars">⭐⭐⭐</div>
+    <div class="result-stats">
+      <div class="box"><div class="v" id="rsCorrect">0</div><div class="l">答对</div></div>
+      <div class="box"><div class="v" id="rsWrong">0</div><div class="l">答错</div></div>
+      <div class="box"><div class="v" id="rsCombo">0</div><div class="l">最高连击</div></div>
+      <div class="box"><div class="v" id="rsTime">0s</div><div class="l">用时</div></div>
+      <div class="box"><div class="v" id="rsCoin">+0</div><div class="l">金币</div></div>
+      <div class="box"><div class="v" id="rsAcc">0%</div><div class="l">正确率</div></div>
+    </div>
+    <div class="badges" id="resultBadges"></div>
+
+    <button class="btn btn-primary" id="againBtn">🚀 再次启航</button>
+    <button class="btn btn-ghost" id="homeBtn">🏠 回到主页</button>
+  </div>
+
+  <footer>NEON · GALACTIC · MATH</footer>
+</div>
+
+<div class="combo" id="comboBadge">🔥 连击 ×0</div>
+
+<script>
+(() => {
+  // ============================================================
+  //   Canvas 粒子 / 星空 系统
+  // ============================================================
+  const canvas = document.getElementById('fxCanvas');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+  function resize(){
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // 背景星星
+  const stars = [];
+  for(let i=0;i<140;i++){
+    stars.push({
+      x: Math.random()*W,
+      y: Math.random()*H,
+      z: Math.random()*1.4 + 0.3,
+      r: Math.random()*1.4 + 0.3,
+      tw: Math.random()*Math.PI*2,
+      hue: Math.random() < 0.6 ? '255,255,255' : (Math.random()<0.5 ? '0,240,255' : '255,43,214'),
+    });
+  }
+  // 流星
+  const meteors = [];
+  function spawnMeteor(){
+    meteors.push({
+      x: Math.random()*W*1.2 - W*0.1,
+      y: -20,
+      vx: (Math.random()*1.2 + 1) * 4,
+      vy: (Math.random()*1 + 2) * 4,
+      life: 1,
+      hue: Math.random() < 0.5 ? '0,240,255' : '255,43,214',
+    });
+  }
+
+  // 通用粒子
+  const particles = [];
+  function addBurst(x, y, count, opts={}){
+    const colors = opts.colors || ['0,240,255','255,43,214','255,247,0','255,255,255'];
+    for(let i=0;i<count;i++){
+      const ang = Math.random()*Math.PI*2;
+      const sp = (Math.random()*4 + 2) * (opts.speed || 1);
+      particles.push({
+        x, y,
+        vx: Math.cos(ang)*sp,
+        vy: Math.sin(ang)*sp,
+        g: opts.gravity || 0.08,
+        life: 1,
+        decay: opts.decay || 0.018,
+        size: (Math.random()*3 + 2) * (opts.size || 1),
+        hue: colors[Math.floor(Math.random()*colors.length)],
+        kind: opts.kind || 'spark',
+      });
+    }
+  }
+
+  // 烟花
+  function fireworks(x, y){
+    const palette = ['0,240,255','255,43,214','255,247,0','57,255,136','255,0,110'];
+    const c1 = palette[Math.floor(Math.random()*palette.length)];
+    for(let i=0;i<60;i++){
+      const ang = (Math.PI*2*i)/60 + Math.random()*0.05;
+      const sp = Math.random()*5 + 4;
+      particles.push({
+        x, y,
+        vx: Math.cos(ang)*sp,
+        vy: Math.sin(ang)*sp,
+        g: 0.05,
+        life: 1, decay: 0.012,
+        size: Math.random()*2 + 2,
+        hue: c1, kind: 'spark',
+      });
+    }
+  }
+
+  // 涟漪
+  const ripples = [];
+  function addRipple(x, y, color='0,240,255'){
+    ripples.push({ x, y, r: 6, max: Math.max(W,H)*0.6, hue: color, life: 1 });
+  }
+
+  // 渲染主循环
+  let lastMeteor = 0;
+  function loop(t){
+    ctx.clearRect(0,0,W,H);
+
+    // 星星
+    for(const s of stars){
+      s.tw += 0.04;
+      const a = 0.5 + 0.5*Math.sin(s.tw);
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(${s.hue},${(0.4 + a*0.6)*s.z})`;
+      ctx.arc(s.x, s.y, s.r*s.z, 0, Math.PI*2);
+      ctx.fill();
+      // 缓慢漂移
+      s.y += 0.05*s.z;
+      if(s.y > H){ s.y = -2; s.x = Math.random()*W; }
+    }
+
+    // 流星
+    if(t - lastMeteor > 2200 + Math.random()*3500){
+      spawnMeteor(); lastMeteor = t;
+    }
+    for(let i=meteors.length-1;i>=0;i--){
+      const m = meteors[i];
+      m.x += m.vx; m.y += m.vy; m.life -= 0.012;
+      if(m.life <= 0 || m.x > W+50 || m.y > H+50){ meteors.splice(i,1); continue; }
+      const grad = ctx.createLinearGradient(m.x, m.y, m.x - m.vx*8, m.y - m.vy*8);
+      grad.addColorStop(0, `rgba(${m.hue},${m.life})`);
+      grad.addColorStop(1, `rgba(${m.hue},0)`);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(m.x, m.y);
+      ctx.lineTo(m.x - m.vx*8, m.y - m.vy*8);
+      ctx.stroke();
+      // 头部光晕
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(${m.hue},${m.life})`;
+      ctx.arc(m.x, m.y, 2.5, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    // 涟漪
+    for(let i=ripples.length-1;i>=0;i--){
+      const r = ripples[i];
+      r.r += 14; r.life -= 0.025;
+      if(r.life <= 0){ ripples.splice(i,1); continue; }
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(${r.hue},${r.life*0.9})`;
+      ctx.lineWidth = 5*r.life + 1;
+      ctx.arc(r.x, r.y, r.r, 0, Math.PI*2);
+      ctx.stroke();
+      // 内圈
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(255,255,255,${r.life*0.5})`;
+      ctx.lineWidth = 2*r.life;
+      ctx.arc(r.x, r.y, r.r*0.7, 0, Math.PI*2);
+      ctx.stroke();
+    }
+
+    // 粒子
+    for(let i=particles.length-1;i>=0;i--){
+      const p = particles[i];
+      p.x += p.vx; p.y += p.vy; p.vy += p.g; p.life -= p.decay;
+      if(p.life <= 0){ particles.splice(i,1); continue; }
+      if(p.kind === 'star'){
+        // 星形
+        drawStar(ctx, p.x, p.y, p.size*1.6, p.size*0.7, 5, `rgba(${p.hue},${p.life})`);
+      } else {
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(${p.hue},${p.life})`;
+        ctx.shadowColor = `rgba(${p.hue},${p.life})`;
+        ctx.shadowBlur = 8;
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+    ctx.shadowBlur = 0;
+
+    requestAnimationFrame(loop);
+  }
+  function drawStar(ctx, cx, cy, outer, inner, points, color){
+    ctx.beginPath();
+    for(let i=0;i<points*2;i++){
+      const r = i % 2 === 0 ? outer : inner;
+      const a = Math.PI/points * i - Math.PI/2;
+      const x = cx + Math.cos(a)*r, y = cy + Math.sin(a)*r;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.shadowColor = color; ctx.shadowBlur = 10;
+    ctx.fill();
+  }
+  requestAnimationFrame(loop);
+
+  // ============================================================
+  //   音频（Web Audio 合成）
+  // ============================================================
+  let audioCtx = null;
+  function ac(){
+    if(!audioCtx){
+      try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){}
+    }
+    return audioCtx;
+  }
+  function tone(freq, dur, type='triangle', vol=0.06, slideTo=null){
+    const c = ac(); if(!c) return;
+    const o = c.createOscillator();
+    const g = c.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, c.currentTime);
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, c.currentTime + dur);
+    g.gain.value = vol;
+    g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(); o.stop(c.currentTime + dur);
+  }
+  function sfxKey(){ tone(620, 0.05, 'square', 0.03); }
+  function sfxCorrect(){
+    tone(660, 0.08, 'triangle', 0.05);
+    setTimeout(()=>tone(990, 0.12, 'triangle', 0.05), 80);
+  }
+  function sfxWrong(){ tone(180, 0.25, 'sawtooth', 0.05, 80); }
+  function sfxCombo(){
+    tone(440, 0.1, 'sine', 0.05, 1320);
+    setTimeout(()=>tone(880, 0.15, 'sine', 0.04, 1760), 100);
+  }
+  function sfxBoss(){
+    tone(120, 0.4, 'sawtooth', 0.06, 60);
+    setTimeout(()=>tone(80, 0.4, 'sawtooth', 0.06, 50), 200);
+  }
+  function sfxVictory(){
+    [523, 659, 784, 1047].forEach((f,i)=> setTimeout(()=>tone(f, 0.18, 'triangle', 0.06), i*120));
+  }
+
+  // ============================================================
+  //   状态
+  // ============================================================
+  const state = {
+    ops: ['+'], diff: 'easy', mode: 'classic',
+    questionCount: 10, timeLimit: 60,
+    current: 0, correct: 0, wrong: 0,
+    combo: 0, bestCombo: 0, lives: 3,
+    startTime: 0, timerId: null, timeLeft: 0,
+    questionStart: 0, answer: '', expected: 0, questionStr: '',
+    inputLock: false,
+
+    // boss
+    inBoss: false, bossHp: 5, bossTimerId: null, bossTimeLeft: 15,
+
+    // 全局存档
+    coins: 0, stars: 0, starcores: 0,
+    bestComboAll: 0, level: 1,
+  };
+
+  const SAVE_KEY = 'neonGalacticMath_v1';
+  function loadSave(){
+    try{
+      const raw = localStorage.getItem(SAVE_KEY);
+      if(!raw) return;
+      const d = JSON.parse(raw);
+      state.coins = d.coins||0;
+      state.stars = d.stars||0;
+      state.starcores = d.starcores||0;
+      state.bestComboAll = d.bestComboAll||0;
+      state.level = d.level||1;
+    }catch(e){}
+  }
+  function saveSave(){
+    try{
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        coins: state.coins, stars: state.stars, starcores: state.starcores,
+        bestComboAll: state.bestComboAll, level: state.level
+      }));
+    }catch(e){}
+  }
+  function refreshTopbar(){
+    document.getElementById('coinDisplay').textContent = state.coins;
+    document.getElementById('starcoreDisplay').textContent = state.starcores;
+    document.getElementById('starDisplay').textContent = state.stars;
+    document.getElementById('bestComboDisplay').textContent = state.bestComboAll;
+    document.getElementById('levelDisplay').textContent = state.level;
+  }
+
+  // ============================================================
+  //   选项
+  // ============================================================
+  function bindOptGrid(gridId, key){
+    const grid = document.getElementById(gridId);
+    grid.addEventListener('click', e => {
+      const opt = e.target.closest('.opt'); if(!opt) return;
+      grid.querySelectorAll('.opt').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      if(key === 'ops') state.ops = opt.dataset.ops.split(',');
+      else if(key === 'diff') state.diff = opt.dataset.diff;
+      else if(key === 'mode') state.mode = opt.dataset.mode;
+      sfxKey();
+    });
+  }
+  bindOptGrid('opsGrid','ops');
+  bindOptGrid('diffGrid','diff');
+  bindOptGrid('modeGrid','mode');
+
+  // ============================================================
+  //   出题
+  // ============================================================
+  function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function newQuestion(){
+    const op = state.ops[Math.floor(Math.random()*state.ops.length)];
+    let a, b, ans;
+    const r = ({easy:{min:1,max:10}, medium:{min:1,max:20}, hard:{min:1,max:100}, expert:{min:10,max:999}})[state.diff];
+    if(op === '+'){
+      a = rand(r.min, r.max); b = rand(r.min, r.max); ans = a+b;
+    } else if(op === '-'){
+      a = rand(r.min, r.max); b = rand(r.min, a); ans = a-b;
+    } else if(op === '×'){
+      const m = state.diff==='easy'?9:state.diff==='medium'?12:state.diff==='hard'?20:50;
+      a = rand(2, m); b = rand(2, m); ans = a*b;
+    } else { // ÷
+      const m = state.diff==='easy'?9:state.diff==='medium'?12:state.diff==='hard'?20:50;
+      b = rand(2, m); ans = rand(2, m); a = b*ans;
+    }
+    state.expected = ans;
+    state.questionStr = `${a} ${op} ${b}`;
+    state.answer = '';
+    state.questionStart = Date.now();
+    state.inputLock = false;
+    const qEl = document.getElementById('questionText');
+    qEl.classList.remove('pop','shake');
+    void qEl.offsetWidth; // restart animation
+    qEl.innerHTML = `${a} <span class="op">${op}</span> ${b} <span class="op">=</span> <span class="blank">?</span>`;
+    qEl.style.animation = 'qFlyIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    updateAnswerDisplay();
+    setFeedback('','');
+    sfxKey();
+  }
+
+  function updateAnswerDisplay(){
+    const ad = document.getElementById('answerDisplay');
+    if(!state.answer){ ad.textContent = '_'; ad.className = 'answer-display empty'; }
+    else { ad.textContent = state.answer; ad.className = 'answer-display'; }
+  }
+  function setFeedback(text, type){
+    const f = document.getElementById('feedback');
+    f.textContent = text || ' ';
+    f.className = 'feedback' + (type ? ' ' + type : '');
+  }
+
+  // ============================================================
+  //   输入
+  // ============================================================
+  function pressKey(k, btn){
+    if(state.inputLock) return;
+    if(btn){
+      btn.classList.add('pressed');
+      setTimeout(()=>btn.classList.remove('pressed'), 100);
+      // 按键溅射
+      const r = btn.getBoundingClientRect();
+      addBurst(r.left + r.width/2, r.top + r.height/2, 6, { speed: 0.6, decay: 0.04, size: 0.6, gravity: 0.02 });
+    }
+    if(k === 'clear'){
+      state.answer = state.answer.slice(0, -1);
+      sfxKey();
+    } else if(k === 'ok'){
+      submitAnswer(); return;
+    } else {
+      if(state.answer.length < 5){ state.answer += k; sfxKey(); }
+    }
+    updateAnswerDisplay();
+  }
+  document.querySelectorAll('.key').forEach(b => {
+    b.addEventListener('click', () => pressKey(b.dataset.k, b));
+  });
+  document.addEventListener('keydown', e => {
+    if(!document.getElementById('gameScreen').classList.contains('active')) return;
+    if(/^[0-9]$/.test(e.key)){
+      const btn = document.querySelector(`.key[data-k="${e.key}"]`);
+      pressKey(e.key, btn);
+    } else if(e.key === 'Enter'){
+      pressKey('ok', document.querySelector('.key.submit'));
+    } else if(e.key === 'Backspace'){
+      pressKey('clear', document.querySelector('.key.action'));
+    }
+  });
+
+  // ============================================================
+  //   提交答案
+  // ============================================================
+  function submitAnswer(){
+    if(state.answer === '') return;
+    state.inputLock = true;
+    const ans = parseInt(state.answer, 10);
+    const qEl = document.getElementById('questionText');
+    const ad = document.getElementById('answerDisplay');
+    const cx = window.innerWidth/2, cy = window.innerHeight*0.42;
+
+    if(ans === state.expected){
+      const elapsed = (Date.now() - state.questionStart)/1000;
+      state.correct++; state.combo++;
+      if(state.combo > state.bestCombo) state.bestCombo = state.combo;
+      let gain = 5;
+      if(elapsed < 3) gain += 4;
+      else if(elapsed < 6) gain += 2;
+      gain += Math.min(state.combo, 12);
+      state.coins += gain;
+
+      ad.classList.add('correct');
+      qEl.classList.add('pop');
+      setFeedback(`太棒了！+${gain} 🪙`, 'correct');
+
+      // 视觉特效
+      addRipple(cx, cy, '0,240,255');
+      addBurst(cx, cy, 14, { kind: 'star', colors:['255,247,0','0,240,255','255,43,214'], speed: 1.2, decay: 0.018 });
+      flashEdge('cyan', 250);
+      sfxCorrect();
+
+      // 火箭加速
+      if(state.combo >= 5){
+        document.getElementById('rocketIcon').classList.add('boost');
+      }
+      // 连击特效升级
+      if(state.combo === 3){
+        showFloating('🔥 连击 ×3', 'var(--yellow)');
+      } else if(state.combo === 5){
+        showFloating('🔥🔥 加速！', 'var(--magenta)');
+        flashEdge('combo', 800);
+        sfxCombo();
+      } else if(state.combo === 10){
+        showFloating('💥 COMBO ×10 💥', 'var(--yellow)');
+        // 烟花
+        for(let i=0;i<5;i++){
+          setTimeout(()=> fireworks(Math.random()*W, Math.random()*H*0.6 + 50), i*150);
+        }
+        screenShake(10, 400);
+        sfxCombo();
+      } else if(state.combo === 20){
+        showFloating('🌟 SUPER NOVA 🌟', 'var(--cyan)');
+        document.body.classList.add('supernova');
+        setTimeout(()=> document.body.classList.remove('supernova'), 10000);
+        for(let i=0;i<10;i++){
+          setTimeout(()=> fireworks(Math.random()*W, Math.random()*H*0.7 + 50), i*120);
+        }
+        screenShake(15, 600);
+        sfxCombo();
+      } else {
+        showFloating(randomPraise(), 'var(--green)');
+      }
+      showCombo();
+      // boss 扣血
+      if(state.inBoss){
+        state.bossHp--;
+        updateBossHp();
+        if(state.bossHp <= 0){ defeatBoss(); return; }
+      }
+    } else {
+      state.wrong++; state.combo = 0;
+      hideCombo();
+      document.getElementById('rocketIcon').classList.remove('boost');
+      ad.classList.add('shake');
+      qEl.classList.add('shake');
+      setFeedback(`正确答案是 ${state.expected}`, 'wrong');
+      flashEdge('red', 350);
+      addBurst(cx, cy, 8, { colors:['255,59,107','255,0,110'], speed: 0.7, gravity: 0.15 });
+      sfxWrong();
+      showFloating('💢', 'var(--red)');
+      if(state.mode === 'endless') state.lives--;
+    }
+    refreshTopbar();
+    saveSave();
+    updateGameUI();
+
+    setTimeout(() => {
+      ad.classList.remove('correct','shake');
+      next();
+    }, ans === state.expected ? 700 : 1200);
+  }
+
+  function next(){
+    state.current++;
+    if(state.mode === 'classic' && state.current >= state.questionCount){
+      // Boss 关：每 10 题进入 Boss
+      enterBoss(); return;
+    }
+    if(state.mode === 'endless' && state.lives <= 0){ endGame(); return; }
+    if(state.mode === 'time' && state.timeLeft <= 0){ endGame(); return; }
+    newQuestion();
+    moveRocket();
+  }
+
+  // ============================================================
+  //   Boss
+  // ============================================================
+  function enterBoss(){
+    state.inBoss = true;
+    state.bossHp = 5;
+    state.bossTimeLeft = 15;
+    document.getElementById('bossBar').classList.add('active');
+    updateBossHp();
+    document.getElementById('bossTimer').textContent = state.bossTimeLeft;
+    // 入场
+    const banner = document.getElementById('bossBanner');
+    banner.classList.remove('show');
+    void banner.offsetWidth;
+    banner.classList.add('show');
+    sfxBoss();
+    flashEdge('combo', 1000);
+    screenShake(8, 500);
+    setTimeout(()=>{
+      newQuestion();
+      // boss 倒计时
+      clearInterval(state.bossTimerId);
+      state.bossTimerId = setInterval(()=>{
+        state.bossTimeLeft--;
+        document.getElementById('bossTimer').textContent = state.bossTimeLeft;
+        if(state.bossTimeLeft <= 0){
+          // 失败
+          showFloating('Boss 逃跑了…', 'var(--red)');
+          endBoss(false);
+        }
+      }, 1000);
+    }, 1200);
+  }
+  function updateBossHp(){
+    const pct = Math.max(0, state.bossHp/5*100);
+    document.getElementById('bossHp').style.width = pct + '%';
+  }
+  function defeatBoss(){
+    state.starcores += 1;
+    state.coins += 50;
+    refreshTopbar();
+    saveSave();
+    showFloating('🌟 击败 BOSS！+1 💎', 'var(--yellow)');
+    for(let i=0;i<8;i++){
+      setTimeout(()=> fireworks(Math.random()*W, Math.random()*H*0.6 + 50), i*120);
+    }
+    screenShake(12, 600);
+    sfxVictory();
+    endBoss(true);
+  }
+  function endBoss(win){
+    clearInterval(state.bossTimerId);
+    state.bossTimerId = null;
+    state.inBoss = false;
+    document.getElementById('bossBar').classList.remove('active');
+    setTimeout(()=> endGame(win), 1200);
+  }
+
+  // ============================================================
+  //   火箭进度 + 行星
+  // ============================================================
+  function moveRocket(){
+    const rocket = document.getElementById('rocketIcon');
+    const trail = document.getElementById('progressTrail');
+    let pct = 0;
+    if(state.mode === 'classic'){
+      pct = Math.min(state.current / state.questionCount, 1);
+    } else if(state.mode === 'time'){
+      pct = 1 - (state.timeLeft/state.timeLimit);
+    } else {
+      pct = state.correct / Math.max(state.correct + 5, 10);
+      pct = Math.min(pct, 1);
+    }
+    const wrap = document.getElementById('progressWrap');
+    const w = wrap.clientWidth;
+    const left = 16 + (w - 32)*pct;
+    rocket.style.left = left + 'px';
+    trail.style.width = (pct*100) + '%';
+    // 标记点亮
+    [0,1,2,3,4].forEach(i=>{
+      const m = document.getElementById('m'+i);
+      const checkpoints = [0, 0.25, 0.5, 0.75, 1];
+      if(pct >= checkpoints[i]) m.classList.add('reached');
+      else m.classList.remove('reached');
+    });
+  }
+
+  function updateGameUI(){
+    if(state.mode === 'classic'){
+      document.getElementById('progressText').textContent = `${Math.min(state.current+1, state.questionCount)} / ${state.questionCount}`;
+    } else if(state.mode === 'endless'){
+      document.getElementById('progressText').textContent = `❤️`.repeat(state.lives);
+    } else {
+      document.getElementById('progressText').textContent = `第 ${state.current+1} 题`;
+    }
+    document.getElementById('correctText').textContent = state.correct;
+    moveRocket();
+  }
+
+  // ============================================================
+  //   连击徽章 / 漂浮文字
+  // ============================================================
+  let comboHideTimer = null;
+  function showCombo(){
+    if(state.combo < 2) return;
+    const el = document.getElementById('comboBadge');
+    el.textContent = `🔥 连击 ×${state.combo}`;
+    el.classList.add('show');
+    clearTimeout(comboHideTimer);
+    comboHideTimer = setTimeout(hideCombo, 1800);
+  }
+  function hideCombo(){ document.getElementById('comboBadge').classList.remove('show'); }
+
+  function showFloating(text, color){
+    const div = document.createElement('div');
+    div.className = 'floating-text';
+    div.textContent = text;
+    div.style.color = color;
+    div.style.textShadow = `0 0 12px ${color}, 0 0 24px ${color}`;
+    div.style.left = (window.innerWidth/2) + 'px';
+    div.style.top = (window.innerHeight/2 - 30) + 'px';
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 1400);
+  }
+  function randomPraise(){
+    const arr = ['🎉 太棒了','✨ 真厉害','🌟 答对啦','🎯 完美','👍 好样的','💯 牛','🚀 飞起来','🦄 神奇','⚡ 闪电'];
+    return arr[Math.floor(Math.random()*arr.length)];
+  }
+
+  // ============================================================
+  //   屏幕特效
+  // ============================================================
+  function flashEdge(kind, dur){
+    const e = document.getElementById('edgeFlash');
+    e.classList.remove('red','cyan','combo');
+    void e.offsetWidth;
+    e.classList.add(kind);
+    setTimeout(()=> e.classList.remove(kind), dur);
+  }
+  function screenShake(intensity, duration){
+    const app = document.querySelector('.app');
+    const start = Date.now();
+    function shake(){
+      const elapsed = Date.now() - start;
+      if(elapsed >= duration){ app.style.transform = ''; return; }
+      const decay = 1 - elapsed/duration;
+      const x = (Math.random()*2-1) * intensity * decay;
+      const y = (Math.random()*2-1) * intensity * decay;
+      app.style.transform = `translate(${x}px, ${y}px)`;
+      requestAnimationFrame(shake);
+    }
+    shake();
+  }
+
+  // ============================================================
+  //   计时
+  // ============================================================
+  function startTimer(){
+    state.startTime = Date.now();
+    state.timeLeft = state.timeLimit;
+    updateTimer();
+    state.timerId = setInterval(()=>{
+      if(state.mode === 'time'){
+        state.timeLeft--;
+        if(state.timeLeft <= 0){ state.timeLeft = 0; updateTimer(); endGame(); return; }
+      }
+      updateTimer();
+      updateGameUI();
+    }, 1000);
+  }
+  function updateTimer(){
+    const t = document.getElementById('timerText');
+    let s;
+    if(state.mode === 'time') s = state.timeLeft;
+    else s = Math.floor((Date.now() - state.startTime)/1000);
+    const m = Math.floor(s/60), ss = s%60;
+    t.textContent = `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+    if(state.mode === 'time' && state.timeLeft <= 10){
+      t.style.color = 'var(--red)';
+      t.style.textShadow = '0 0 12px var(--red), 0 0 20px var(--red)';
+    } else {
+      t.style.color = 'var(--yellow)';
+      t.style.textShadow = '0 0 8px var(--yellow)';
+    }
+  }
+  function stopTimer(){
+    clearInterval(state.timerId); state.timerId = null;
+    clearInterval(state.bossTimerId); state.bossTimerId = null;
+  }
+
+  // ============================================================
+  //   流程
+  // ============================================================
+  function showScreen(name){
+    document.getElementById('homeScreen').classList.toggle('active', name==='home');
+    document.getElementById('gameScreen').classList.toggle('active', name==='game');
+    document.getElementById('resultScreen').classList.toggle('active', name==='result');
+    document.getElementById('homeScreen').style.display = name==='home' ? '' : 'none';
+    document.getElementById('gameScreen').style.display = name==='game' ? 'flex' : 'none';
+    document.getElementById('resultScreen').style.display = name==='result' ? 'flex' : 'none';
+  }
+
+  function startGame(){
+    state.current = 0; state.correct = 0; state.wrong = 0;
+    state.combo = 0; state.bestCombo = 0; state.lives = 3;
+    state.inBoss = false;
+    if(state.mode === 'classic') state.questionCount = 10;
+    if(state.mode === 'time') state.timeLimit = 60;
+    document.getElementById('rocketIcon').classList.remove('boost');
+    document.getElementById('bossBar').classList.remove('active');
+    document.body.classList.remove('supernova');
+    showScreen('game');
+    updateGameUI();
+    startTimer();
+    newQuestion();
+    sfxKey();
+  }
+
+  function endGame(bossWin){
+    stopTimer();
+    document.body.classList.remove('supernova');
+    const totalTime = Math.floor((Date.now() - state.startTime)/1000);
+    const total = state.correct + state.wrong;
+    const acc = total > 0 ? Math.round(state.correct/total*100) : 0;
+
+    let earnedStars = 0;
+    if(acc >= 95 && state.correct >= 5) earnedStars = 3;
+    else if(acc >= 80 && state.correct >= 3) earnedStars = 2;
+    else if(state.correct >= 1) earnedStars = 1;
+    state.stars += earnedStars;
+    if(state.bestCombo > state.bestComboAll) state.bestComboAll = state.bestCombo;
+
+    const newLevel = Math.floor(state.stars / 10) + 1;
+    if(newLevel > state.level) state.level = newLevel;
+    saveSave(); refreshTopbar();
+
+    let grade = 'C', medal = '😊', title = '任务完成！', planet = '🌍';
+    if(acc === 100 && state.correct >= 5){ grade='S'; medal='👑'; title='完美无瑕！'; }
+    else if(acc >= 90){ grade='A+'; medal='🏆'; title='非常出色！'; }
+    else if(acc >= 80){ grade='A'; medal='🥇'; title='很棒！'; }
+    else if(acc >= 70){ grade='B'; medal='🥈'; title='不错哦~'; }
+    else if(acc >= 60){ grade='C'; medal='🥉'; title='继续加油！'; }
+    else { grade='D'; medal='💪'; title='下次会更好！'; }
+
+    if(state.diff === 'easy') planet = '🌍';
+    else if(state.diff === 'medium') planet = '🔴';
+    else if(state.diff === 'hard') planet = '🪐';
+    else planet = '🌑';
+
+    document.getElementById('endPlanet').textContent = planet;
+    document.getElementById('medalEmoji').textContent = medal;
+    document.getElementById('resultTitle').textContent = bossWin ? '击败 BOSS · 任务成功！' : title;
+    document.getElementById('resultGrade').textContent = grade;
+    document.getElementById('rsCorrect').textContent = state.correct;
+    document.getElementById('rsWrong').textContent = state.wrong;
+    document.getElementById('rsCombo').textContent = state.bestCombo;
+    document.getElementById('rsTime').textContent = totalTime + 's';
+    document.getElementById('rsAcc').textContent = acc + '%';
+
+    const sessionCoinGain = state.correct * 5 + state.bestCombo * 2 + earnedStars * 20 + (bossWin ? 50 : 0);
+    state.coins += earnedStars * 20 + (bossWin ? 0 : 0);
+    saveSave(); refreshTopbar();
+    document.getElementById('rsCoin').textContent = '+' + sessionCoinGain;
+
+    let starHtml = '';
+    for(let i=0;i<3;i++) starHtml += `<span class="${i<earnedStars?'':'star-empty'}">⭐</span>`;
+    document.getElementById('resultStars').innerHTML = starHtml;
+
+    const badges = [];
+    if(state.bestCombo >= 5) badges.push('🔥 连击高手');
+    if(state.bestCombo >= 10) badges.push('🌪️ 风火轮');
+    if(state.bestCombo >= 20) badges.push('🌟 超新星');
+    if(acc === 100 && state.correct >= 5) badges.push('💯 全对达人');
+    if(state.correct >= 20) badges.push('🚀 飞速答题');
+    if(state.mode === 'time' && state.correct >= 15) badges.push('⏰ 闪电侠');
+    if(state.mode === 'endless' && state.correct >= 15) badges.push('♾️ 持久战神');
+    if(state.diff === 'expert' && acc >= 80) badges.push('🐉 大师之力');
+    if(bossWin) badges.push('👾 屠龙勇士');
+    document.getElementById('resultBadges').innerHTML =
+      badges.map((b,i)=>`<span class="badge" style="animation-delay:${i*0.08}s">${b}</span>`).join('');
+
+    sfxVictory();
+    // 撒星星
+    for(let i=0;i<25;i++){
+      setTimeout(()=>{
+        addBurst(Math.random()*W, -10, 1, {
+          kind:'star', speed: 0.4, decay: 0.008, gravity: 0.08,
+          colors:['255,247,0','0,240,255','255,43,214']
+        });
+      }, i*60);
+    }
+    showScreen('result');
+  }
+
+  // ============================================================
+  //   按钮
+  // ============================================================
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('quitBtn').addEventListener('click', () => {
+    if(confirm('确定要退出当前任务吗？本局成绩将不计入。')){
+      stopTimer();
+      document.body.classList.remove('supernova');
+      showScreen('home');
+    }
+  });
+  document.getElementById('againBtn').addEventListener('click', startGame);
+  document.getElementById('homeBtn').addEventListener('click', () => showScreen('home'));
+
+  // 全局点击启动音频（移动端必须用户手势）
+  document.addEventListener('click', () => { ac(); }, { once: true });
+  document.addEventListener('touchstart', () => { ac(); }, { once: true });
+
+  loadSave();
+  refreshTopbar();
+  showScreen('home');
+
+  // 防双击放大
+  document.addEventListener('dblclick', e => e.preventDefault(), { passive:false });
+})();
+</script>
+</body>
+</html>

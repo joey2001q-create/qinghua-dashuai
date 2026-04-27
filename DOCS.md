@@ -597,3 +597,107 @@ PADDLE_OCR_URL=http://localhost:8868/predict
 | 自适应 | 年级联动、难度自适应、内容适配学段 |
 | 数据验证 | 分数不能负数、不超过满分、目标>当前 |
 | 组件复用 | MarkdownRenderer/ProgressBar/ExportButton等公共组件 |
+
+---
+
+## 🚀 部署指南
+
+### 宝塔面板部署
+
+#### 1. 克隆项目
+
+```bash
+cd /www/wwwroot/193.112.110.145
+git clone https://gitee.com/Y1zsda23/new_dashuai.git
+cd new_dashuai
+```
+
+#### 2. 安装依赖并构建
+
+```bash
+npm install
+npm run build
+```
+
+#### 3. 使用 PM2 启动
+
+```bash
+pm2 start npm --name "dashuai" --cwd /www/wwwroot/193.112.110.145/new_dashuai -- start
+pm2 save
+```
+
+#### 4. 配置 Nginx 反向代理
+
+```bash
+cat > /www/server/panel/vhost/nginx/proxy/193.112.110.145/dashuai.conf << 'EOF'
+location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_cache_bypass $http_upgrade;
+}
+EOF
+
+nginx -t && nginx -s reload
+```
+
+#### 5. 配置环境变量（可选）
+
+```bash
+cat > /www/wwwroot/193.112.110.145/new_dashuai/.env.local << 'EOF'
+BAIDU_API_KEY=你的API_KEY
+BAIDU_SECRET_KEY=你的SECRET_KEY
+EOF
+
+pm2 restart dashuai
+```
+
+### 更新部署
+
+```bash
+cd /www/wwwroot/193.112.110.145/new_dashuai
+git pull
+rm -rf .next
+npm run build
+pm2 restart dashuai
+```
+
+### 常见问题
+
+#### 问题1：更新后还是旧内容
+
+**原因**：Next.js 缓存了旧的构建结果
+
+**解决**：
+```bash
+cd /www/wwwroot/193.112.110.145/new_dashuai
+rm -rf .next
+npm run build
+pm2 restart dashuai
+```
+
+#### 问题2：端口被占用
+
+**解决**：
+```bash
+kill -9 $(lsof -t -i:3000)
+pm2 restart dashuai
+```
+
+#### 问题3：权限错误
+
+**解决**：
+```bash
+chmod -R 755 /www/wwwroot/193.112.110.145/new_dashuai/node_modules/.bin/
+```
+
+#### 问题4：PM2 找不到项目
+
+**解决**：使用 `--cwd` 指定工作目录
+```bash
+pm2 start npm --name "dashuai" --cwd /www/wwwroot/193.112.110.145/new_dashuai -- start
+```

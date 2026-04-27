@@ -1,0 +1,1256 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>红楼梦人物关系</title>
+  <style>
+    :root {
+      --paper: #f6ead8;
+      --paper-deep: #ead8bd;
+      --ink: #30261f;
+      --muted: #766554;
+      --ruby: #9e2f32;
+      --gold: #b8873f;
+      --teal: #2f706a;
+      --indigo: #465a88;
+      --green: #597746;
+      --panel: rgba(255, 249, 239, 0.92);
+      --line: rgba(96, 73, 52, 0.25);
+      --shadow: 0 20px 50px rgba(72, 47, 29, 0.16);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% 8%, rgba(184, 135, 63, 0.16), transparent 32%),
+        radial-gradient(circle at 82% 18%, rgba(47, 112, 106, 0.12), transparent 30%),
+        linear-gradient(180deg, #fbf4e8 0%, #efe0c7 100%);
+      font-family: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+      min-height: 100vh;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .page {
+      width: min(1560px, calc(100vw - 36px));
+      margin: 0 auto;
+      padding: 26px 0 40px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+
+    .title-card,
+    .graph-shell,
+    .detail-card,
+    .source-card {
+      border: 1px solid rgba(135, 91, 46, 0.2);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .title-card {
+      padding: 24px 26px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: end;
+      min-height: 176px;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .title-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(158, 47, 50, 0.14), transparent 28%),
+        radial-gradient(circle at 82% 34%, rgba(47, 112, 106, 0.12), transparent 30%),
+        linear-gradient(90deg, rgba(255, 250, 241, 0.7), rgba(246, 234, 216, 0.42));
+      opacity: 1;
+      z-index: -1;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(34px, 4.2vw, 66px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 860px;
+      color: #5f4d3f;
+      font-size: 17px;
+      line-height: 1.8;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 86px);
+      gap: 10px;
+    }
+
+    .stat {
+      border-left: 3px solid var(--ruby);
+      background: rgba(255, 252, 246, 0.7);
+      padding: 10px 12px;
+      min-height: 70px;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(780px, 1fr) 390px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .graph-shell {
+      min-height: 840px;
+      background:
+        linear-gradient(180deg, rgba(255, 250, 241, 0.94), rgba(247, 235, 213, 0.92)),
+        repeating-linear-gradient(90deg, rgba(122, 89, 52, 0.05) 0 1px, transparent 1px 74px);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border-bottom: 1px solid rgba(135, 91, 46, 0.18);
+      background: rgba(255, 250, 242, 0.78);
+    }
+
+    .search-box {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      background: #fff9ef;
+      border: 1px solid rgba(109, 76, 42, 0.22);
+      border-radius: var(--radius);
+      padding: 8px 11px;
+    }
+
+    .search-box svg {
+      width: 18px;
+      height: 18px;
+      color: var(--gold);
+    }
+
+    .search-box input {
+      border: 0;
+      outline: 0;
+      color: var(--ink);
+      background: transparent;
+      min-width: 0;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 7px;
+    }
+
+    .filter-btn,
+    .reset-btn {
+      border: 1px solid rgba(109, 76, 42, 0.24);
+      background: #fff8ee;
+      color: #5b4637;
+      border-radius: 999px;
+      padding: 7px 11px;
+      cursor: pointer;
+      transition: 160ms ease;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .filter-btn:hover,
+    .reset-btn:hover,
+    .filter-btn.active {
+      color: white;
+      background: var(--ruby);
+      border-color: var(--ruby);
+    }
+
+    .graph-scroll {
+      overflow: auto;
+      padding: 16px;
+    }
+
+    .graph-stage {
+      position: relative;
+      width: 1280px;
+      height: 760px;
+      border: 1px solid rgba(133, 93, 50, 0.2);
+      border-radius: var(--radius);
+      background:
+        radial-gradient(circle at 50% 44%, rgba(158, 47, 50, 0.08), transparent 20%),
+        radial-gradient(circle at 28% 62%, rgba(47, 112, 106, 0.08), transparent 22%),
+        linear-gradient(180deg, rgba(255, 250, 241, 0.98), rgba(242, 226, 198, 0.95)),
+        repeating-linear-gradient(0deg, rgba(105, 80, 51, 0.035) 0 1px, transparent 1px 18px);
+    }
+
+    .graph-stage::after {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border: 1px solid rgba(158, 47, 50, 0.1);
+      pointer-events: none;
+    }
+
+    #edgeLayer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .edge {
+      stroke: var(--line);
+      stroke-width: 1.4;
+      transition: 180ms ease;
+    }
+
+    .edge.love { stroke: rgba(158, 47, 50, 0.34); }
+    .edge.family { stroke: rgba(184, 135, 63, 0.36); }
+    .edge.power { stroke: rgba(70, 90, 136, 0.35); }
+    .edge.servant { stroke: rgba(47, 112, 106, 0.35); }
+    .edge.plot { stroke: rgba(89, 119, 70, 0.35); }
+    .edge.hidden { opacity: 0.05; }
+    .edge.focus {
+      stroke-width: 3.2;
+      opacity: 1;
+      filter: drop-shadow(0 2px 3px rgba(96, 52, 25, 0.28));
+    }
+
+    .edge-label {
+      opacity: 0;
+      transition: 180ms ease;
+    }
+
+    .edge-label.focus {
+      opacity: 1;
+    }
+
+    .edge-label rect {
+      fill: rgba(255, 249, 239, 0.94);
+      stroke: rgba(158, 47, 50, 0.28);
+      stroke-width: 1;
+      rx: 5;
+    }
+
+    .edge-label text {
+      fill: #5d302d;
+      font-size: 13px;
+      font-weight: 700;
+      dominant-baseline: middle;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .node {
+      position: absolute;
+      z-index: 2;
+      width: 86px;
+      min-height: 108px;
+      transform: translate(-50%, -50%);
+      border: 0;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+      color: var(--ink);
+      transition: transform 180ms ease, opacity 180ms ease, filter 180ms ease;
+    }
+
+    .node.hidden-by-filter {
+      display: none;
+    }
+
+    .node.dimmed {
+      opacity: 0.27;
+      filter: grayscale(0.35);
+    }
+
+    .node.linked {
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+
+    .node.active {
+      z-index: 5;
+      transform: translate(-50%, -50%) scale(1.17);
+    }
+
+    .portrait {
+      width: 68px;
+      height: 68px;
+      margin: 0 auto 6px;
+      border-radius: 50%;
+      background-image: url("红楼梦人物关系-头像.png");
+      background-size: 900% 600%;
+      background-repeat: no-repeat;
+      border: 2px solid rgba(255, 250, 241, 0.95);
+      outline: 1px solid rgba(135, 91, 46, 0.38);
+      box-shadow: 0 9px 18px rgba(72, 47, 29, 0.2);
+      background-color: #efe1ca;
+      transition: 180ms ease;
+    }
+
+    .node.active .portrait {
+      border-color: #fffdf7;
+      outline: 4px solid rgba(158, 47, 50, 0.56);
+      box-shadow: 0 12px 26px rgba(158, 47, 50, 0.32);
+    }
+
+    .node.linked:not(.active) .portrait {
+      outline: 3px solid rgba(47, 112, 106, 0.45);
+    }
+
+    .node-name {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 68px;
+      max-width: 88px;
+      min-height: 28px;
+      padding: 4px 7px;
+      border: 1px solid rgba(135, 91, 46, 0.26);
+      background: rgba(255, 249, 239, 0.94);
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.2;
+      box-shadow: 0 6px 12px rgba(72, 47, 29, 0.1);
+    }
+
+    .node.active .node-name {
+      color: #fff;
+      background: var(--ruby);
+      border-color: var(--ruby);
+    }
+
+    .group-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      color: white;
+      background: var(--ruby);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .detail-card {
+      position: sticky;
+      top: 18px;
+      min-height: 760px;
+      background:
+        linear-gradient(180deg, rgba(255, 250, 242, 0.98), rgba(244, 229, 205, 0.96));
+    }
+
+    .detail-head {
+      padding: 20px;
+      background:
+        linear-gradient(135deg, rgba(158, 47, 50, 0.14), rgba(47, 112, 106, 0.1)),
+        rgba(255, 250, 241, 0.82);
+      border-bottom: 1px solid rgba(135, 91, 46, 0.18);
+    }
+
+    .detail-person {
+      display: grid;
+      grid-template-columns: 88px minmax(0, 1fr);
+      gap: 14px;
+      align-items: center;
+    }
+
+    .detail-avatar {
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      background-image: url("红楼梦人物关系-头像.png");
+      background-size: 900% 600%;
+      background-repeat: no-repeat;
+      border: 3px solid #fffaf1;
+      outline: 3px solid rgba(158, 47, 50, 0.42);
+      box-shadow: 0 12px 22px rgba(72, 47, 29, 0.18);
+      background-color: #efe1ca;
+    }
+
+    .detail-head h2 {
+      margin: 8px 0 6px;
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .detail-role {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .detail-body {
+      padding: 18px 20px 22px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 16px 0 10px;
+      font-size: 16px;
+      font-weight: 900;
+      color: #3d2d23;
+    }
+
+    .section-title:first-child {
+      margin-top: 0;
+    }
+
+    .trait-list,
+    .story-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .trait-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .trait-list li,
+    .story-list li {
+      border: 1px solid rgba(135, 91, 46, 0.17);
+      background: rgba(255, 252, 247, 0.72);
+      border-radius: var(--radius);
+      padding: 9px 10px;
+      line-height: 1.55;
+    }
+
+    .trait-list li {
+      color: #633b36;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .story-list li {
+      color: #5e4a3c;
+      font-size: 14px;
+    }
+
+    .exam-note {
+      margin: 0;
+      padding: 12px;
+      border-left: 4px solid var(--gold);
+      background: rgba(255, 246, 225, 0.86);
+      line-height: 1.7;
+      color: #5d4838;
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+
+    .relation-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .relation-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 7px 10px;
+      text-align: left;
+      border: 1px solid rgba(135, 91, 46, 0.17);
+      background: rgba(255, 252, 247, 0.8);
+      border-radius: var(--radius);
+      padding: 9px 10px;
+      cursor: pointer;
+      color: var(--ink);
+      transition: 160ms ease;
+    }
+
+    .relation-row:hover {
+      border-color: rgba(158, 47, 50, 0.38);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 16px rgba(72, 47, 29, 0.12);
+    }
+
+    .relation-row span {
+      color: var(--ruby);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .relation-row strong {
+      font-size: 14px;
+      color: #4b382f;
+    }
+
+    .relation-row small {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 16px 16px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: #695547;
+      font-size: 13px;
+    }
+
+    .legend i {
+      width: 22px;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--gold);
+    }
+
+    .legend .love i { background: var(--ruby); }
+    .legend .family i { background: var(--gold); }
+    .legend .servant i { background: var(--teal); }
+    .legend .power i { background: var(--indigo); }
+    .legend .plot i { background: var(--green); }
+
+    .source-card {
+      margin-top: 18px;
+      padding: 16px 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .source-card a {
+      color: #7c2b2d;
+      font-weight: 800;
+      text-decoration: none;
+      margin-right: 10px;
+    }
+
+    @media (max-width: 1180px) {
+      .topbar,
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .title-card {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-stats {
+        width: min(100%, 520px);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .detail-card {
+        position: static;
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        width: calc(100vw - 20px);
+        padding-top: 12px;
+      }
+
+      .title-card {
+        grid-template-columns: 1fr;
+        padding: 18px;
+      }
+
+      .hero-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .filters {
+        justify-content: flex-start;
+      }
+
+      .detail-person {
+        grid-template-columns: 76px minmax(0, 1fr);
+      }
+
+      .detail-avatar {
+        width: 74px;
+        height: 74px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="topbar">
+      <div class="title-card">
+        <div>
+          <h1>红楼梦人物关系</h1>
+          <p class="subtitle">40 个常考人物以关系网呈现。点击任意人物，人物性格、典型情节、关联人物与故事连线会同步高亮，适合复习“谁与谁因什么故事相连”。</p>
+        </div>
+        <div class="hero-stats" aria-label="内容统计">
+          <div class="stat"><b>40</b><span>常考人物</span></div>
+          <div class="stat"><b>60</b><span>故事连线</span></div>
+          <div class="stat"><b>7</b><span>人物分组</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="workspace" aria-label="动态人物关系图">
+      <div class="graph-shell">
+        <div class="toolbar">
+          <label class="search-box" aria-label="搜索人物">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="m21 21-4.2-4.2M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z"/>
+            </svg>
+            <input id="searchInput" type="search" placeholder="只搜索人物姓名，如：黛玉、宝钗、王熙凤" />
+          </label>
+          <div class="filters" id="filters" aria-label="人物分组筛选"></div>
+        </div>
+        <div class="graph-scroll">
+          <div class="graph-stage" id="graphStage" aria-label="红楼梦 40 人物动态关系网络">
+            <svg id="edgeLayer" viewBox="0 0 1280 760" aria-hidden="true"></svg>
+          </div>
+        </div>
+        <div class="legend" aria-label="关系类型图例">
+          <span class="love"><i></i>情感婚恋</span>
+          <span class="family"><i></i>亲族辈分</span>
+          <span class="servant"><i></i>主仆知己</span>
+          <span class="power"><i></i>权力管家</span>
+          <span class="plot"><i></i>关键情节</span>
+        </div>
+      </div>
+
+      <aside class="detail-card" aria-live="polite">
+        <div class="detail-head">
+          <div class="detail-person">
+            <div class="detail-avatar" id="detailAvatar"></div>
+            <div>
+              <span class="group-pill" id="detailGroup">荣国府核心</span>
+              <h2 id="detailName">贾宝玉</h2>
+              <p class="detail-role" id="detailRole"></p>
+            </div>
+          </div>
+        </div>
+        <div class="detail-body">
+          <div class="section-title">性格关键词</div>
+          <ul class="trait-list" id="traitList"></ul>
+
+          <div class="section-title">典型故事</div>
+          <ul class="story-list" id="storyList"></ul>
+
+          <div class="section-title">常考提示</div>
+          <p class="exam-note" id="examNote"></p>
+
+          <div class="section-title">
+            <span>关联人物与故事线</span>
+            <button class="reset-btn" id="resetBtn" type="button">回到宝玉</button>
+          </div>
+          <div class="relation-list" id="relationList"></div>
+        </div>
+      </aside>
+    </section>
+
+    <footer class="source-card">
+      资料底本参考《红楼梦》原著常见情节，并核对了人物谱系与金陵十二钗名单：
+      <a href="https://zh.wikisource.org/wiki/%E7%B4%85%E6%A8%93%E5%A4%A2" target="_blank" rel="noreferrer">维基文库《红楼梦》</a>
+      <a href="https://zh.wikipedia.org/wiki/%E7%BA%A2%E6%A5%BC%E6%A2%A6%E4%BA%BA%E7%89%A9%E5%88%97%E8%A1%A8" target="_blank" rel="noreferrer">红楼梦角色列表</a>
+      <a href="https://zh.wikipedia.org/wiki/%E9%87%91%E9%99%B5%E5%8D%81%E4%BA%8C%E9%92%97" target="_blank" rel="noreferrer">金陵十二钗</a>
+    </footer>
+  </main>
+
+  <script>
+    const groups = [
+      ["all", "全部"],
+      ["core", "宝黛钗"],
+      ["rong", "荣国府"],
+      ["ning", "宁国府"],
+      ["xue", "薛家外戚"],
+      ["maid", "丫鬟仆从"],
+      ["story", "线索人物"]
+    ];
+
+    const groupMeta = {
+      core: { label: "宝黛钗核心", color: "#9e2f32" },
+      rong: { label: "荣国府主支", color: "#b8873f" },
+      ning: { label: "宁国府支线", color: "#465a88" },
+      xue: { label: "薛家外戚", color: "#597746" },
+      maid: { label: "丫鬟仆从", color: "#2f706a" },
+      story: { label: "线索人物", color: "#7a4d86" }
+    };
+
+    const people = [
+      {
+        id: "baoyu", name: "贾宝玉", group: "core", avatar: [2, 0], x: 640, y: 330,
+        role: "荣国府衔玉而生的公子，故事的情感与价值中心。",
+        traits: ["痴情重义", "厌恶功名", "敏感叛逆", "怜香惜玉"],
+        stories: ["木石前盟与通灵宝玉", "共读《西厢记》", "被贾政笞挞后众人探望", "宝玉成婚与出家结局"],
+        exam: "常考他对封建仕途的反抗，以及与黛玉、宝钗形成的“木石前盟”和“金玉良缘”两条主线。"
+      },
+      {
+        id: "daiyu", name: "林黛玉", group: "core", avatar: [0, 0], x: 470, y: 425,
+        role: "贾母外孙女，寄居荣国府，才情清峻，是“木石前盟”的女主角。",
+        traits: ["才思敏捷", "多愁敏感", "孤高真挚", "自尊强烈"],
+        stories: ["黛玉进贾府", "葬花吟", "共读《西厢记》", "焚稿断痴情"],
+        exam: "常考“寄人篱下”的处境、诗性才情和真情理想被礼教婚姻摧毁的悲剧。"
+      },
+      {
+        id: "baochai", name: "薛宝钗", group: "core", avatar: [1, 0], x: 810, y: 425,
+        role: "薛姨妈之女，端庄圆融，与宝玉构成“金玉良缘”。",
+        traits: ["稳重端方", "通达人情", "冷静自持", "善于周旋"],
+        stories: ["宝钗扑蝶", "金锁与通灵宝玉相配", "劝宝玉读书应举", "宝玉成婚"],
+        exam: "常考她既有温厚才德，也更能适应家族秩序，与黛玉形成价值与性情对照。"
+      },
+      {
+        id: "xifeng", name: "王熙凤", group: "rong", avatar: [4, 1], x: 330, y: 305,
+        role: "贾琏之妻，荣国府实际管家者，精明强干又狠辣。",
+        traits: ["精明泼辣", "权谋老练", "口才锋利", "喜怒皆威"],
+        stories: ["协理宁国府", "毒设相思局", "弄权铁槛寺", "接待刘姥姥"],
+        exam: "常考“凤辣子”的语言和管家才能，也考她的权力欲、机变和悲剧性反噬。"
+      },
+      {
+        id: "jiamu", name: "贾母", group: "rong", avatar: [2, 1], x: 640, y: 125,
+        role: "史太君，荣国府最高长辈，维系家族礼法与日常欢乐。",
+        traits: ["慈爱尊贵", "讲究体面", "阅历深厚", "偏爱宝黛"],
+        stories: ["接黛玉入府", "元妃省亲时主持家宴", "大观园宴乐", "庇护宝玉"],
+        exam: "常考她在贾府中的精神权威，以及对宝玉、黛玉命运的影响。"
+      },
+      {
+        id: "jiazheng", name: "贾政", group: "rong", avatar: [7, 1], x: 520, y: 225,
+        role: "宝玉之父，荣国府正统父权与仕途价值的代表。",
+        traits: ["严肃守礼", "重视功名", "迂腐正统", "父爱压抑"],
+        stories: ["试宝玉题对额", "笞挞宝玉", "元妃省亲工程", "管教贾环宝玉"],
+        exam: "常考他与宝玉的父子冲突，集中体现仕途经济与个性生命的矛盾。"
+      },
+      {
+        id: "wangfuren", name: "王夫人", group: "rong", avatar: [6, 1], x: 760, y: 225,
+        role: "贾政之妻，宝玉之母，荣府内宅秩序的重要掌控者。",
+        traits: ["慈母心重", "保守谨慎", "外柔内厉", "维护礼法"],
+        stories: ["认可袭人", "逐金钏", "抄检大观园前后", "保护宝玉婚事"],
+        exam: "常考她一面疼爱宝玉，一面以礼法和家族利益压迫丫鬟与年轻女性。"
+      },
+      {
+        id: "jiashe", name: "贾赦", group: "rong", avatar: [8, 1], x: 190, y: 180,
+        role: "贾母长子，荣国府长房主人，贪享权势。",
+        traits: ["贪婪荒唐", "专横好色", "缺乏担当", "倚势压人"],
+        stories: ["强纳鸳鸯", "长房与二房权势失衡", "迎春误嫁的父权失职"],
+        exam: "常考他是贾府衰败中道德失序的长辈代表。"
+      },
+      {
+        id: "xingfuren", name: "邢夫人", group: "rong", avatar: [0, 2], x: 110, y: 285,
+        role: "贾赦续弦，长房夫人，处境尴尬又趋炎附势。",
+        traits: ["懦弱势利", "依附丈夫", "刻薄寡恩", "目光短浅"],
+        stories: ["替贾赦说合鸳鸯", "对迎春婚事少有庇护", "长房内宅琐事"],
+        exam: "常考她在强权面前的附和，以及对女性命运无力保护的冷漠。"
+      },
+      {
+        id: "jialian", name: "贾琏", group: "rong", avatar: [1, 2], x: 250, y: 305,
+        role: "贾赦之子，王熙凤丈夫，长房事务的实际执行者。",
+        traits: ["风流懦弱", "办事机敏", "贪色怕妻", "缺少定力"],
+        stories: ["偷娶尤二姐", "与凤姐夫妻斗法", "办理林如海丧事", "家务银钱往来"],
+        exam: "常考他夹在父权、凤姐权力和情欲之间，显示贵族男性的软弱。"
+      },
+      {
+        id: "qiaojie", name: "巧姐", group: "rong", avatar: [0, 3], x: 390, y: 180,
+        role: "王熙凤与贾琏之女，金陵十二钗之一。",
+        traits: ["年幼无辜", "命运飘零", "承受家败", "遇恩得救"],
+        stories: ["刘姥姥赐名", "凤姐托孤意味", "家败后蒙刘姥姥搭救"],
+        exam: "常考“留余庆”的因果结构，凤姐一念善待刘姥姥，为巧姐留下一线生机。"
+      },
+      {
+        id: "yuanchun", name: "贾元春", group: "rong", avatar: [3, 0], x: 640, y: 45,
+        role: "宝玉长姐，入宫为妃，是贾府烈火烹油的表面荣光。",
+        traits: ["端庄贵重", "身不由己", "思亲含悲", "荣华脆弱"],
+        stories: ["元妃省亲", "题名大观园", "宫中失意与早逝暗线"],
+        exam: "常考“省亲”表面繁华与内在悲凉，预示贾府盛极而衰。"
+      },
+      {
+        id: "yingchun", name: "贾迎春", group: "rong", avatar: [4, 0], x: 510, y: 565,
+        role: "贾赦之女，四春之一，性格温弱。",
+        traits: ["懦弱忍让", "与世无争", "缺乏反抗", "命运悲苦"],
+        stories: ["绰号二木头", "误嫁孙绍祖", "被中山狼折磨"],
+        exam: "常考她的悲剧来自父权交易与自身软弱，判词“中山狼”最典型。"
+      },
+      {
+        id: "tanchun", name: "贾探春", group: "rong", avatar: [5, 0], x: 650, y: 540,
+        role: "贾政庶女，四春之一，有才干和改革意识。",
+        traits: ["精明果断", "自尊刚正", "有管理才", "远嫁悲凉"],
+        stories: ["探春理家", "兴利除弊", "抄检大观园时掌掴王善保家的", "远嫁海疆"],
+        exam: "常考她的才干与庶出身份矛盾，是贾府女性中少有的改革型人物。"
+      },
+      {
+        id: "xichun", name: "贾惜春", group: "rong", avatar: [6, 0], x: 780, y: 565,
+        role: "宁府贾敬之女，寄居荣府，四春中最小。",
+        traits: ["冷峻孤僻", "洁身自守", "畏惧污浊", "趋向出世"],
+        stories: ["奉命画大观园", "与宁府划清界限", "看破后出家"],
+        exam: "常考她从冷眼旁观到出家的选择，映照贾府污浊与女性退路。"
+      },
+      {
+        id: "liwan", name: "李纨", group: "rong", avatar: [3, 2], x: 385, y: 565,
+        role: "贾珠遗孀，贾兰之母，诗社中号稻香老农。",
+        traits: ["守节端方", "沉静寡欲", "教子有方", "才情含蓄"],
+        stories: ["稻香村生活", "海棠诗社评诗", "寡母教贾兰读书", "协理大观园"],
+        exam: "常考她作为封建节妇的典型，人生被“守节”和“教子”限定。"
+      },
+      {
+        id: "jialan", name: "贾兰", group: "rong", avatar: [3, 5], x: 305, y: 655,
+        role: "贾珠与李纨之子，贾府晚辈中读书承继者。",
+        traits: ["勤学守礼", "少年早熟", "沉稳内敛", "承受期望"],
+        stories: ["随母寡居读书", "族学与家宴出场", "李纨教子"],
+        exam: "常考他与宝玉形成“读书仕进”的对照，也承载李纨后半生希望。"
+      },
+      {
+        id: "jiahuan", name: "贾环", group: "rong", avatar: [6, 5], x: 895, y: 565,
+        role: "贾政庶子，赵姨娘之子，宝玉异母弟。",
+        traits: ["阴郁自卑", "嫉妒狭隘", "受宠不足", "易被挑唆"],
+        stories: ["烫蜡害宝玉", "向贾政告状", "与赵姨娘谋害凤姐宝玉"],
+        exam: "常考他因庶出、偏爱与家庭教育失衡而形成的扭曲心理。"
+      },
+      {
+        id: "zhaoyi", name: "赵姨娘", group: "rong", avatar: [5, 5], x: 980, y: 540,
+        role: "贾政妾室，探春和贾环生母。",
+        traits: ["粗鄙偏执", "嫉妒争宠", "狭隘短视", "母爱失度"],
+        stories: ["辱骂探春", "马道婆魇魔法", "与贾环结成怨气支线"],
+        exam: "常考她的妾室处境与低层争斗，衬托探春的自尊和清醒。"
+      },
+      {
+        id: "xiangyun", name: "史湘云", group: "core", avatar: [7, 0], x: 330, y: 430,
+        role: "贾母娘家侄孙女，才情豪爽，金陵十二钗之一。",
+        traits: ["豪爽率真", "才思敏捷", "乐观明朗", "身世孤苦"],
+        stories: ["醉卧芍药裀", "海棠诗社联句", "金麒麟暗线", "劝慰宝钗"],
+        exam: "常考她的率真豪放与身世孤苦之间的反差。"
+      },
+      {
+        id: "miaoyu", name: "妙玉", group: "core", avatar: [7, 5], x: 970, y: 430,
+        role: "栊翠庵带发修行女子，才洁孤高，金陵十二钗之一。",
+        traits: ["孤高洁癖", "才情清雅", "外冷内热", "身世飘零"],
+        stories: ["栊翠庵品茶", "嫌刘姥姥用杯", "与宝玉微妙相惜"],
+        exam: "常考她的“洁”与“僻”，以及洁癖背后的孤独和悲剧。"
+      },
+      {
+        id: "keqing", name: "秦可卿", group: "ning", avatar: [8, 0], x: 1130, y: 405,
+        role: "贾蓉之妻，宁国府少奶奶，金陵十二钗之一。",
+        traits: ["温柔妩媚", "心思深沉", "早逝神秘", "预警兴亡"],
+        stories: ["秦可卿托梦王熙凤", "秦可卿丧事", "宁国府奢靡铺陈"],
+        exam: "常考她的早逝和托梦，点出贾府“月满则亏，水满则溢”的衰败预警。"
+      },
+      {
+        id: "jiazhen", name: "贾珍", group: "ning", avatar: [2, 2], x: 1110, y: 190,
+        role: "宁国府家长，贾蓉之父，贾府荒淫腐败的代表。",
+        traits: ["荒淫放纵", "奢靡无度", "权势骄纵", "败家失德"],
+        stories: ["操办秦可卿丧事", "宁国府家风败坏", "与尤氏关系疏离"],
+        exam: "常考他代表宁国府伦理崩坏，是贾府由内而败的重要支线。"
+      },
+      {
+        id: "youshi", name: "尤氏", group: "ning", avatar: [3, 3], x: 1180, y: 285,
+        role: "贾珍之妻，宁国府夫人，尤二姐、尤三姐的姻亲姐姐。",
+        traits: ["圆滑忍让", "处事谨慎", "缺乏主见", "明哲保身"],
+        stories: ["秦可卿丧事中周旋", "牵出尤氏姐妹", "宁府内宅调停"],
+        exam: "常考她在宁府乱局中的忍让与自保，体现大家族女性的困境。"
+      },
+      {
+        id: "jiarong", name: "贾蓉", group: "ning", avatar: [3, 2], x: 1045, y: 305,
+        role: "贾珍之子，秦可卿丈夫，宁府年轻一代。",
+        traits: ["轻浮圆滑", "趋炎附势", "道德薄弱", "依附父权"],
+        stories: ["秦可卿丧事", "协助凤姐宁府事务", "宁国府荒唐日常"],
+        exam: "常考他承接宁府败坏风气，年轻却已失去责任感。"
+      },
+      {
+        id: "xueyima", name: "薛姨妈", group: "xue", avatar: [5, 1], x: 670, y: 655,
+        role: "王夫人之妹，薛宝钗、薛蟠之母。",
+        traits: ["慈和圆融", "护短爱子", "倚亲而居", "重视婚姻"],
+        stories: ["薛家进京投亲", "金玉良缘暗线", "为薛蟠周旋"],
+        exam: "常考她连接王家与薛家，也推动宝钗进入贾府婚姻格局。"
+      },
+      {
+        id: "xuepan", name: "薛蟠", group: "xue", avatar: [4, 5], x: 800, y: 660,
+        role: "薛家少爷，外号呆霸王，宝钗兄长。",
+        traits: ["粗鲁纨绔", "任性好色", "义气偶现", "缺乏约束"],
+        stories: ["争买香菱打死人命", "葫芦案", "被柳湘莲痛打", "宴饮斗诗闹笑话"],
+        exam: "常考他引出“护官符”和四大家族互相包庇的社会网络。"
+      },
+      {
+        id: "xiangling", name: "香菱", group: "xue", avatar: [8, 3], x: 910, y: 665,
+        role: "原名甄英莲，甄士隐之女，被拐后落入薛家。",
+        traits: ["温顺纯善", "命运坎坷", "爱诗好学", "逆来顺受"],
+        stories: ["英莲被拐", "薛蟠强买香菱", "香菱学诗", "被夏金桂折磨"],
+        exam: "常考她从甄家到薛家的命运线，是全书女性苦难的早期缩影。"
+      },
+      {
+        id: "xiren", name: "袭人", group: "maid", avatar: [1, 4], x: 500, y: 650,
+        role: "宝玉身边大丫鬟，温柔稳重，后被王夫人看重。",
+        traits: ["温顺体贴", "现实稳妥", "尽职守分", "善于自保"],
+        stories: ["初试云雨情", "劝宝玉读书", "王夫人准其姨娘待遇", "怡红院照料宝玉"],
+        exam: "常考她与晴雯形成对照：一个顺应秩序，一个保持锋芒。"
+      },
+      {
+        id: "qingwen", name: "晴雯", group: "maid", avatar: [2, 4], x: 420, y: 690,
+        role: "怡红院丫鬟，聪明漂亮，性格刚烈。",
+        traits: ["心高气傲", "口齿伶俐", "清白刚烈", "反抗性强"],
+        stories: ["晴雯撕扇", "病补雀金裘", "被逐出大观园", "宝玉作《芙蓉女儿诔》"],
+        exam: "常考她“风流灵巧招人怨”的悲剧，代表被礼法和流言摧毁的清白生命。"
+      },
+      {
+        id: "zijuan", name: "紫鹃", group: "maid", avatar: [4, 3], x: 305, y: 515,
+        role: "黛玉身边丫鬟，忠心体贴，是黛玉最亲近的照护者。",
+        traits: ["忠诚细心", "机敏大胆", "深知黛玉", "重情重义"],
+        stories: ["紫鹃试玉", "照料病中黛玉", "黛玉焚稿时陪伴"],
+        exam: "常考“紫鹃试玉”揭示宝黛感情深度，也显示她对黛玉命运的焦虑。"
+      },
+      {
+        id: "yuanyang", name: "鸳鸯", group: "maid", avatar: [8, 2], x: 560, y: 95,
+        role: "贾母贴身大丫鬟，地位特殊，性格刚烈。",
+        traits: ["忠心稳重", "刚烈自尊", "不畏强权", "处事得体"],
+        stories: ["鸳鸯抗婚", "侍奉贾母", "管钥匙与传话"],
+        exam: "常考她拒绝贾赦纳妾，体现底层女性少有的尊严反抗。"
+      },
+      {
+        id: "pinger", name: "平儿", group: "maid", avatar: [7, 2], x: 220, y: 425,
+        role: "王熙凤陪房丫鬟，贾琏通房，处事公允。",
+        traits: ["温和能干", "公道细致", "善解人意", "夹缝求全"],
+        stories: ["平儿理妆", "替凤姐周全事务", "调解贾琏凤姐矛盾", "体恤下人"],
+        exam: "常考她在凤姐权力阴影下仍保有仁厚，是丫鬟群像中的温柔平衡者。"
+      },
+      {
+        id: "jinchuan", name: "金钏", group: "maid", avatar: [0, 4], x: 760, y: 645,
+        role: "王夫人房中丫鬟，因与宝玉调笑被逐。",
+        traits: ["活泼轻佻", "无辜受罚", "性情刚烈", "命运惨烈"],
+        stories: ["宝玉调笑金钏", "王夫人逐金钏", "金钏投井"],
+        exam: "常考她的死暴露封建内宅对丫鬟身体与名誉的严酷控制。"
+      },
+      {
+        id: "liulaolao", name: "刘姥姥", group: "story", avatar: [0, 5], x: 105, y: 430,
+        role: "乡村老妇，借王家旧亲进入贾府，见证荣华。",
+        traits: ["朴实机智", "知恩图报", "能屈能伸", "生命力强"],
+        stories: ["一进荣国府", "二进大观园", "逗笑贾母众人", "家败后救巧姐"],
+        exam: "常考她作为外部视角，既制造喜剧，也反衬贾府奢靡，并完成善恶因果。"
+      },
+      {
+        id: "jiayucun", name: "贾雨村", group: "story", avatar: [2, 5], x: 180, y: 520,
+        role: "落魄书生出身，后做官，趋炎附势。",
+        traits: ["才具不俗", "忘恩负义", "趋炎附势", "官场圆滑"],
+        stories: ["受甄士隐资助", "葫芦僧判断葫芦案", "看护官符徇私", "攀附贾府"],
+        exam: "常考他从贫士到贪官的转变，揭示官场与四大家族的利益网。"
+      },
+      {
+        id: "zhenshiyin", name: "甄士隐", group: "story", avatar: [8, 5], x: 100, y: 625,
+        role: "姑苏乡宦，香菱生父，开篇由盛转衰的线索人物。",
+        traits: ["善良雅致", "看破世情", "遭逢巨变", "超脱出尘"],
+        stories: ["梦遇僧道", "资助贾雨村", "英莲被拐", "家败后出家"],
+        exam: "常考他的“真事隐”寓意，开篇即提示盛衰无常与真假结构。"
+      },
+      {
+        id: "yower", name: "尤二姐", group: "ning", avatar: [5, 3], x: 1030, y: 560,
+        role: "尤氏继母带来的妹妹，被贾琏偷娶。",
+        traits: ["柔顺轻信", "美丽薄命", "缺乏防备", "忍辱含悲"],
+        stories: ["贾琏偷娶尤二姐", "王熙凤赚入大观园", "吞金自尽"],
+        exam: "常考她的悲剧是男权情欲与凤姐权谋共同造成的。"
+      },
+      {
+        id: "yousan", name: "尤三姐", group: "ning", avatar: [6, 3], x: 1150, y: 570,
+        role: "尤氏妹妹，性格刚烈，钟情柳湘莲。",
+        traits: ["泼辣刚烈", "敢爱敢恨", "自尊强烈", "以死明志"],
+        stories: ["戏弄贾珍贾琏", "钟情柳湘莲", "柳湘莲退婚后自刎"],
+        exam: "常考她与尤二姐对照，一个柔弱被吞噬，一个刚烈以死守尊严。"
+      },
+      {
+        id: "liuxianglian", name: "柳湘莲", group: "story", avatar: [3, 5], x: 1080, y: 680,
+        role: "冷面郎君，侠义人物，与尤三姐悲剧相连。",
+        traits: ["侠义孤傲", "洁身自好", "判断偏激", "悔恨出走"],
+        stories: ["痛打薛蟠", "与尤三姐订婚又退婚", "尤三姐自刎后出家"],
+        exam: "常考他与尤三姐支线，表现名声、偏见与女性清白悲剧。"
+      }
+    ];
+
+    const edges = [
+      { from: "baoyu", to: "daiyu", type: "love", story: "木石前盟 / 共读西厢", detail: "二人以真情相知，宝黛爱情是全书最重要的悲剧线。" },
+      { from: "baoyu", to: "baochai", type: "love", story: "金玉良缘 / 宝玉成婚", detail: "通灵宝玉与金锁相配，最终礼教婚姻压过个人真情。" },
+      { from: "daiyu", to: "baochai", type: "love", story: "钗黛并举 / 金兰语", detail: "二人既被并置比较，也在后期有理解与互相体恤。" },
+      { from: "baoyu", to: "xiren", type: "servant", story: "怡红院主仆 / 初试云雨", detail: "袭人长期照料宝玉，代表较现实的主仆亲密关系。" },
+      { from: "baoyu", to: "qingwen", type: "servant", story: "撕扇 / 病补雀金裘", detail: "晴雯锋芒与清白让宝玉珍重，也因此被逐出园。" },
+      { from: "baoyu", to: "zijuan", type: "love", story: "紫鹃试玉", detail: "紫鹃试探宝玉对黛玉真心，宝玉几近失魂。" },
+      { from: "baoyu", to: "jinchuan", type: "servant", story: "调笑金钏 / 投井", detail: "宝玉一时调笑引发王夫人严惩，金钏投井而死。" },
+      { from: "daiyu", to: "zijuan", type: "servant", story: "潇湘馆知己", detail: "紫鹃最懂黛玉病弱与孤独，陪伴她到悲剧尽头。" },
+      { from: "baochai", to: "xueyima", type: "family", story: "母女 / 薛家入京", detail: "薛姨妈携儿女投亲，宝钗由此进入贾府核心。" },
+      { from: "baochai", to: "xuepan", type: "family", story: "兄妹 / 呆霸王惹祸", detail: "宝钗的端庄常与薛蟠的荒唐形成鲜明对照。" },
+      { from: "xuepan", to: "xiangling", type: "plot", story: "强买香菱 / 葫芦案", detail: "薛蟠争买香菱打死人命，牵出护官符。" },
+      { from: "zhenshiyin", to: "xiangling", type: "family", story: "英莲被拐", detail: "香菱原为甄士隐之女英莲，被拐后命运彻底转向。" },
+      { from: "jiayucun", to: "zhenshiyin", type: "plot", story: "葫芦庙旧恩", detail: "甄士隐曾资助贾雨村，贾雨村得势后忘恩趋利。" },
+      { from: "jiayucun", to: "xuepan", type: "power", story: "葫芦案 / 护官符", detail: "贾雨村明知案情却徇私枉法，维护薛家利益。" },
+      { from: "baoyu", to: "xiangyun", type: "love", story: "海棠诗社 / 金麒麟", detail: "湘云与宝玉率真亲厚，金麒麟也形成婚恋暗线。" },
+      { from: "xiangyun", to: "baochai", type: "love", story: "住蘅芜苑 / 劝慰", detail: "湘云常受宝钗照拂，二人性情不同却互相亲近。" },
+      { from: "baoyu", to: "miaoyu", type: "plot", story: "栊翠庵品茶", detail: "妙玉以特殊茶具待宝黛钗，显出孤高清洁与微妙情意。" },
+      { from: "daiyu", to: "miaoyu", type: "plot", story: "品茶才情相照", detail: "黛玉、妙玉同具才情与孤高，互为映照。" },
+      { from: "jiamu", to: "baoyu", type: "family", story: "祖孙宠爱", detail: "贾母对宝玉极度宠爱，是宝玉在府中最强保护伞。" },
+      { from: "jiamu", to: "daiyu", type: "family", story: "外祖母收养", detail: "黛玉母亡后投奔外祖母，进入贾府生活。" },
+      { from: "jiamu", to: "jiazheng", type: "family", story: "母子 / 荣府二房", detail: "贾政是贾母次子，二房因宝玉与元春更受重视。" },
+      { from: "jiamu", to: "jiashe", type: "family", story: "母子 / 荣府长房", detail: "贾赦为长子却失去许多实际尊荣，长房二房矛盾暗存。" },
+      { from: "jiazheng", to: "wangfuren", type: "family", story: "夫妻 / 宝玉父母", detail: "二人共同代表荣府二房的礼法秩序。" },
+      { from: "jiazheng", to: "baoyu", type: "power", story: "父子冲突 / 笞挞宝玉", detail: "贾政以功名要求压迫宝玉，父子冲突极具代表性。" },
+      { from: "wangfuren", to: "baoyu", type: "family", story: "母子庇护", detail: "王夫人保护宝玉，却也以宝玉利益压制他身边女子。" },
+      { from: "wangfuren", to: "jinchuan", type: "power", story: "逐金钏 / 投井", detail: "王夫人逐出金钏，直接导致金钏投井悲剧。" },
+      { from: "wangfuren", to: "xiren", type: "power", story: "认可袭人", detail: "王夫人看中袭人的稳妥，给她准姨娘待遇。" },
+      { from: "jiazheng", to: "yuanchun", type: "family", story: "父女 / 元妃省亲", detail: "元春封妃带来荣光，也加重贾府排场消耗。" },
+      { from: "wangfuren", to: "yuanchun", type: "family", story: "母女 / 省亲含悲", detail: "省亲一面盛大，一面显出母女不得常见的宫廷悲凉。" },
+      { from: "jiamu", to: "yuanchun", type: "family", story: "祖孙 / 省亲大宴", detail: "贾母主持省亲家宴，贾府繁华达到高峰。" },
+      { from: "jiazheng", to: "tanchun", type: "family", story: "父女 / 探春理家", detail: "探春虽庶出却有才干，得到治理家务的机会。" },
+      { from: "wangfuren", to: "tanchun", type: "power", story: "嫡母庶女 / 理家试才", detail: "探春在王夫人体系内协理事务，却始终受庶出身份限制。" },
+      { from: "zhaoyi", to: "tanchun", type: "family", story: "母女隔膜 / 辱亲", detail: "赵姨娘粗鄙争闹，最刺痛探春的身份自尊。" },
+      { from: "zhaoyi", to: "jiahuan", type: "family", story: "母子 / 阴私争宠", detail: "母子怨气相互滋长，屡次卷入害人风波。" },
+      { from: "jiahuan", to: "baoyu", type: "family", story: "兄弟对照 / 烫蜡", detail: "贾环因嫉妒害宝玉，显示家族偏爱带来的心理扭曲。" },
+      { from: "liwan", to: "jialan", type: "family", story: "寡母教子", detail: "李纨将人生希望寄托在贾兰读书成名上。" },
+      { from: "liwan", to: "tanchun", type: "power", story: "协理大观园", detail: "二人共同参与园中管理，探春表现改革才干。" },
+      { from: "yingchun", to: "jiashe", type: "family", story: "父女 / 误嫁中山狼", detail: "贾赦对迎春婚姻失职，造成她婚后悲剧。" },
+      { from: "xichun", to: "jiazhen", type: "family", story: "宁府血脉 / 出家", detail: "惜春出身宁府却厌恶宁府污浊，最终选择出家。" },
+      { from: "jiashe", to: "xingfuren", type: "family", story: "夫妻 / 长房", detail: "邢夫人依附贾赦，也替他执行强纳鸳鸯的意思。" },
+      { from: "jiashe", to: "jialian", type: "family", story: "父子 / 长房事务", detail: "贾琏在长房与荣府事务间周旋。" },
+      { from: "jialian", to: "xifeng", type: "love", story: "夫妻 / 管家斗法", detail: "夫妻既共掌家务，也因情欲、权力与银钱不断冲突。" },
+      { from: "xifeng", to: "qiaojie", type: "family", story: "母女 / 留余庆", detail: "凤姐一念善待刘姥姥，后来成为巧姐得救的伏笔。" },
+      { from: "xifeng", to: "pinger", type: "servant", story: "主仆心腹 / 平儿理妆", detail: "平儿是凤姐最可靠的助手，也常以温厚调和矛盾。" },
+      { from: "xifeng", to: "liulaolao", type: "plot", story: "接待刘姥姥", detail: "凤姐对刘姥姥施惠，埋下巧姐日后被救的因果。" },
+      { from: "liulaolao", to: "qiaojie", type: "plot", story: "巧姐遇恩得救", detail: "贾府败落后，刘姥姥报恩救出巧姐。" },
+      { from: "jiamu", to: "yuanyang", type: "servant", story: "贴身丫鬟", detail: "鸳鸯深受贾母信任，掌管许多内宅事务。" },
+      { from: "jiashe", to: "yuanyang", type: "power", story: "强纳鸳鸯", detail: "贾赦强纳鸳鸯遭拒，鸳鸯抗婚成为尊严反抗名场面。" },
+      { from: "jiazhen", to: "youshi", type: "family", story: "夫妻 / 宁国府", detail: "尤氏在贾珍荒唐统治下多以隐忍周旋。" },
+      { from: "jiazhen", to: "jiarong", type: "family", story: "父子 / 宁府家风", detail: "父子同处宁府败坏风气之中。" },
+      { from: "jiarong", to: "keqing", type: "love", story: "夫妻 / 秦可卿早逝", detail: "秦可卿早亡，引发宁国府极尽奢华的丧事。" },
+      { from: "jiazhen", to: "keqing", type: "plot", story: "秦可卿丧事", detail: "贾珍异常铺张办理丧事，显示宁府伦理与奢靡问题。" },
+      { from: "xifeng", to: "keqing", type: "plot", story: "托梦 / 协理宁国府", detail: "秦可卿托梦警示凤姐，凤姐随后协理宁国府丧事。" },
+      { from: "youshi", to: "yower", type: "family", story: "姻亲姐妹", detail: "尤二姐经尤氏一线进入宁荣两府的情欲风波。" },
+      { from: "youshi", to: "yousan", type: "family", story: "姻亲姐妹", detail: "尤三姐同样卷入尤氏姐妹支线。" },
+      { from: "jialian", to: "yower", type: "love", story: "偷娶尤二姐", detail: "贾琏背着凤姐偷娶尤二姐，引发后续悲剧。" },
+      { from: "xifeng", to: "yower", type: "power", story: "赚入大观园 / 吞金", detail: "凤姐设计将尤二姐控制在府中，最终逼出悲剧。" },
+      { from: "yousan", to: "liuxianglian", type: "love", story: "退婚殉情", detail: "柳湘莲误信风评退婚，尤三姐以死明志。" },
+      { from: "liuxianglian", to: "xuepan", type: "plot", story: "痛打薛蟠", detail: "柳湘莲惩戒薛蟠，显出侠义和刚烈。" },
+      { from: "liuxianglian", to: "baoyu", type: "plot", story: "旧相识 / 侠义出场", detail: "柳湘莲与宝玉往来，牵出尤三姐支线。" }
+    ];
+
+    const peopleById = new Map(people.map((person) => [person.id, person]));
+    let activeId = "baoyu";
+    let activeGroup = "all";
+    let searchText = "";
+
+    const stage = document.getElementById("graphStage");
+    const edgeLayer = document.getElementById("edgeLayer");
+    const filters = document.getElementById("filters");
+    const searchInput = document.getElementById("searchInput");
+    const resetBtn = document.getElementById("resetBtn");
+
+    function avatarPosition(avatar) {
+      const [col, row] = avatar;
+      return `${(col / 8) * 100}% ${(row / 5) * 100}%`;
+    }
+
+    function matchesSearch(person) {
+      if (!searchText) return true;
+      return person.name.includes(searchText);
+    }
+
+    function visiblePerson(person) {
+      const groupOk = activeGroup === "all" || person.group === activeGroup;
+      return groupOk && matchesSearch(person);
+    }
+
+    function connectedIds(id) {
+      const ids = new Set([id]);
+      edges.forEach((edge) => {
+        if (edge.from === id) ids.add(edge.to);
+        if (edge.to === id) ids.add(edge.from);
+      });
+      return ids;
+    }
+
+    function setActive(id) {
+      activeId = id;
+      render();
+    }
+
+    function buildFilters() {
+      filters.innerHTML = groups.map(([id, label]) => (
+        `<button type="button" class="filter-btn${id === activeGroup ? " active" : ""}" data-group="${id}">${label}</button>`
+      )).join("");
+      filters.querySelectorAll("button").forEach((button) => {
+        button.addEventListener("click", () => {
+          activeGroup = button.dataset.group;
+          render();
+        });
+      });
+    }
+
+    function buildNodes() {
+      people.forEach((person) => {
+        const node = document.createElement("button");
+        node.type = "button";
+        node.className = "node";
+        node.dataset.id = person.id;
+        node.style.left = `${person.x}px`;
+        node.style.top = `${person.y}px`;
+        node.innerHTML = `
+          <span class="portrait" aria-hidden="true"></span>
+          <span class="node-name">${person.name}</span>
+        `;
+        node.querySelector(".portrait").style.backgroundPosition = avatarPosition(person.avatar);
+        node.addEventListener("click", () => setActive(person.id));
+        stage.appendChild(node);
+      });
+    }
+
+    function drawEdges() {
+      edgeLayer.innerHTML = "";
+      const activeConnections = connectedIds(activeId);
+      const visibleIds = new Set(people.filter(visiblePerson).map((person) => person.id));
+
+      edges.forEach((edge, index) => {
+        const from = peopleById.get(edge.from);
+        const to = peopleById.get(edge.to);
+        const isActive = edge.from === activeId || edge.to === activeId;
+        const isVisible = visibleIds.has(edge.from) && visibleIds.has(edge.to);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", from.x);
+        line.setAttribute("y1", from.y);
+        line.setAttribute("x2", to.x);
+        line.setAttribute("y2", to.y);
+        line.classList.add("edge", edge.type);
+        if (!isVisible || (!isActive && activeConnections.size > 1)) line.classList.add("hidden");
+        if (isActive) line.classList.add("focus");
+        edgeLayer.appendChild(line);
+
+        const midX = (from.x + to.x) / 2;
+        const midY = (from.y + to.y) / 2;
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const length = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+        const offset = index % 2 === 0 ? 10 : -10;
+        const labelX = midX + (-dy / length) * offset;
+        const labelY = midY + (dx / length) * offset;
+        const width = Math.min(176, Math.max(74, edge.story.length * 12 + 20));
+
+        const label = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        label.classList.add("edge-label");
+        if (isActive && isVisible) label.classList.add("focus");
+        label.setAttribute("transform", `translate(${labelX} ${labelY})`);
+        label.innerHTML = `
+          <rect x="${-width / 2}" y="-14" width="${width}" height="28"></rect>
+          <text x="0" y="1">${edge.story}</text>
+        `;
+        edgeLayer.appendChild(label);
+      });
+    }
+
+    function renderNodes() {
+      const links = connectedIds(activeId);
+      document.querySelectorAll(".node").forEach((node) => {
+        const person = peopleById.get(node.dataset.id);
+        const visible = visiblePerson(person);
+        node.classList.toggle("hidden-by-filter", !visible);
+        node.classList.toggle("active", person.id === activeId);
+        node.classList.toggle("linked", person.id !== activeId && links.has(person.id));
+        node.classList.toggle("dimmed", visible && !links.has(person.id));
+      });
+    }
+
+    function renderDetail() {
+      const person = peopleById.get(activeId);
+      const meta = groupMeta[person.group];
+      const detailAvatar = document.getElementById("detailAvatar");
+      detailAvatar.style.backgroundPosition = avatarPosition(person.avatar);
+      document.getElementById("detailGroup").textContent = meta.label;
+      document.getElementById("detailGroup").style.background = meta.color;
+      document.getElementById("detailName").textContent = person.name;
+      document.getElementById("detailRole").textContent = person.role;
+      document.getElementById("traitList").innerHTML = person.traits.map((trait) => `<li>${trait}</li>`).join("");
+      document.getElementById("storyList").innerHTML = person.stories.map((story) => `<li>${story}</li>`).join("");
+      document.getElementById("examNote").textContent = person.exam;
+
+      const relationList = document.getElementById("relationList");
+      const related = edges.filter((edge) => edge.from === activeId || edge.to === activeId);
+      relationList.innerHTML = related.map((edge) => {
+        const otherId = edge.from === activeId ? edge.to : edge.from;
+        const other = peopleById.get(otherId);
+        return `
+          <button type="button" class="relation-row" data-target="${otherId}">
+            <span>${other.name}</span>
+            <strong>${edge.story}</strong>
+            <small>${edge.detail}</small>
+          </button>
+        `;
+      }).join("");
+      relationList.querySelectorAll("button").forEach((button) => {
+        button.addEventListener("click", () => setActive(button.dataset.target));
+      });
+    }
+
+    function render() {
+      buildFilters();
+      renderNodes();
+      drawEdges();
+      renderDetail();
+    }
+
+    searchInput.addEventListener("input", (event) => {
+      searchText = event.target.value.trim();
+      render();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      activeGroup = "all";
+      searchText = "";
+      searchInput.value = "";
+      setActive("baoyu");
+    });
+
+    buildNodes();
+    render();
+  </script>
+</body>
+</html>
